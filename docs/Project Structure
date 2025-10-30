@@ -1,0 +1,83 @@
+smart_note_app/
+├── lib/
+│   ├── main.dart
+│   │
+│   ├── components/
+│   │   │
+│   │   ├── 🔐 auth/                    [Ali]
+│   │   │   ├── splash/
+│   │   │   │   ├── animated_splash_screen.dart
+│   │   │   │   └── splash_animations.dart
+│   │   │   ├── login/
+│   │   │   │   ├── login_screen.dart
+│   │   │   │   ├── login_form.dart
+│   │   │   │   └── forgot_password_dialog.dart
+│   │   │   ├── register/
+│   │   │   │   └── register_screen.dart
+│   │   │   └── services/
+│   │   │       └── auth_service.dart
+│   │   │
+│   │   ├── 📊 dashboard/               [Abdelrahman]
+│   │   │   ├── main_screen.dart
+│   │   │   ├── navigation/
+│   │   │   │   ├── app_drawer.dart
+│   │   │   │   └── tab_bar.dart
+│   │   │   ├── home/
+│   │   │   │   ├── home_view.dart
+│   │   │   │   ├── welcome_card.dart
+│   │   │   │   ├── stats_grid.dart
+│   │   │   │   └── quick_actions.dart
+│   │   │   ├── categories/
+│   │   │   │   ├── tasks_view.dart
+│   │   │   │   ├── appointments_view.dart
+│   │   │   │   ├── expenses_view.dart
+│   │   │   │   └── quotes_view.dart
+│   │   │   └── search/
+│   │   │       └── search_functionality.dart
+│   │   │
+│   │   ├── ⌨️ input_system/            [Ahmed Shaaban - Leader]
+│   │   │   ├── coordinator/
+│   │   │   │   └── input_options_sheet.dart
+│   │   │   ├── text/
+│   │   │   │   ├── text_input_dialog.dart
+│   │   │   │   └── text_processor.dart
+│   │   │   ├── voice/
+│   │   │   │   ├── voice_recorder_dialog.dart
+│   │   │   │   ├── speech_to_text_service.dart
+│   │   │   │   └── voice_animations.dart
+│   │   │   ├── camera/
+│   │   │   │   ├── camera_capture_screen.dart
+│   │   │   │   ├── image_picker_handler.dart
+│   │   │   │   └── image_upload_service.dart
+│   │   │   └── shared/
+│   │   │       └── input_models.dart
+│   │   │
+│   │   └── 🤖 ai_brain/                [Raouf]
+│   │       ├── gemini/
+│   │       │   ├── gemini_service.dart
+│   │       │   ├── gemini_prompts.dart
+│   │       │   └── gemini_config.dart
+│   │       ├── processing/
+│   │       │   ├── content_analyzer.dart
+│   │       │   ├── smart_categorizer.dart
+│   │       │   └── data_extractor.dart
+│   │       ├── ui/
+│   │       │   ├── ai_results_dialog.dart
+│   │       │   └── extracted_items_list.dart
+│   │       └── models/
+│   │           └── ai_models.dart
+│   │
+│   └── 🔧 core/                        [Shared]
+│       ├── database/
+│       │   ├── firebase_service.dart
+│       │   └── notes_repository.dart
+│       ├── models/
+│       │   ├── note.dart
+│       │   ├── task.dart
+│       │   ├── appointment.dart
+│       │   └── expense.dart
+│       ├── theme/
+│       │   └── app_theme.dart
+│       └── utils/
+│           ├── constants.dart
+│           └── helpers.dart
