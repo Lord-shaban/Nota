@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 
-// Dummy screen for the place where the user goes after successful login
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -18,7 +17,6 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                // Call the mock sign out function
                 await AuthService().signOut(); 
               },
               child: const Text('Logout'),
@@ -35,38 +33,54 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // StreamBuilder listens to the AuthService to check login status
     return StreamBuilder<bool>(
       stream: AuthService().authStateChanges,
-      initialData: false, 
+      initialData: AuthService()._isLoggedIn, 
       builder: (context, snapshot) {
         
-        // If the user is logged in (data == true)
+        if (snapshot.connectionState == ConnectionState.waiting) {
+             return _buildSplashUI();
+        }
+
         if (snapshot.hasData && snapshot.data == true) {
-          // Navigate to the Dashboard (HomeScreen)
           return const HomeScreen();
         } 
         
-        // If not logged in (data == false), show the Splash UI
-        return const Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.notes, size: 100, color: Colors.blue),
-                SizedBox(height: 20),
-                Text('Nota App', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-                SizedBox(height: 20),
-                // Mock animation/loading indicator
-                CircularProgressIndicator(), 
-                SizedBox(height: 20),
-                // We add a tiny delay here to ensure the animation shows up before navigating
-                Text('Checking session...', style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-          ),
+        return FutureBuilder(
+          future: Future.delayed(const Duration(seconds: 2)), 
+          builder: (context, timerSnapshot) {
+            if (timerSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildSplashUI();
+            }
+            
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+               Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            });
+            
+            return Container(); 
+          },
         );
       },
+    );
+  }
+
+  Widget _buildSplashUI() {
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.notes, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text('Nota App', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
+            // Mock animation/loading indicator
+            CircularProgressIndicator(), 
+          ],
+        ),
+      ),
     );
   }
 }
