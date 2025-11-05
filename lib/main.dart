@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import ' features/auth/splash/animated_splash_screen.dart';
 import 'core/database/firebase_service.dart';
 
 void main() async {
