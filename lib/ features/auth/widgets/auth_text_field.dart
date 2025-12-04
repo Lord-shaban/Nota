@@ -16,6 +16,10 @@ class AuthTextField extends StatefulWidget {
   final int maxLines;
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
+  final FocusNode? focusNode;
+  final String? errorText;
+  final void Function(String)? onChanged;
+  final void Function(String)? onFieldSubmitted;
 
   const AuthTextField({
     super.key,
@@ -30,6 +34,10 @@ class AuthTextField extends StatefulWidget {
     this.maxLines = 1,
     this.textInputAction,
     this.onSubmitted,
+    this.focusNode,
+    this.errorText,
+    this.onChanged,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -43,17 +51,20 @@ class _AuthTextFieldState extends State<AuthTextField> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
+      focusNode: widget.focusNode,
       obscureText: widget.isPassword && _obscureText,
       keyboardType: widget.keyboardType,
       validator: widget.validator,
       enabled: widget.enabled,
       maxLines: widget.maxLines,
       textInputAction: widget.textInputAction,
-      onFieldSubmitted: widget.onSubmitted,
+      onFieldSubmitted: widget.onFieldSubmitted ?? widget.onSubmitted,
+      onChanged: widget.onChanged,
       style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
+        errorText: widget.errorText,
         prefixIcon: widget.prefixIcon != null
             ? Icon(widget.prefixIcon, color: AppTheme.primaryColor)
             : null,
