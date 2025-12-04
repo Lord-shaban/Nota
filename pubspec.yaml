@@ -30,7 +30,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_generative_ai: ^0.4.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -49,20 +48,28 @@ dependencies:
   animated_text_kit: ^4.2.2
   flutter_animate: ^4.5.0
   lottie: ^3.1.3
+  google_fonts: ^6.3.3
   
   # Form Validation
   email_validator: ^3.0.0
   
+  # AI
+  google_generative_ai: ^0.4.7
+  
+  # Media & Input
+  camera: ^0.11.3
+  image_picker: ^1.2.1
+  speech_to_text: ^7.3.0
+  
+  # Permissions
+  permission_handler: ^12.0.1
+  
+  # Cloud
+  cloudinary_public: ^0.23.1
+  
   # Utils
   intl: ^0.20.1
   shared_preferences: ^2.3.4
-  google_generative_ai: ^0.4.7
-  camera: ^0.11.3
-  google_fonts: ^6.3.3
-  image_picker: ^1.2.1
-  permission_handler: ^12.0.1
-  cloudinary_public: ^0.23.1
-  speech_to_text: ^7.3.0
   equatable: ^2.0.7
 
 dev_dependencies:
