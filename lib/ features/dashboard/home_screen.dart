@@ -29,14 +29,15 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
-  
+
   // AI Components
   late stt.SpeechToText _speech;
   late GenerativeModel _model;
@@ -45,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _fullSpeechText = '';
   Timer? _speechTimer;
   bool _continuousListening = true;
-  
+
   // Data lists (alNota style - organized by type)
   List<Map<String, dynamic>> _allNotes = [];
   List<Map<String, dynamic>> _filteredNotes = [];
@@ -53,11 +54,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   List<Map<String, dynamic>> _appointments = [];
   List<Map<String, dynamic>> _expenses = [];
   List<Map<String, dynamic>> _quotes = [];
-  
+
   // AI Processing
   List<Map<String, dynamic>> _extractedItems = [];
   bool _isProcessing = false;
-  
+
   // UI State
   bool _isSearching = false;
   Map<String, dynamic>? _userData;
@@ -71,9 +72,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _loadUserData();
     _loadNotesData();
   }
-  
+
   void _initializeGemini() {
-    _model = GenerativeModel(model: 'gemini-2.0-flash-exp', apiKey: geminiApiKey);
+    _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: geminiApiKey);
   }
 
   @override
@@ -84,18 +85,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _speechTimer?.cancel();
     super.dispose();
   }
-  
+
   // Load user profile data
   Future<void> _loadUserData() async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
-    
+
     final doc = await _firestore.collection('users').doc(userId).get();
     if (mounted && doc.exists) {
       setState(() => _userData = doc.data());
     }
   }
-  
+
   // Load and categorize notes in real-time
   void _loadNotesData() {
     final userId = _auth.currentUser?.uid;
@@ -108,16 +109,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         .orderBy('createdAt', descending: true)
         .snapshots()
         .listen((snapshot) {
-      if (!mounted) return;
-      
-      setState(() {
-        _allNotes = snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-        _filteredNotes = _allNotes;
-        _categorizeNotes();
-      });
-    });
+          if (!mounted) return;
+
+          setState(() {
+            _allNotes = snapshot.docs
+                .map((doc) => {'id': doc.id, ...doc.data()})
+                .toList();
+            _filteredNotes = _allNotes;
+            _categorizeNotes();
+          });
+        });
   }
-  
+
   // Categorize notes by type
   void _categorizeNotes() {
     _tasks = _allNotes.where((n) => n['type'] == 'task').toList();
@@ -125,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _expenses = _allNotes.where((n) => n['type'] == 'expense').toList();
     _quotes = _allNotes.where((n) => n['type'] == 'quote').toList();
   }
-  
+
   // Filter notes by search query
   void _filterNotes(String query) {
     if (query.isEmpty) {
@@ -176,9 +179,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       drawer: _buildDrawer(),
     );
   }
-  
+
   // ==================== UI Components ====================
-  
+
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       elevation: 0,
@@ -204,10 +207,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               color: const Color(0xFF58CC02).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.book_rounded, color: Color(0xFF58CC02), size: 24),
+            child: const Icon(
+              Icons.book_rounded,
+              color: Color(0xFF58CC02),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 12),
-          Text('النوتة', style: GoogleFonts.tajawal(fontSize: 24, fontWeight: FontWeight.w700, color: const Color(0xFF3C3C3C))),
+          Text(
+            'النوتة',
+            style: GoogleFonts.tajawal(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF3C3C3C),
+            ),
+          ),
         ],
       ),
       actions: [
@@ -237,20 +251,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               color: const Color(0xFFFFD900).withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.notifications_outlined, color: Color(0xFFFFB800)),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: Color(0xFFFFB800),
+            ),
           ),
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً: الإشعارات'))),
+          onPressed: () => ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('قريباً: الإشعارات'))),
         ),
       ],
     );
   }
-  
+
   Widget _buildSearchBar() {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
-        decoration: BoxDecoration(color: const Color(0xFFF8F8F8), borderRadius: BorderRadius.circular(15)),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F8F8),
+          borderRadius: BorderRadius.circular(15),
+        ),
         child: TextField(
           controller: _searchController,
           onChanged: _filterNotes,
@@ -261,16 +283,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             hintStyle: GoogleFonts.tajawal(color: Colors.grey),
             prefixIcon: const Icon(Icons.search, color: Colors.grey),
             suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(icon: const Icon(Icons.clear, color: Colors.grey), onPressed: () { _searchController.clear(); _filterNotes(''); })
+                ? IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.grey),
+                    onPressed: () {
+                      _searchController.clear();
+                      _filterNotes('');
+                    },
+                  )
                 : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
         ),
       ),
     );
   }
-  
+
   Widget _buildTabBar() {
     return Container(
       color: Colors.white,
@@ -281,18 +312,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         indicatorWeight: 3,
         labelColor: const Color(0xFF58CC02),
         unselectedLabelColor: Colors.grey,
-        labelStyle: GoogleFonts.tajawal(fontWeight: FontWeight.w600, fontSize: 16),
+        labelStyle: GoogleFonts.tajawal(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
         tabs: [
           _buildTab(Icons.home_rounded, 'الرئيسية'),
           _buildTab(Icons.task_alt_rounded, 'المهام', _tasks.length),
-          _buildTab(Icons.calendar_month_rounded, 'المواعيد', _appointments.length),
+          _buildTab(
+            Icons.calendar_month_rounded,
+            'المواعيد',
+            _appointments.length,
+          ),
           _buildTab(Icons.attach_money_rounded, 'المصروفات', _expenses.length),
           _buildTab(Icons.format_quote_rounded, 'اقتباسات', _quotes.length),
         ],
       ),
     );
   }
-  
+
   Widget _buildTab(IconData icon, String label, [int? count]) {
     return Tab(
       child: Row(
@@ -304,15 +342,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: const Color(0xFF58CC02), borderRadius: BorderRadius.circular(10)),
-              child: Text(count.toString(), style: GoogleFonts.tajawal(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: GoogleFonts.tajawal(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
       ),
     );
   }
-  
+
   Widget _buildFAB() {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -321,11 +369,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         backgroundColor: const Color(0xFF58CC02),
         elevation: 8,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('إضافة جديد', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 16)),
+        label: Text(
+          'إضافة جديد',
+          style: GoogleFonts.tajawal(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
       ),
     );
   }
-  
+
   Widget _buildDrawer() {
     final user = _auth.currentUser;
     return Drawer(
@@ -335,44 +390,97 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF58CC02), Color(0xFF45A801)])),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF58CC02), Color(0xFF45A801)],
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 70, height: 70,
-                    decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3)),
-                    child: const Icon(Icons.person, size: 40, color: Color(0xFF58CC02)),
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      size: 40,
+                      color: Color(0xFF58CC02),
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Text(_userData?['name'] ?? 'المستخدم', style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
-                  Text(user?.email ?? '', style: GoogleFonts.tajawal(fontSize: 14, color: Colors.white70)),
+                  Text(
+                    _userData?['name'] ?? 'المستخدم',
+                    style: GoogleFonts.tajawal(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    user?.email ?? '',
+                    style: GoogleFonts.tajawal(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
                 ],
               ),
             ),
-            ListTile(leading: Icon(Icons.analytics_rounded, color: const Color(0xFF58CC02)), title: Text('الإحصائيات', style: GoogleFonts.tajawal()), onTap: () => Navigator.pop(context)),
-            ListTile(leading: Icon(Icons.settings_rounded, color: const Color(0xFF58CC02)), title: Text('الإعدادات', style: GoogleFonts.tajawal()), onTap: () => Navigator.pop(context)),
+            ListTile(
+              leading: Icon(
+                Icons.analytics_rounded,
+                color: const Color(0xFF58CC02),
+              ),
+              title: Text('الإحصائيات', style: GoogleFonts.tajawal()),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.settings_rounded,
+                color: const Color(0xFF58CC02),
+              ),
+              title: Text('الإعدادات', style: GoogleFonts.tajawal()),
+              onTap: () => Navigator.pop(context),
+            ),
             const Divider(),
-            ListTile(leading: Icon(Icons.logout_rounded, color: Colors.red), title: Text('تسجيل الخروج', style: GoogleFonts.tajawal()), onTap: () { Navigator.pop(context); _handleLogout(); }),
+            ListTile(
+              leading: Icon(Icons.logout_rounded, color: Colors.red),
+              title: Text('تسجيل الخروج', style: GoogleFonts.tajawal()),
+              onTap: () {
+                Navigator.pop(context);
+                _handleLogout();
+              },
+            ),
           ],
         ),
       ),
     );
   }
-  
+
   // ==================== Tab Content ====================
-  
+
   Widget _buildHomeTab() {
     final notes = _isSearching ? _filteredNotes : _allNotes;
     return AnimationLimiter(
       child: RefreshIndicator(
-        onRefresh: () async { await _loadUserData(); _loadNotesData(); },
+        onRefresh: () async {
+          await _loadUserData();
+          _loadNotesData();
+        },
         color: const Color(0xFF58CC02),
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: AnimationConfiguration.toStaggeredList(
             duration: const Duration(milliseconds: 375),
-            childAnimationBuilder: (widget) => SlideAnimation(horizontalOffset: 50.0, child: FadeInAnimation(child: widget)),
+            childAnimationBuilder: (widget) => SlideAnimation(
+              horizontalOffset: 50.0,
+              child: FadeInAnimation(child: widget),
+            ),
             children: [
               if (!_isSearching) ...[
                 _buildWelcomeCard(),
@@ -384,72 +492,160 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
               Row(
                 children: [
-                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFF58CC02).withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.history_rounded, color: Color(0xFF58CC02), size: 20)),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF58CC02).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.history_rounded,
+                      color: Color(0xFF58CC02),
+                      size: 20,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Text(_isSearching ? 'نتائج البحث (${notes.length})' : 'آخر الملاحظات', style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(
+                    _isSearching
+                        ? 'نتائج البحث (${notes.length})'
+                        : 'آخر الملاحظات',
+                    style: GoogleFonts.tajawal(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               if (notes.isEmpty)
                 Container(
                   height: 200,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.withOpacity(0.2), width: 2)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.grey.withOpacity(0.2),
+                      width: 2,
+                    ),
+                  ),
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(_isSearching ? Icons.search_off_rounded : Icons.note_add_rounded, size: 48, color: Colors.grey),
+                        Icon(
+                          _isSearching
+                              ? Icons.search_off_rounded
+                              : Icons.note_add_rounded,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 12),
-                        Text(_isSearching ? 'لا توجد نتائج' : 'لا توجد ملاحظات', style: GoogleFonts.tajawal(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w500)),
+                        Text(
+                          _isSearching ? 'لا توجد نتائج' : 'لا توجد ملاحظات',
+                          style: GoogleFonts.tajawal(
+                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 )
               else
-                ...notes.take(_isSearching ? notes.length : 10).map((n) => _buildNoteCard(n)),
+                ...notes
+                    .take(_isSearching ? notes.length : 10)
+                    .map((n) => _buildNoteCard(n)),
             ],
           ),
         ),
       ),
     );
   }
-  
-  Widget _buildTasksTab() => _buildListTab(_tasks, Icons.task_alt_rounded, 'لا توجد مهام');
-  Widget _buildAppointmentsTab() => _buildListTab(_appointments, Icons.calendar_month_rounded, 'لا توجد مواعيد');
-  Widget _buildExpensesTab() => _buildListTab(_expenses, Icons.attach_money_rounded, 'لا توجد مصروفات');
-  Widget _buildQuotesTab() => _buildListTab(_quotes, Icons.format_quote_rounded, 'لا توجد اقتباسات');
-  
-  Widget _buildListTab(List<Map<String, dynamic>> items, IconData emptyIcon, String emptyText) {
+
+  Widget _buildTasksTab() =>
+      _buildListTab(_tasks, Icons.task_alt_rounded, 'لا توجد مهام');
+  Widget _buildAppointmentsTab() => _buildListTab(
+    _appointments,
+    Icons.calendar_month_rounded,
+    'لا توجد مواعيد',
+  );
+  Widget _buildExpensesTab() =>
+      _buildListTab(_expenses, Icons.attach_money_rounded, 'لا توجد مصروفات');
+  Widget _buildQuotesTab() =>
+      _buildListTab(_quotes, Icons.format_quote_rounded, 'لا توجد اقتباسات');
+
+  Widget _buildListTab(
+    List<Map<String, dynamic>> items,
+    IconData emptyIcon,
+    String emptyText,
+  ) {
     return AnimationLimiter(
       child: RefreshIndicator(
         onRefresh: () async => _loadNotesData(),
         color: const Color(0xFF58CC02),
         child: items.isEmpty
-            ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(emptyIcon, size: 80, color: Colors.grey[400]), const SizedBox(height: 16), Text(emptyText, style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[700]))]))
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(emptyIcon, size: 80, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      emptyText,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              )
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: items.length,
-                itemBuilder: (context, index) => AnimationConfiguration.staggeredList(
-                  position: index,
-                  duration: const Duration(milliseconds: 375),
-                  child: SlideAnimation(verticalOffset: 50, child: FadeInAnimation(child: _buildNoteCard(items[index]))),
-                ),
+                itemBuilder: (context, index) =>
+                    AnimationConfiguration.staggeredList(
+                      position: index,
+                      duration: const Duration(milliseconds: 375),
+                      child: SlideAnimation(
+                        verticalOffset: 50,
+                        child: FadeInAnimation(
+                          child: _buildNoteCard(items[index]),
+                        ),
+                      ),
+                    ),
               ),
       ),
     );
   }
-  
+
   // ==================== Widgets ====================
-  
+
   Widget _buildWelcomeCard() {
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'مساء الخير';
+    final greeting = hour < 12
+        ? 'صباح الخير'
+        : hour < 18
+        ? 'مساء الخير'
+        : 'مساء الخير';
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF58CC02), Color(0xFF45A801)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF58CC02), Color(0xFF45A801)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: const Color(0xFF58CC02).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF58CC02).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -457,25 +653,53 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('$greeting، ${_userData?['name'] ?? 'صديقي'}', style: GoogleFonts.tajawal(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text(
+                  '$greeting، ${_userData?['name'] ?? 'صديقي'}',
+                  style: GoogleFonts.tajawal(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text('لديك ${_tasks.where((t) => t['completed'] != true).length} مهمة غير مكتملة', style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white.withOpacity(0.9))),
+                Text(
+                  'لديك ${_tasks.where((t) => t['completed'] != true).length} مهمة غير مكتملة',
+                  style: GoogleFonts.tajawal(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(15)),
-            child: Icon(hour < 12 ? Icons.wb_sunny_rounded : hour < 18 ? Icons.wb_twilight_rounded : Icons.nightlight_rounded, color: Colors.white, size: 32),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              hour < 12
+                  ? Icons.wb_sunny_rounded
+                  : hour < 18
+                  ? Icons.wb_twilight_rounded
+                  : Icons.nightlight_rounded,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildStatsCards() {
     final pending = _tasks.where((t) => t['completed'] != true).length;
-    final totalExp = _expenses.fold<double>(0, (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble());
+    final totalExp = _expenses.fold<double>(
+      0,
+      (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble(),
+    );
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -484,18 +708,53 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       crossAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _buildStatCard('المهام المعلقة', pending.toString(), Icons.pending_actions_rounded, const Color(0xFF58CC02)),
-        _buildStatCard('المواعيد', _appointments.length.toString(), Icons.event_available_rounded, const Color(0xFFFFB800)),
-        _buildStatCard('المصروفات', totalExp.toStringAsFixed(0), Icons.account_balance_wallet_rounded, Colors.blue),
-        _buildStatCard('الاقتباسات', _quotes.length.toString(), Icons.format_quote_rounded, Colors.purple),
+        _buildStatCard(
+          'المهام المعلقة',
+          pending.toString(),
+          Icons.pending_actions_rounded,
+          const Color(0xFF58CC02),
+        ),
+        _buildStatCard(
+          'المواعيد',
+          _appointments.length.toString(),
+          Icons.event_available_rounded,
+          const Color(0xFFFFB800),
+        ),
+        _buildStatCard(
+          'المصروفات',
+          totalExp.toStringAsFixed(0),
+          Icons.account_balance_wallet_rounded,
+          Colors.blue,
+        ),
+        _buildStatCard(
+          'الاقتباسات',
+          _quotes.length.toString(),
+          Icons.format_quote_rounded,
+          Colors.purple,
+        ),
       ],
     );
   }
-  
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -503,39 +762,96 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 20)),
-              Text(value, style: GoogleFonts.tajawal(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              Text(
+                value,
+                style: GoogleFonts.tajawal(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
             ],
           ),
-          Text(title, style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey[700])),
+          Text(
+            title,
+            style: GoogleFonts.tajawal(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
         ],
       ),
     );
   }
-  
+
   Widget _buildQuickActions() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('إجراءات سريعة', style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w600)),
+          Text(
+            'إجراءات سريعة',
+            style: GoogleFonts.tajawal(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildQuickBtn(Icons.add_task_rounded, 'مهمة', const Color(0xFF58CC02), 'task'),
-              _buildQuickBtn(Icons.event_rounded, 'موعد', const Color(0xFFFFB800), 'appointment'),
-              _buildQuickBtn(Icons.receipt_long_rounded, 'مصروف', Colors.blue, 'expense'),
-              _buildQuickBtn(Icons.format_quote_rounded, 'اقتباس', Colors.purple, 'quote'),
+              _buildQuickBtn(
+                Icons.add_task_rounded,
+                'مهمة',
+                const Color(0xFF58CC02),
+                'task',
+              ),
+              _buildQuickBtn(
+                Icons.event_rounded,
+                'موعد',
+                const Color(0xFFFFB800),
+                'appointment',
+              ),
+              _buildQuickBtn(
+                Icons.receipt_long_rounded,
+                'مصروف',
+                Colors.blue,
+                'expense',
+              ),
+              _buildQuickBtn(
+                Icons.format_quote_rounded,
+                'اقتباس',
+                Colors.purple,
+                'quote',
+              ),
             ],
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildQuickBtn(IconData icon, String label, Color color, String type) {
     return InkWell(
       onTap: () => _showAddDialog(type),
@@ -544,26 +860,55 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            Container(width: 48, height: 48, decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
             const SizedBox(height: 8),
-            Text(label, style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w500)),
+            Text(
+              label,
+              style: GoogleFonts.tajawal(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildNoteCard(Map<String, dynamic> note) {
     final type = note['type'] ?? 'note';
-    IconData icon; Color color;
+    IconData icon;
+    Color color;
     switch (type) {
-      case 'task': icon = Icons.task_alt_rounded; color = const Color(0xFF58CC02); break;
-      case 'appointment': icon = Icons.calendar_month_rounded; color = const Color(0xFFFFB800); break;
-      case 'expense': icon = Icons.attach_money_rounded; color = Colors.blue; break;
-      case 'quote': icon = Icons.format_quote_rounded; color = Colors.purple; break;
-      default: icon = Icons.note_rounded; color = Colors.grey;
+      case 'task':
+        icon = Icons.task_alt_rounded;
+        color = const Color(0xFF58CC02);
+        break;
+      case 'appointment':
+        icon = Icons.calendar_month_rounded;
+        color = const Color(0xFFFFB800);
+        break;
+      case 'expense':
+        icon = Icons.attach_money_rounded;
+        color = Colors.blue;
+        break;
+      case 'quote':
+        icon = Icons.format_quote_rounded;
+        color = Colors.purple;
+        break;
+      default:
+        icon = Icons.note_rounded;
+        color = Colors.grey;
     }
-    
+
     // عرض مختلف حسب النوع
     if (type == 'appointment') {
       return _buildAppointmentCard(note, icon, color);
@@ -572,11 +917,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } else if (type == 'quote') {
       return _buildQuoteCard(note, icon, color);
     }
-    
+
     // Default card with optional image
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
@@ -589,30 +944,91 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             children: [
               if (note['imageUrl'] != null)
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Image.network(note['imageUrl'], height: 150, width: double.infinity, fit: BoxFit.cover),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: Image.network(
+                    note['imageUrl'],
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: color, size: 24),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(note['title'] ?? '', style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text(
+                            note['title'] ?? '',
+                            style: GoogleFonts.tajawal(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           const SizedBox(height: 4),
-                          Text(note['content'] ?? '', style: GoogleFonts.tajawal(fontSize: 14, color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis),
+                          Text(
+                            note['content'] ?? '',
+                            style: GoogleFonts.tajawal(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
                     PopupMenuButton(
                       icon: Icon(Icons.more_vert, color: Colors.grey[400]),
                       itemBuilder: (ctx) => [
-                        PopupMenuItem(child: Row(children: [const Icon(Icons.edit, size: 20), const SizedBox(width: 12), Text('تعديل', style: GoogleFonts.tajawal())]), onTap: () => Future.delayed(Duration.zero, () => _editNote(note))),
-                        PopupMenuItem(child: Row(children: [const Icon(Icons.delete, size: 20, color: Colors.red), const SizedBox(width: 12), Text('حذف', style: GoogleFonts.tajawal(color: Colors.red))]), onTap: () => Future.delayed(Duration.zero, () => _deleteNote(note['id']))),
+                        PopupMenuItem(
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit, size: 20),
+                              const SizedBox(width: 12),
+                              Text('تعديل', style: GoogleFonts.tajawal()),
+                            ],
+                          ),
+                          onTap: () => Future.delayed(
+                            Duration.zero,
+                            () => _editNote(note),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete,
+                                size: 20,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'حذف',
+                                style: GoogleFonts.tajawal(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                          onTap: () => Future.delayed(
+                            Duration.zero,
+                            () => _deleteNote(note['id']),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -624,13 +1040,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
-  Widget _buildAppointmentCard(Map<String, dynamic> appointment, IconData icon, Color color) {
+
+  Widget _buildAppointmentCard(
+    Map<String, dynamic> appointment,
+    IconData icon,
+    Color color,
+  ) {
     String? dateStr;
     if (appointment['date'] != null) {
       try {
         if (appointment['date'] is Timestamp) {
-          dateStr = (appointment['date'] as Timestamp).toDate().toString().substring(0, 10);
+          dateStr = (appointment['date'] as Timestamp)
+              .toDate()
+              .toString()
+              .substring(0, 10);
         } else {
           dateStr = appointment['date'];
         }
@@ -638,10 +1061,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         dateStr = null;
       }
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () => _showNoteDetails(appointment),
         borderRadius: BorderRadius.circular(16),
@@ -653,49 +1086,110 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(dateStr.split('-')[2], style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
-                      Text(dateStr.split('-')[1], style: GoogleFonts.tajawal(fontSize: 12, color: color)),
+                      Text(
+                        dateStr.split('-')[2],
+                        style: GoogleFonts.tajawal(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                      Text(
+                        dateStr.split('-')[1],
+                        style: GoogleFonts.tajawal(fontSize: 12, color: color),
+                      ),
                     ],
                   ),
                 )
               else
-                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(appointment['title'] ?? '', style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text(
+                      appointment['title'] ?? '',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     if (appointment['time'] != null)
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                          const Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
-                          Text(appointment['time'], style: GoogleFonts.tajawal(color: Colors.grey[600], fontSize: 14)),
+                          Text(
+                            appointment['time'],
+                            style: GoogleFonts.tajawal(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
                         ],
                       ),
                     if (appointment['content'] != null)
-                      Text(appointment['content'], style: GoogleFonts.tajawal(color: Colors.grey[600], fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(
+                        appointment['content'],
+                        style: GoogleFonts.tajawal(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                   ],
                 ),
               ),
-              IconButton(icon: const Icon(Icons.more_vert), onPressed: () => _showNoteOptions(appointment)),
+              IconButton(
+                icon: const Icon(Icons.more_vert),
+                onPressed: () => _showNoteOptions(appointment),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-  
-  Widget _buildExpenseCard(Map<String, dynamic> expense, IconData icon, Color color) {
+
+  Widget _buildExpenseCard(
+    Map<String, dynamic> expense,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () => _showNoteDetails(expense),
         borderRadius: BorderRadius.circular(16),
@@ -703,33 +1197,72 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(expense['title'] ?? '', style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text(
+                      expense['title'] ?? '',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(expense['content'] ?? '', style: GoogleFonts.tajawal(color: Colors.grey[600], fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(
+                      expense['content'] ?? '',
+                      style: GoogleFonts.tajawal(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
-              Text('${expense['amount'] ?? 0} ${expense['currency'] ?? 'ر.س'}', style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
-              IconButton(icon: const Icon(Icons.more_vert), onPressed: () => _showNoteOptions(expense)),
+              Text(
+                '${expense['amount'] ?? 0} ${expense['currency'] ?? 'ر.س'}',
+                style: GoogleFonts.tajawal(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.more_vert),
+                onPressed: () => _showNoteOptions(expense),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-  
-  Widget _buildQuoteCard(Map<String, dynamic> quote, IconData icon, Color color) {
+
+  Widget _buildQuoteCard(
+    Map<String, dynamic> quote,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color.withOpacity(0.1), color.withOpacity(0.05)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.3), width: 2),
       ),
@@ -740,12 +1273,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             Icon(Icons.format_quote_rounded, color: color, size: 32),
             const SizedBox(height: 12),
-            Text(quote['content'] ?? quote['title'] ?? '', style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black87), textAlign: TextAlign.right),
+            Text(
+              quote['content'] ?? quote['title'] ?? '',
+              style: GoogleFonts.tajawal(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.right,
+            ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(icon: const Icon(Icons.more_vert), onPressed: () => _showNoteOptions(quote)),
+                IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () => _showNoteOptions(quote),
+                ),
               ],
             ),
           ],
@@ -753,9 +1297,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   // ==================== Dialogs & Actions ====================
-  
+
   void _showQuickAddSheet() {
     showModalBottomSheet(
       context: context,
@@ -763,61 +1307,132 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       isScrollControlled: true,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 20),
-            Text('إضافة جديد', style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              'إضافة جديد',
+              style: GoogleFonts.tajawal(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 20),
-            
+
             // طرق الإدخال الذكية
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFFF8F8F8), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F8F8),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('إدخال ذكي بالـ AI', style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(
+                    'إدخال ذكي بالـ AI',
+                    style: GoogleFonts.tajawal(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildAIInputOption(Icons.keyboard_rounded, 'نص', const Color(0xFF58CC02), () {
-                        Navigator.pop(ctx);
-                        _showTextInputDialog();
-                      }),
-                      _buildAIInputOption(Icons.mic_rounded, 'صوت', const Color(0xFFFFB800), () {
-                        Navigator.pop(ctx);
-                        _startVoiceInput();
-                      }),
-                      _buildAIInputOption(Icons.camera_alt_rounded, 'كاميرا', Colors.blue, () {
-                        Navigator.pop(ctx);
-                        _pickImage(ImageSource.camera);
-                      }),
-                      _buildAIInputOption(Icons.image_rounded, 'صورة', Colors.purple, () {
-                        Navigator.pop(ctx);
-                        _pickImage(ImageSource.gallery);
-                      }),
+                      _buildAIInputOption(
+                        Icons.keyboard_rounded,
+                        'نص',
+                        const Color(0xFF58CC02),
+                        () {
+                          Navigator.pop(ctx);
+                          _showTextInputDialog();
+                        },
+                      ),
+                      _buildAIInputOption(
+                        Icons.mic_rounded,
+                        'صوت',
+                        const Color(0xFFFFB800),
+                        () {
+                          Navigator.pop(ctx);
+                          _startVoiceInput();
+                        },
+                      ),
+                      _buildAIInputOption(
+                        Icons.camera_alt_rounded,
+                        'كاميرا',
+                        Colors.blue,
+                        () {
+                          Navigator.pop(ctx);
+                          _pickImage(ImageSource.camera);
+                        },
+                      ),
+                      _buildAIInputOption(
+                        Icons.image_rounded,
+                        'صورة',
+                        Colors.purple,
+                        () {
+                          Navigator.pop(ctx);
+                          _pickImage(ImageSource.gallery);
+                        },
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // الإضافة اليدوية
-            Text('أو إضافة يدوية', style: GoogleFonts.tajawal(fontSize: 14, color: Colors.grey)),
+            Text(
+              'أو إضافة يدوية',
+              style: GoogleFonts.tajawal(fontSize: 14, color: Colors.grey),
+            ),
             const SizedBox(height: 12),
             GridView.count(
               shrinkWrap: true,
               crossAxisCount: 4,
               children: [
-                _buildQuickAddOption(Icons.add_task_rounded, 'مهمة', const Color(0xFF58CC02), 'task'),
-                _buildQuickAddOption(Icons.event_rounded, 'موعد', const Color(0xFFFFB800), 'appointment'),
-                _buildQuickAddOption(Icons.receipt_long_rounded, 'مصروف', Colors.blue, 'expense'),
-                _buildQuickAddOption(Icons.format_quote_rounded, 'اقتباس', Colors.purple, 'quote'),
+                _buildQuickAddOption(
+                  Icons.add_task_rounded,
+                  'مهمة',
+                  const Color(0xFF58CC02),
+                  'task',
+                ),
+                _buildQuickAddOption(
+                  Icons.event_rounded,
+                  'موعد',
+                  const Color(0xFFFFB800),
+                  'appointment',
+                ),
+                _buildQuickAddOption(
+                  Icons.receipt_long_rounded,
+                  'مصروف',
+                  Colors.blue,
+                  'expense',
+                ),
+                _buildQuickAddOption(
+                  Icons.format_quote_rounded,
+                  'اقتباس',
+                  Colors.purple,
+                  'quote',
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -826,8 +1441,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
-  Widget _buildAIInputOption(IconData icon, String label, Color color, VoidCallback onTap) {
+
+  Widget _buildAIInputOption(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -836,16 +1456,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(label, style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: GoogleFonts.tajawal(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
-  
+
   void _showTextInputDialog() {
     showDialog(
       context: context,
@@ -855,11 +1484,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: const Color(0xFF58CC02).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF58CC02)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                color: Color(0xFF58CC02),
+              ),
             ),
             const SizedBox(width: 12),
-            Text('إدخال ذكي', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
+            Text(
+              'إدخال ذكي',
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         content: Column(
@@ -878,15 +1516,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFF8F8F8), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F8F8),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 children: [
-                  const Icon(Icons.tips_and_updates, size: 16, color: Color(0xFF58CC02)),
+                  const Icon(
+                    Icons.tips_and_updates,
+                    size: 16,
+                    color: Color(0xFF58CC02),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'مثال: اشتري حليب غداً، اجتماع الساعة 3، دفعت 50 جنيه',
-                      style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey[600]),
+                      style: GoogleFonts.tajawal(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ),
                 ],
@@ -895,72 +1543,134 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: GoogleFonts.tajawal())),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF58CC02),
+            ),
             onPressed: () async {
               if (_noteController.text.trim().isEmpty) return;
               Navigator.pop(ctx);
               await _processTextWithAI(_noteController.text);
               _noteController.clear();
             },
-            child: Text('تحليل', style: GoogleFonts.tajawal(color: Colors.white)),
+            child: Text(
+              'تحليل',
+              style: GoogleFonts.tajawal(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildQuickAddOption(IconData icon, String label, Color color, String type) {
+
+  Widget _buildQuickAddOption(
+    IconData icon,
+    String label,
+    Color color,
+    String type,
+  ) {
     return InkWell(
-      onTap: () { Navigator.pop(context); _showAddDialog(type); },
+      onTap: () {
+        Navigator.pop(context);
+        _showAddDialog(type);
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16)), child: Icon(icon, color: color, size: 28)),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
           const SizedBox(height: 8),
-          Text(label, style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: GoogleFonts.tajawal(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
-  
+
   void _showAddDialog(String type) {
     final titleCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
-    final typeLabel = type == 'task' ? 'مهمة' : type == 'appointment' ? 'موعد' : type == 'expense' ? 'مصروف' : 'اقتباس';
-    
+    final typeLabel = type == 'task'
+        ? 'مهمة'
+        : type == 'appointment'
+        ? 'موعد'
+        : type == 'expense'
+        ? 'مصروف'
+        : 'اقتباس';
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('إضافة $typeLabel', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+        title: Text(
+          'إضافة $typeLabel',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'العنوان', border: OutlineInputBorder())),
+            TextField(
+              controller: titleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'العنوان',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 16),
-            TextField(controller: contentCtrl, decoration: const InputDecoration(labelText: 'المحتوى', border: OutlineInputBorder()), maxLines: 3),
+            TextField(
+              controller: contentCtrl,
+              decoration: const InputDecoration(
+                labelText: 'المحتوى',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: GoogleFonts.tajawal())),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF58CC02),
+            ),
             onPressed: () async {
               if (titleCtrl.text.trim().isEmpty) return;
               final userId = _auth.currentUser?.uid;
               if (userId == null) return;
-              await _firestore.collection('users').doc(userId).collection('notes').add({
-                'title': titleCtrl.text.trim(),
-                'content': contentCtrl.text.trim(),
-                'type': type,
-                'createdAt': FieldValue.serverTimestamp(),
-                'updatedAt': FieldValue.serverTimestamp(),
-                'completed': false,
-              });
+              await _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .add({
+                    'title': titleCtrl.text.trim(),
+                    'content': contentCtrl.text.trim(),
+                    'type': type,
+                    'createdAt': FieldValue.serverTimestamp(),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                    'completed': false,
+                  });
               if (context.mounted) {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إضافة $typeLabel بنجاح')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('تم إضافة $typeLabel بنجاح')),
+                );
               }
             },
             child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
@@ -969,18 +1679,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _showNoteDetails(Map<String, dynamic> note) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(note['title'] ?? 'بدون عنوان', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
-        content: Text(note['content'] ?? 'لا يوجد محتوى', style: GoogleFonts.tajawal(fontSize: 16)),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إغلاق', style: GoogleFonts.tajawal()))],
+        title: Text(
+          note['title'] ?? 'بدون عنوان',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          note['content'] ?? 'لا يوجد محتوى',
+          style: GoogleFonts.tajawal(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إغلاق', style: GoogleFonts.tajawal()),
+          ),
+        ],
       ),
     );
   }
-  
+
   void _showNoteOptions(Map<String, dynamic> note) {
     showModalBottomSheet(
       context: context,
@@ -989,45 +1710,87 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(leading: const Icon(Icons.edit, color: Color(0xFF58CC02)), title: Text('تعديل', style: GoogleFonts.tajawal()), onTap: () { Navigator.pop(ctx); _editNote(note); }),
-            ListTile(leading: const Icon(Icons.delete, color: Colors.red), title: Text('حذف', style: GoogleFonts.tajawal(color: Colors.red)), onTap: () { Navigator.pop(ctx); _deleteNote(note['id']); }),
+            ListTile(
+              leading: const Icon(Icons.edit, color: Color(0xFF58CC02)),
+              title: Text('تعديل', style: GoogleFonts.tajawal()),
+              onTap: () {
+                Navigator.pop(ctx);
+                _editNote(note);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: Text('حذف', style: GoogleFonts.tajawal(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _deleteNote(note['id']);
+              },
+            ),
           ],
         ),
       ),
     );
   }
-  
+
   void _editNote(Map<String, dynamic> note) {
     final titleCtrl = TextEditingController(text: note['title']);
     final contentCtrl = TextEditingController(text: note['content']);
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('تعديل الملاحظة', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+        title: Text(
+          'تعديل الملاحظة',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'العنوان', border: OutlineInputBorder())),
+            TextField(
+              controller: titleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'العنوان',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 16),
-            TextField(controller: contentCtrl, decoration: const InputDecoration(labelText: 'المحتوى', border: OutlineInputBorder()), maxLines: 3),
+            TextField(
+              controller: contentCtrl,
+              decoration: const InputDecoration(
+                labelText: 'المحتوى',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: GoogleFonts.tajawal())),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF58CC02),
+            ),
             onPressed: () async {
               final userId = _auth.currentUser?.uid;
               if (userId == null) return;
-              await _firestore.collection('users').doc(userId).collection('notes').doc(note['id']).update({
-                'title': titleCtrl.text.trim(),
-                'content': contentCtrl.text.trim(),
-                'updatedAt': FieldValue.serverTimestamp(),
-              });
+              await _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .doc(note['id'])
+                  .update({
+                    'title': titleCtrl.text.trim(),
+                    'content': contentCtrl.text.trim(),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                  });
               if (context.mounted) {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم التحديث')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('تم التحديث')));
               }
             },
             child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
@@ -1036,25 +1799,38 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _deleteNote(String? docId) {
     if (docId == null) return;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('حذف الملاحظة', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+        title: Text(
+          'حذف الملاحظة',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
         content: Text('هل أنت متأكد؟', style: GoogleFonts.tajawal()),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: GoogleFonts.tajawal())),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               final userId = _auth.currentUser?.uid;
               if (userId == null) return;
-              await _firestore.collection('users').doc(userId).collection('notes').doc(docId).delete();
+              await _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .doc(docId)
+                  .delete();
               if (context.mounted) {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحذف')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('تم الحذف')));
               }
             },
             child: Text('حذف', style: GoogleFonts.tajawal(color: Colors.white)),
@@ -1063,19 +1839,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('تسجيل الخروج', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+        title: Text(
+          'تسجيل الخروج',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
         content: Text('هل أنت متأكد؟', style: GoogleFonts.tajawal()),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('إلغاء', style: GoogleFonts.tajawal())),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('تسجيل الخروج', style: GoogleFonts.tajawal(color: Colors.white)),
+            child: Text(
+              'تسجيل الخروج',
+              style: GoogleFonts.tajawal(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -1090,68 +1875,113 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       }
     }
   }
-  
+
   // ==================== AI Features ====================
-  
+
   Future<void> _processTextWithAI(String text) async {
     _showLoadingDialog('الذكاء الاصطناعي يحلل النص...');
 
     try {
       final prompt = '''
-      قم بتحليل النص التالي واستخرج جميع العناصر المختلفة منه.
-      
-      النص: "$text"
-      
-      قم باستخراج:
-      1. المهام - أي شيء يحتاج إلى إنجاز
-      2. المواعيد - أي حدث له وقت أو تاريخ محدد  
-      3. المصروفات - أي ذكر للمال أو المشتريات
-      4. الاقتباسات - أي عبارات ملهمة أو حكم
-      5. الملاحظات العامة
-      
-      أرجع النتيجة كـ JSON:
-      {
-        "items": [
-          {
-            "type": "task/appointment/expense/quote/note",
-            "title": "عنوان مناسب قصير",
-            "content": "المحتوى الكامل",
-            "date": "التاريخ YYYY-MM-DD إن وجد",
-            "time": "الوقت HH:MM إن وجد",
-            "amount": رقم المبلغ إن وجد,
-            "currency": "العملة",
-            "priority": "high/medium/low",
-            "tags": ["وسوم مناسبة"]
-          }
-        ]
-      }
-      ''';
+قم بتحليل النص التالي واستخراج جميع العناصر منه بدقة:
+
+النص: "$text"
+
+استخرج العناصر التالية:
+- المهام: أي شيء يحتاج إنجاز (مثل: اشتري، اعمل، راجع، اتصل)
+- المواعيد: أي حدث بتاريخ/وقت (مثل: اجتماع، موعد، غداً، الساعة)
+- المصروفات: أي ذكر للمال (مثل: دفعت، اشتريت، جنيه، ريال، دولار)
+- الاقتباسات: عبارات ملهمة أو حكم
+- الملاحظات: أي شيء آخر
+
+أرجع JSON فقط بدون أي نص إضافي:
+{
+  "items": [
+    {
+      "type": "task",
+      "title": "عنوان قصير (3-5 كلمات)",
+      "content": "المحتوى الكامل",
+      "date": "YYYY-MM-DD أو null",
+      "time": "HH:MM أو null",
+      "amount": رقم أو null,
+      "currency": "ر.س/جنيه/دولار أو null"
+    }
+  ]
+}
+
+مهم جداً: 
+- أرجع JSON صحيح فقط
+- type يجب أن يكون: task أو appointment أو expense أو quote أو note
+- التاريخ بصيغة YYYY-MM-DD
+- الوقت بصيغة 24 ساعة HH:MM
+''';
 
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
 
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
 
-      if (response.text != null) {
-        final jsonStr = response.text!.replaceAll('```json', '').replaceAll('```', '').trim();
-        try {
-          final data = json.decode(jsonStr);
-          if (data['items'] != null && data['items'] is List) {
-            setState(() {
-              _extractedItems = List<Map<String, dynamic>>.from(data['items']);
-            });
-            _showExtractedItemsDialog();
+      if (response.text != null && response.text!.isNotEmpty) {
+        print('AI Response: ${response.text}'); // للتشخيص
+        
+        var jsonStr = response.text!.trim();
+        
+        // تنظيف النص
+        jsonStr = jsonStr.replaceAll('```json', '');
+        jsonStr = jsonStr.replaceAll('```', '');
+        jsonStr = jsonStr.trim();
+        
+        // إزالة أي نص قبل أو بعد JSON
+        final jsonStart = jsonStr.indexOf('{');
+        final jsonEnd = jsonStr.lastIndexOf('}');
+        
+        if (jsonStart != -1 && jsonEnd != -1) {
+          jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
+          
+          try {
+            final data = json.decode(jsonStr);
+            
+            if (data['items'] != null && data['items'] is List && (data['items'] as List).isNotEmpty) {
+              setState(() {
+                _extractedItems = List<Map<String, dynamic>>.from(data['items']);
+              });
+              _showExtractedItemsDialog();
+              return;
+            }
+          } catch (e) {
+            print('JSON Parse Error: $e'); // للتشخيص
+            print('JSON String: $jsonStr'); // للتشخيص
           }
-        } catch (e) {
-          await _saveNote({'type': 'note', 'title': text.length > 30 ? '${text.substring(0, 30)}...' : text, 'content': text});
         }
       }
+      
+      // إذا فشل التحليل، احفظ كملاحظة عادية
+      if (mounted) {
+        await _saveNote({
+          'type': 'note',
+          'title': text.length > 30 ? '${text.substring(0, 30)}...' : text,
+          'content': text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
+        );
+      }
     } catch (e) {
-      Navigator.pop(context);
-      await _saveNote({'type': 'note', 'title': text.length > 30 ? '${text.substring(0, 30)}...' : text, 'content': text});
+      print('AI Error: $e'); // للتشخيص
+      if (mounted) {
+        Navigator.pop(context);
+        await _saveNote({
+          'type': 'note',
+          'title': text.length > 30 ? '${text.substring(0, 30)}...' : text,
+          'content': text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في التحليل. تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal()), backgroundColor: Colors.orange),
+        );
+      }
     }
   }
-  
+
   Future<void> _startVoiceInput() async {
     var status = await Permission.microphone.status;
     if (!status.isGranted) {
@@ -1160,7 +1990,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     bool available = await _speech.initialize();
     if (!available) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('التعرف على الصوت غير متاح', style: GoogleFonts.tajawal()), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'التعرف على الصوت غير متاح',
+            style: GoogleFonts.tajawal(),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -1173,7 +2011,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1183,28 +2023,58 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: _isListening ? [const Color(0xFFFFB800), const Color(0xFFFFD900)] : [Colors.grey[400]!, Colors.grey[600]!],
+                    colors: _isListening
+                        ? [const Color(0xFFFFB800), const Color(0xFFFFD900)]
+                        : [Colors.grey[400]!, Colors.grey[600]!],
                   ),
                 ),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    if (_isListening) Lottie.network('https://assets10.lottiefiles.com/packages/lf20_p7ml1rhe.json', width: 150, height: 150),
-                    Icon(_isListening ? Icons.mic : Icons.mic_off, color: Colors.white, size: 48),
+                    if (_isListening)
+                      Lottie.network(
+                        'https://assets10.lottiefiles.com/packages/lf20_p7ml1rhe.json',
+                        width: 150,
+                        height: 150,
+                      ),
+                    Icon(
+                      _isListening ? Icons.mic : Icons.mic_off,
+                      color: Colors.white,
+                      size: 48,
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-              Text(_isListening ? 'أستمع إليك...' : 'اضغط للتحدث', style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text(
+                _isListening ? 'أستمع إليك...' : 'اضغط للتحدث',
+                style: GoogleFonts.tajawal(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: const Color(0xFFF8F8F8), borderRadius: BorderRadius.circular(12)),
-                constraints: const BoxConstraints(minHeight: 100, maxHeight: 200),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F8F8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                constraints: const BoxConstraints(
+                  minHeight: 100,
+                  maxHeight: 200,
+                ),
                 child: SingleChildScrollView(
                   child: Text(
-                    _fullSpeechText.isEmpty ? 'ابدأ بالتحدث...' : _fullSpeechText,
-                    style: GoogleFonts.tajawal(color: _fullSpeechText.isEmpty ? Colors.grey : Colors.black, fontSize: 14),
+                    _fullSpeechText.isEmpty
+                        ? 'ابدأ بالتحدث...'
+                        : _fullSpeechText,
+                    style: GoogleFonts.tajawal(
+                      color: _fullSpeechText.isEmpty
+                          ? Colors.grey
+                          : Colors.black,
+                      fontSize: 14,
+                    ),
                     textAlign: TextAlign.right,
                   ),
                 ),
@@ -1222,8 +2092,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Navigator.pop(context);
                     },
                     icon: const Icon(Icons.close, color: Colors.white),
-                    label: Text('إلغاء', style: GoogleFonts.tajawal(color: Colors.white, fontWeight: FontWeight.w500)),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    label: Text(
+                      'إلغاء',
+                      style: GoogleFonts.tajawal(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
                   ElevatedButton.icon(
                     onPressed: () async {
@@ -1244,9 +2125,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         _startContinuousListening(setDialogState);
                       }
                     },
-                    icon: Icon(_isListening ? Icons.check : Icons.mic, color: Colors.white),
-                    label: Text(_isListening ? 'حفظ' : 'تحدث', style: GoogleFonts.tajawal(color: Colors.white, fontWeight: FontWeight.w500)),
-                    style: ElevatedButton.styleFrom(backgroundColor: _isListening ? const Color(0xFF58CC02) : const Color(0xFFFFB800), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    icon: Icon(
+                      _isListening ? Icons.check : Icons.mic,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      _isListening ? 'حفظ' : 'تحدث',
+                      style: GoogleFonts.tajawal(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isListening
+                          ? const Color(0xFF58CC02)
+                          : const Color(0xFFFFB800),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1256,7 +2153,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _startContinuousListening(StateSetter setDialogState) async {
     if (!_continuousListening) return;
     try {
@@ -1283,50 +2180,118 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       print('Error: $e');
     }
   }
-  
+
   Future<void> _pickImage(ImageSource source) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: source);
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: source, imageQuality: 85);
 
-    if (image != null) {
-      _showLoadingDialog('جاري معالجة الصورة...');
+      if (image != null) {
+        _showLoadingDialog('جاري معالجة الصورة...');
 
-      try {
-        CloudinaryResponse response = await cloudinary.uploadFile(
-          CloudinaryFile.fromFile(image.path, resourceType: CloudinaryResourceType.Image),
-        );
+        try {
+          // رفع الصورة لـ Cloudinary
+          CloudinaryResponse cloudinaryResponse = await cloudinary.uploadFile(
+            CloudinaryFile.fromFile(image.path, resourceType: CloudinaryResourceType.Image),
+          );
 
-        final imageBytes = await File(image.path).readAsBytes();
-        final prompt = '''قم بتحليل هذه الصورة واستخرج جميع المعلومات منها بنفس تنسيق JSON السابق.''';
-        final content = [Content.multi([TextPart(prompt), DataPart('image/jpeg', imageBytes)])];
-        final response2 = await _model.generateContent(content);
-        
-        Navigator.pop(context);
+          // قراءة الصورة
+          final imageBytes = await File(image.path).readAsBytes();
+          
+          final prompt = '''
+قم بتحليل هذه الصورة بدقة واستخرج جميع المعلومات:
+- إذا كانت فاتورة: استخرج المصروفات والمبالغ
+- إذا كانت قائمة مهام: استخرج المهام
+- إذا كانت جدول مواعيد: استخرج المواعيد
+- إذا كانت نص: استخرج المحتوى
 
-        if (response2.text != null) {
-          final jsonStr = response2.text!.replaceAll('```json', '').replaceAll('```', '').trim();
-          try {
-            final data = json.decode(jsonStr);
-            if (data['items'] != null && data['items'] is List) {
-              setState(() {
-                _extractedItems = List<Map<String, dynamic>>.from(data['items']);
-                for (var item in _extractedItems) {
-                  item['imageUrl'] = response.secureUrl;
+أرجع JSON فقط:
+{
+  "items": [
+    {
+      "type": "task/appointment/expense/quote/note",
+      "title": "عنوان قصير",
+      "content": "المحتوى",
+      "amount": رقم أو null,
+      "currency": "العملة أو null"
+    }
+  ]
+}
+''';
+
+          final content = [Content.multi([TextPart(prompt), DataPart('image/jpeg', imageBytes)])];
+          final aiResponse = await _model.generateContent(content);
+
+          if (mounted) Navigator.pop(context);
+
+          if (aiResponse.text != null && aiResponse.text!.isNotEmpty) {
+            print('Image AI Response: ${aiResponse.text}');
+            
+            var jsonStr = aiResponse.text!.trim();
+            jsonStr = jsonStr.replaceAll('```json', '').replaceAll('```', '').trim();
+            
+            final jsonStart = jsonStr.indexOf('{');
+            final jsonEnd = jsonStr.lastIndexOf('}');
+            
+            if (jsonStart != -1 && jsonEnd != -1) {
+              jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
+              
+              try {
+                final data = json.decode(jsonStr);
+                if (data['items'] != null && data['items'] is List && (data['items'] as List).isNotEmpty) {
+                  setState(() {
+                    _extractedItems = List<Map<String, dynamic>>.from(data['items']);
+                    for (var item in _extractedItems) {
+                      item['imageUrl'] = cloudinaryResponse.secureUrl;
+                    }
+                  });
+                  _showExtractedItemsDialog();
+                  return;
                 }
-              });
-              _showExtractedItemsDialog();
+              } catch (e) {
+                print('Image JSON Parse Error: $e');
+              }
             }
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ في معالجة الصورة', style: GoogleFonts.tajawal()), backgroundColor: Colors.red));
+          }
+          
+          // إذا فشل التحليل، احفظ الصورة كملاحظة
+          if (mounted) {
+            await _saveNote({
+              'type': 'note',
+              'title': 'صورة - ${DateTime.now().toString().substring(0, 16)}',
+              'content': 'صورة تم رفعها',
+              'imageUrl': cloudinaryResponse.secureUrl,
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('تم حفظ الصورة', style: GoogleFonts.tajawal())),
+            );
+          }
+        } catch (e) {
+          print('Image Upload/Process Error: $e');
+          if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('خطأ في معالجة الصورة', style: GoogleFonts.tajawal()),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         }
-      } catch (e) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ في معالجة الصورة', style: GoogleFonts.tajawal()), backgroundColor: Colors.red));
+      }
+    } catch (e) {
+      print('Image Picker Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في اختيار الصورة', style: GoogleFonts.tajawal()),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
-  
+
   void _showLoadingDialog(String message) {
     showDialog(
       context: context,
@@ -1342,7 +2307,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _showExtractedItemsDialog() {
     showDialog(
       context: context,
@@ -1353,11 +2318,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: const Color(0xFF58CC02).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF58CC02)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                color: Color(0xFF58CC02),
+              ),
             ),
             const SizedBox(width: 12),
-            Text('تم استخراج ${_extractedItems.length} عنصر', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
+            Text(
+              'تم استخراج ${_extractedItems.length} عنصر',
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         content: Container(
@@ -1366,7 +2340,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: _extractedItems.length,
-            itemBuilder: (context, index) => _buildExtractedItemCard(_extractedItems[index], index),
+            itemBuilder: (context, index) =>
+                _buildExtractedItemCard(_extractedItems[index], index),
           ),
         ),
         actions: [
@@ -1375,39 +2350,80 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               setState(() => _extractedItems.clear());
               Navigator.pop(context);
             },
-            child: Text('إلغاء', style: GoogleFonts.tajawal(color: Colors.grey[600])),
+            child: Text(
+              'إلغاء',
+              style: GoogleFonts.tajawal(color: Colors.grey[600]),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
               await _saveMultipleNotes();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
-            child: Text('حفظ الكل', style: GoogleFonts.tajawal(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF58CC02),
+            ),
+            child: Text(
+              'حفظ الكل',
+              style: GoogleFonts.tajawal(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildExtractedItemCard(Map<String, dynamic> item, int index) {
     IconData icon;
     Color color;
     switch (item['type']) {
-      case 'task': icon = Icons.task_alt_rounded; color = const Color(0xFF58CC02); break;
-      case 'appointment': icon = Icons.calendar_month_rounded; color = const Color(0xFFFFB800); break;
-      case 'expense': icon = Icons.attach_money_rounded; color = Colors.blue; break;
-      case 'quote': icon = Icons.format_quote_rounded; color = Colors.purple; break;
-      default: icon = Icons.note_rounded; color = Colors.grey;
+      case 'task':
+        icon = Icons.task_alt_rounded;
+        color = const Color(0xFF58CC02);
+        break;
+      case 'appointment':
+        icon = Icons.calendar_month_rounded;
+        color = const Color(0xFFFFB800);
+        break;
+      case 'expense':
+        icon = Icons.attach_money_rounded;
+        color = Colors.blue;
+        break;
+      case 'quote':
+        icon = Icons.format_quote_rounded;
+        color = Colors.purple;
+        break;
+      default:
+        icon = Icons.note_rounded;
+        color = Colors.grey;
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.3))),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
       child: ListTile(
-        leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color)),
-        title: Text(item['title'] ?? 'بدون عنوان', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
-        subtitle: Text(item['content'] ?? '', style: GoogleFonts.tajawal(fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(
+          item['title'] ?? 'بدون عنوان',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          item['content'] ?? '',
+          style: GoogleFonts.tajawal(fontSize: 12),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.close, size: 20),
           onPressed: () => setState(() => _extractedItems.removeAt(index)),
@@ -1415,29 +2431,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   Future<void> _saveNote(Map<String, dynamic> note) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
-    
+
     await _firestore.collection('users').doc(userId).collection('notes').add({
       ...note,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'completed': false,
     });
-    
+
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح')));
     }
   }
-  
+
   Future<void> _saveMultipleNotes() async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
-    
+
     _showLoadingDialog('جاري الحفظ...');
-    
+
     for (var item in _extractedItems) {
       await _firestore.collection('users').doc(userId).collection('notes').add({
         ...item,
@@ -1446,12 +2464,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         'completed': false,
       });
     }
-    
+
     Navigator.pop(context);
     setState(() => _extractedItems.clear());
-    
+
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ ${_extractedItems.length} عنصر', style: GoogleFonts.tajawal())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'تم حفظ ${_extractedItems.length} عنصر',
+            style: GoogleFonts.tajawal(),
+          ),
+        ),
+      );
     }
   }
 }
