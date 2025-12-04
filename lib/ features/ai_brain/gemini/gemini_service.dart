@@ -211,6 +211,92 @@ class GeminiService {
   }
 
   // ════════════════════════════════════════════════════════════
+  // 🎯 MULTI-ITEM EXTRACTION (ALNOTA FEATURE)
+  // ════════════════════════════════════════════════════════════
+
+  /// Extract multiple items from single input
+  ///
+  /// This is inspired by alNota's ability to extract multiple
+  /// tasks, appointments, or expenses from a single text input.
+  ///
+  /// Example:
+  /// "اشتري لبن وخبز وجبنة" → 3 separate todo items
+  /// "عندي اجتماع الساعة 2 وموعد مع دكتور الساعة 5" → 2 appointments
+  Future<List<Map<String, dynamic>>> extractMultipleItems(String userInput) async {
+    if (_useMockData) {
+      return _getMockMultipleItems(userInput);
+    }
+
+    try {
+      final prompt = GeminiPrompts.buildPrompt(
+        GeminiPrompts.extractMultipleItems,
+        userInput,
+      );
+
+      final response = await generateText(prompt);
+      final json = _parseJsonResponse(response);
+
+      if (json['items'] is List) {
+        return (json['items'] as List)
+            .map((item) => item as Map<String, dynamic>)
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('❌ Multi-Item Extraction Error: $e');
+      return [];
+    }
+  }
+
+  /// Smart categorization with confidence scoring
+  ///
+  /// Enhanced version that provides more detailed analysis
+  /// including secondary category suggestions and reasoning
+  Future<Map<String, dynamic>> smartCategorize(String userInput) async {
+    if (_useMockData) {
+      return _getMockSmartCategorization(userInput);
+    }
+
+    try {
+      final prompt = '''
+قم بتحليل النص التالي وتصنيفه بذكاء:
+
+النص: "$userInput"
+
+أعد JSON يحتوي على:
+1. category: التصنيف الأساسي (todo/appointment/expense/quote/note)
+2. confidence: نسبة الثقة (0-100)
+3. secondaryCategory: تصنيف ثانوي محتمل (أو null)
+4. secondaryConfidence: نسبة ثقة التصنيف الثانوي
+5. keywords: كلمات مفتاحية تم اكتشافها
+6. sentiment: المشاعر (positive/negative/neutral)
+7. urgency: مستوى الأهمية (low/medium/high/urgent)
+8. reason: سبب التصنيف
+9. suggestedTags: تاجات مقترحة
+
+مثال:
+{
+  "category": "todo",
+  "confidence": 95,
+  "secondaryCategory": "expense",
+  "secondaryConfidence": 30,
+  "keywords": ["اشتري", "حليب"],
+  "sentiment": "neutral",
+  "urgency": "medium",
+  "reason": "يحتوي على فعل أمر يتطلب شراء",
+  "suggestedTags": ["shopping", "groceries"]
+}
+''';
+
+      final response = await generateText(prompt);
+      return _parseJsonResponse(response);
+    } catch (e) {
+      print('❌ Smart Categorization Error: $e');
+      return {};
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
   // 🔍 RESPONSE PARSING HELPERS
   // ════════════════════════════════════════════════════════════
 
@@ -451,6 +537,106 @@ class GeminiService {
         reason: 'للتنظيم',
       ),
     ];
+  }
+
+  /// Get mock multiple items extraction
+  List<Map<String, dynamic>> _getMockMultipleItems(String input) {
+    final lower = input.toLowerCase();
+
+    // Check for multiple shopping items
+    if (lower.contains('و') || lower.contains('and')) {
+      // Split by Arabic 'و' or English 'and'
+      final items = input
+          .split(RegExp(r'\s+و\s+|and'))
+          .where((s) => s.trim().isNotEmpty)
+          .map((item) => {
+                'type': 'todo',
+                'title': item.trim(),
+                'priority': 'medium',
+                'category': 'shopping',
+              })
+          .toList();
+
+      if (items.isNotEmpty) return items;
+    }
+
+    // Single item fallback
+    return [
+      {
+        'type': _detectType(input),
+        'title': input.substring(0, min(50, input.length)),
+        'priority': 'medium',
+      }
+    ];
+  }
+
+  /// Detect item type from text
+  String _detectType(String input) {
+    final lower = input.toLowerCase();
+    if (lower.contains('اشتري') ||
+        lower.contains('buy') ||
+        lower.contains('task')) return 'todo';
+    if (lower.contains('اجتماع') ||
+        lower.contains('meeting') ||
+        lower.contains('موعد')) return 'appointment';
+    if (lower.contains('دفعت') ||
+        lower.contains('paid') ||
+        lower.contains('egp')) return 'expense';
+    return 'note';
+  }
+
+  /// Get mock smart categorization
+  Map<String, dynamic> _getMockSmartCategorization(String input) {
+    final lower = input.toLowerCase();
+    String category = 'note';
+    double confidence = 70.0;
+    String? secondaryCategory;
+    double secondaryConfidence = 0.0;
+    List<String> keywords = [];
+    String sentiment = 'neutral';
+    String urgency = 'medium';
+
+    // Detect category
+    if (lower.contains('اشتري') || lower.contains('buy')) {
+      category = 'todo';
+      confidence = 90.0;
+      secondaryCategory = 'expense';
+      secondaryConfidence = 40.0;
+      keywords = ['اشتري', 'shopping'];
+      urgency = 'medium';
+    } else if (lower.contains('اجتماع') || lower.contains('meeting')) {
+      category = 'appointment';
+      confidence = 95.0;
+      keywords = ['اجتماع', 'meeting'];
+      urgency = 'high';
+    } else if (lower.contains('دفعت') || lower.contains('paid')) {
+      category = 'expense';
+      confidence = 98.0;
+      keywords = ['دفعت', 'payment'];
+      urgency = 'low';
+    } else if (lower.contains('مهم') || lower.contains('urgent')) {
+      urgency = 'urgent';
+      confidence = 85.0;
+    }
+
+    // Detect sentiment
+    if (lower.contains('سعيد') || lower.contains('happy') || lower.contains('رائع')) {
+      sentiment = 'positive';
+    } else if (lower.contains('حزين') || lower.contains('sad') || lower.contains('مشكلة')) {
+      sentiment = 'negative';
+    }
+
+    return {
+      'category': category,
+      'confidence': confidence,
+      'secondaryCategory': secondaryCategory,
+      'secondaryConfidence': secondaryConfidence,
+      'keywords': keywords,
+      'sentiment': sentiment,
+      'urgency': urgency,
+      'reason': 'تحليل تلقائي بناءً على الكلمات المفتاحية',
+      'suggestedTags': keywords,
+    };
   }
 
   // ════════════════════════════════════════════════════════════
