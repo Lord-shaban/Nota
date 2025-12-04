@@ -1,14 +1,32 @@
-# 🚀 Sprint 2 Tasks – Nota App
+# 🚀 Sprint 2 Tasks – Nota App (Based on alNota Reference)
 
 ## 🎯 Sprint Goal
-Enhance **Nota App** with full AI integration, advanced features, and production-ready improvements:
-- Complete AI categorization with Gemini API
-- Implement advanced search and filtering
-- Add real-time synchronization
-- Enhance UI/UX with animations
-- Implement offline support
-- Add data export/import features
-- Optimize performance and security
+Transform **Nota App** to match alNota reference implementation with enhanced features:
+- **Complete AI integration** with Gemini API for smart categorization
+- **Implement multi-input system** (Text/Voice/Camera with OCR)
+- **Add Cloudinary integration** for image storage
+- **Enhance UI/UX** with animations and modern design
+- **Implement advanced features** from alNota reference
+- **Maintain current data structure** while upgrading functionality
+- **Optimize performance** and user experience
+
+## 📚 Reference: alNota Implementation
+Base: `C:\Users\miar4\StudioProjects\nota\alNota\lib\main.dart`
+
+### Key Features to Implement:
+- ✅ Animated Splash Screen with loading states
+- ✅ Complete AI categorization (Tasks, Appointments, Expenses, Quotes)
+- ✅ Voice to Text with Speech Recognition
+- ✅ Image to Text with OCR
+- ✅ Smart multi-item extraction from text
+- ✅ Tab-based navigation
+- ✅ Calendar integration
+- ✅ Staggered animations for lists
+- ✅ Quick action buttons
+- ✅ Advanced search and filtering
+- ✅ Note details screen
+- ✅ Edit functionality
+- ✅ Notification system
 
 ---
 
