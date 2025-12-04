@@ -11,7 +11,10 @@ class ImagePickerHandler {
   static final ImagePicker _picker = ImagePicker();
 
   // Pick image from gallery
-  static Future<InputData?> pickFromGallery(BuildContext context) async {
+  static Future<InputData?> pickFromGallery(
+    BuildContext context, {
+    required Null Function(dynamic imagePath) onImagePicked,
+  }) async {
     try {
       // Check gallery permission
       final status = await Permission.photos.status;

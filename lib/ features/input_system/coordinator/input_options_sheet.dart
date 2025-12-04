@@ -94,11 +94,6 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
 
   void _handleGalleryInput() {
     Navigator.pop(context);
-    ImagePickerHandler.pickFromGallery(
-      onImagePicked: (imagePath) {
-        widget.onDataReceived({'type': 'gallery', 'imagePath': imagePath});
-      },
-    );
   }
 
   @override

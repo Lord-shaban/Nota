@@ -224,7 +224,6 @@ class _TextInputDialogState extends State<TextInputDialog>
               ),
               title: _buildTitle(),
               content: _buildContent(),
-              actions: _buildActions(),
               contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
               actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
             ),
