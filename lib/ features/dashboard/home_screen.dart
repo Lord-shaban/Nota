@@ -191,14 +191,23 @@ class HomeScreen extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        icon: const Icon(
+          Icons.logout,
+          color: AppTheme.errorColor,
+          size: 48,
+        ),
         title: const Text('تسجيل الخروج'),
-        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
+        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('إلغاء'),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('تسجيل الخروج'),
           ),
@@ -208,8 +217,20 @@ class HomeScreen extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       try {
+        debugPrint('🚪 Logging out user...');
         await AuthService().signOut();
+        debugPrint('✅ User logged out successfully');
+        
         if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم تسجيل الخروج بنجاح'),
+              backgroundColor: AppTheme.successColor,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          // Navigate back to splash screen
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (_) => const AnimatedSplashScreen(),
@@ -218,11 +239,13 @@ class HomeScreen extends StatelessWidget {
           );
         }
       } catch (e) {
+        debugPrint('❌ Logout error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('خطأ: $e'),
+              content: Text('خطأ في تسجيل الخروج: $e'),
               backgroundColor: AppTheme.errorColor,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
