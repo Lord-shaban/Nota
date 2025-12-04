@@ -1,69 +1,285 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/models/user_model.dart';
 
-// This class simulates the operations that Firebase Auth will perform later.
+/// Authentication Service
+/// Handles all authentication operations with Firebase
+/// 
+/// Co-authored-by: Ali-0110
 class AuthService {
-  // 1. Mock user state (is the user logged in?)
-  bool _isLoggedIn = false;
-  
-  // 2. Mock Stream variable to monitor login/logout state
-  // Used by the SplashScreen to decide where to navigate.
-  final StreamController<bool> _authStateController = StreamController<bool>.broadcast();
-  // Expose a stream that immediately yields the current state and then
-  // forwards subsequent changes. A plain broadcast controller does not
-  // replay the last value to new listeners, so the splash screen could
-  // miss the current login state if it subscribes after the initial event.
-  Stream<bool> get authStateChanges async* {
-    yield _isLoggedIn;
-    yield* _authStateController.stream;
-  }
-
-  // Singleton pattern for easy access throughout the app
+  // Singleton pattern
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  // 3. Mock Sign In
-  Future<void> signIn({required String email, required String password}) async {
-    // Simulate network delay (2 seconds)
-    await Future.delayed(const Duration(seconds: 2));
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-    // Success condition
-    if (email == 'test@example.com' && password == 'password') {
-      _isLoggedIn = true;
-      _authStateController.add(true); // Notify listeners that user is logged in
-      return;
-    } else {
-      // Throw a simulated error for login failure
-      throw 'Invalid credentials provided. Use test@example.com and password.';
+  // Stream of auth state changes
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Current user
+  User? get currentUser => _auth.currentUser;
+
+  // Current user model
+  Stream<UserModel?> get currentUserStream {
+    return authStateChanges.asyncMap((user) async {
+      if (user == null) return null;
+      return await getUserData(user.uid);
+    });
+  }
+
+  /// Sign in with email and password
+  Future<UserCredential> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      // Update last login time
+      if (credential.user != null) {
+        await updateLastLogin(credential.user!.uid);
+      }
+
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ غير متوقع: $e';
     }
   }
 
-  // 4. Mock Sign Up
-  Future<void> signUp({required String email, required String password}) async {
-    // Simulate network delay (2 seconds)
-    await Future.delayed(const Duration(seconds: 2));
+  /// Sign up with email and password
+  Future<UserCredential> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+    String? displayName,
+  }) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
 
-    if (password.length < 6) {
-      throw 'Password must be at least 6 characters.';
+      // Create user document in Firestore
+      if (credential.user != null) {
+        final userModel = UserModel(
+          uid: credential.user!.uid,
+          email: email.trim(),
+          displayName: displayName?.trim(),
+          createdAt: DateTime.now(),
+          lastLoginAt: DateTime.now(),
+          isEmailVerified: false,
+        );
+
+        await _firestore
+            .collection('users')
+            .doc(credential.user!.uid)
+            .set(userModel.toJson());
+
+        // Update display name if provided
+        if (displayName != null && displayName.trim().isNotEmpty) {
+          await credential.user!.updateDisplayName(displayName.trim());
+        }
+
+        // Send email verification
+        await sendEmailVerification();
+      }
+
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ أثناء إنشاء الحساب: $e';
     }
-    // Success condition: No need to log in immediately after sign up
-    return;
   }
 
-  // 5. Mock Forgot Password Email
+  /// Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return;
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ أثناء إرسال رابط استعادة كلمة المرور: $e';
+    }
   }
 
-  // 6. Mock Sign Out
+  /// Send email verification
+  Future<void> sendEmailVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ أثناء إرسال رابط التحقق: $e';
+    }
+  }
+
+  /// Sign out
   Future<void> signOut() async {
-    _isLoggedIn = false;
-    _authStateController.add(false); // Notify listeners that user is logged out
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      throw 'حدث خطأ أثناء تسجيل الخروج: $e';
+    }
   }
 
-  // Close resources if needed (call from app dispose if appropriate).
-  void dispose() {
-    _authStateController.close();
+  /// Delete account
+  Future<void> deleteAccount() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // Delete user document from Firestore
+        await _firestore.collection('users').doc(user.uid).delete();
+        
+        // Delete auth account
+        await user.delete();
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ أثناء حذف الحساب: $e';
+    }
   }
+
+  /// Update user profile
+  Future<void> updateProfile({
+    String? displayName,
+    String? photoURL,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        if (displayName != null) {
+          await user.updateDisplayName(displayName.trim());
+        }
+        if (photoURL != null) {
+          await user.updatePhotoURL(photoURL.trim());
+        }
+
+        // Update Firestore
+        await _firestore.collection('users').doc(user.uid).update({
+          if (displayName != null) 'displayName': displayName.trim(),
+          if (photoURL != null) 'photoURL': photoURL.trim(),
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ أثناء تحديث الملف الشخصي: $e';
+    }
+  }
+
+  /// Get user data from Firestore
+  Future<UserModel?> getUserData(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return UserModel.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      throw 'حدث خطأ أثناء جلب بيانات المستخدم: $e';
+    }
+  }
+
+  /// Update last login time
+  Future<void> updateLastLogin(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'lastLoginAt': Timestamp.now(),
+      });
+    } catch (e) {
+      // Silently fail - this is not critical
+      print('Failed to update last login: $e');
+    }
+  }
+
+  /// Re-authenticate user (required for sensitive operations)
+  Future<void> reauthenticateWithPassword(String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && user.email != null) {
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'فشلت عملية إعادة المصادقة: $e';
+    }
+  }
+
+  /// Change password
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      // Re-authenticate first
+      await reauthenticateWithPassword(currentPassword);
+
+      // Change password
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.updatePassword(newPassword);
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'حدث خطأ أثناء تغيير كلمة المرور: $e';
+    }
+  }
+
+  /// Handle Firebase Auth exceptions
+  String _handleAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'البريد الإلكتروني غير مسجل';
+      case 'wrong-password':
+        return 'كلمة المرور غير صحيحة';
+      case 'email-already-in-use':
+        return 'البريد الإلكتروني مستخدم بالفعل';
+      case 'invalid-email':
+        return 'البريد الإلكتروني غير صالح';
+      case 'weak-password':
+        return 'كلمة المرور ضعيفة جداً';
+      case 'user-disabled':
+        return 'تم تعطيل هذا الحساب';
+      case 'too-many-requests':
+        return 'تم تجاوز عدد المحاولات المسموح به، حاول مرة أخرى لاحقاً';
+      case 'operation-not-allowed':
+        return 'العملية غير مسموح بها';
+      case 'requires-recent-login':
+        return 'يتطلب إعادة تسجيل الدخول';
+      case 'network-request-failed':
+        return 'خطأ في الاتصال بالشبكة';
+      default:
+        return 'حدث خطأ غير متوقع: ${e.message ?? e.code}';
+    }
+  }
+
+  /// Check if user is signed in
+  bool get isSignedIn => _auth.currentUser != null;
+
+  /// Get current user ID
+  String? get currentUserId => _auth.currentUser?.uid;
+
+  /// Get current user email
+  String? get currentUserEmail => _auth.currentUser?.email;
+
+  /// Check if email is verified
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
 }
