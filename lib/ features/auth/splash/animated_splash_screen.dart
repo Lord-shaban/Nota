@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
-import '../services/auth_service.dart';
 import '../login/login_screen.dart';
 import '../../dashboard/home_screen.dart';
 
 /// Animated Splash Screen with Firebase Auth State Management
 /// 
 /// Co-authored-by: Ali-0110
+/// Co-authored-by: abdelrahman-hesham11
+/// Co-authored-by: Mahmoud13MA
 class AnimatedSplashScreen extends StatefulWidget {
   const AnimatedSplashScreen({super.key});
 
@@ -28,19 +31,35 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
 
     if (!mounted) return;
 
-    // Check auth state
-    final user = AuthService().currentUser;
+    try {
+      // Check auth state from provider
+      final user = context.read<User?>();
 
-    if (user != null) {
-      // User is signed in, navigate to home
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
-      // User is not signed in, navigate to login
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      if (user != null) {
+        debugPrint('✅ User authenticated: ${user.email}');
+        // User is signed in, navigate to home
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+      } else {
+        debugPrint('ℹ️ No user authenticated, navigating to login');
+        // User is not signed in, navigate to login
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error checking auth state: $e');
+      // On error, navigate to login
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     }
   }
 
