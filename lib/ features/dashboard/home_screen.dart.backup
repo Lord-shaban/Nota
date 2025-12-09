@@ -1,0 +1,919 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import '../auth/splash/animated_splash_screen.dart';
+
+/// Home Screen / Dashboard (alNota Reference Style)
+/// Complete replication of alNota design and functionality
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+  
+  // Data lists
+  List<Map<String, dynamic>> _allNotes = [];
+  List<Map<String, dynamic>> _filteredNotes = [];
+  List<Map<String, dynamic>> _tasks = [];
+  List<Map<String, dynamic>> _appointments = [];
+  List<Map<String, dynamic>> _expenses = [];
+  List<Map<String, dynamic>> _quotes = [];
+  
+  // State
+  bool _isSearching = false;
+  Map<String, dynamic>? _userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 5, vsync: this);
+    _loadData();
+    _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _loadUserData() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+    
+    final doc = await _firestore.collection('users').doc(userId).get();
+    if (mounted && doc.exists) {
+      setState(() {
+        _userData = doc.data();
+      });
+    }
+  }
+  
+  Future<void> _loadData() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notes')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _allNotes = snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList();
+          _filteredNotes = _allNotes;
+          _categorizeNotes();
+        });
+      }
+    });
+  }
+  
+  void _categorizeNotes() {
+    _tasks.clear();
+    _appointments.clear();
+    _expenses.clear();
+    _quotes.clear();
+
+    for (var note in _allNotes) {
+      switch (note['type']) {
+        case 'task':
+          _tasks.add(note);
+          break;
+        case 'appointment':
+          _appointments.add(note);
+          break;
+        case 'expense':
+          _expenses.add(note);
+          break;
+        case 'quote':
+          _quotes.add(note);
+          break;
+      }
+    }
+  }
+  
+  void _filterNotes(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        _filteredNotes = _allNotes;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _filteredNotes = _allNotes.where((note) {
+        final title = note['title']?.toString().toLowerCase() ?? '';
+        final content = note['content']?.toString().toLowerCase() ?? '';
+        final searchQuery = query.toLowerCase();
+
+        return title.contains(searchQuery) || content.contains(searchQuery);
+      }).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF7F7F7),
+      appBar: _buildAppBar(),
+      body: Column(
+        children: [
+          if (_isSearching) _buildSearchBar(),
+          _buildTabBar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildHomeTab(),
+                _buildTasksTab(),
+                _buildAppointmentsTab(),
+                _buildExpensesTab(),
+                _buildQuotesTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: _buildFloatingActionButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      drawer: _buildDrawer(),
+    );
+  }
+  
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: Colors.white,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF58CC02).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.menu_rounded, color: Color(0xFF58CC02)),
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF58CC02).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.book_rounded,
+              color: Color(0xFF58CC02),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'النوتة',
+            style: GoogleFonts.tajawal(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF3C3C3C),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.search_rounded, color: Colors.blue),
+          ),
+          onPressed: () {
+            setState(() {
+              _isSearching = !_isSearching;
+              if (!_isSearching) {
+                _searchController.clear();
+                _filterNotes('');
+              }
+            });
+          },
+        ),
+        IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFD900).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: Color(0xFFFFB800),
+            ),
+          ),
+          onPressed: () => _showNotifications(),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildSearchBar() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F8F8),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: _filterNotes,
+          autofocus: true,
+          style: GoogleFonts.tajawal(),
+          decoration: InputDecoration(
+            hintText: 'ابحث في ملاحظاتك...',
+            hintStyle: GoogleFonts.tajawal(color: Colors.grey),
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.grey),
+                    onPressed: () {
+                      _searchController.clear();
+                      _filterNotes('');
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTabBar() {
+    return Container(
+      color: Colors.white,
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: true,
+        indicatorColor: const Color(0xFF58CC02),
+        indicatorWeight: 3,
+        labelColor: const Color(0xFF58CC02),
+        unselectedLabelColor: Colors.grey,
+        labelStyle: GoogleFonts.tajawal(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+        tabs: [
+          _buildTab(Icons.home_rounded, 'الرئيسية'),
+          _buildTab(Icons.task_alt_rounded, 'المهام', _tasks.length),
+          _buildTab(Icons.calendar_month_rounded, 'المواعيد', _appointments.length),
+          _buildTab(Icons.attach_money_rounded, 'المصروفات', _expenses.length),
+          _buildTab(Icons.format_quote_rounded, 'اقتباسات', _quotes.length),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTab(IconData icon, String label, [int? count]) {
+    return Tab(
+      child: Row(
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Text(label, style: GoogleFonts.tajawal()),
+          if (count != null && count > 0) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: GoogleFonts.tajawal(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildFloatingActionButton() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FloatingActionButton.extended(
+            onPressed: () => _showQuickAddOptions(),
+            backgroundColor: const Color(0xFF58CC02),
+            elevation: 8,
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: Text(
+              'إضافة جديد',
+              style: GoogleFonts.tajawal(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build Home Tab (Like alNota)
+  Widget _buildHomeTab() {
+    final notes = _isSearching ? _filteredNotes : _allNotes;
+
+    return AnimationLimiter(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          await _loadData();
+          await _loadUserData();
+        },
+        color: const Color(0xFF58CC02),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: AnimationConfiguration.toStaggeredList(
+            duration: const Duration(milliseconds: 375),
+            childAnimationBuilder: (widget) => SlideAnimation(
+              horizontalOffset: 50.0,
+              child: FadeInAnimation(child: widget),
+            ),
+            children: [
+              if (!_isSearching) ...[
+                _buildWelcomeCard(),
+                const SizedBox(height: 20),
+                _buildStatsCards(),
+                const SizedBox(height: 20),
+                _buildQuickActions(),
+                const SizedBox(height: 20),
+              ],
+              _buildSectionTitle(
+                _isSearching
+                    ? 'نتائج البحث (${notes.length})'
+                    : 'آخر الملاحظات',
+                Icons.history_rounded,
+              ),
+              const SizedBox(height: 12),
+              if (notes.isEmpty)
+                _buildEmptyStateWidget()
+              else
+                ...notes
+                    .take(_isSearching ? notes.length : 10)
+                    .map((note) => _buildNoteCard(note, showActions: true)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTasksTab() {
+    return _buildListTab(_tasks, 'task', 'لا توجد مهام', 'ابدأ بإضافة مهمة جديدة');
+  }
+  
+  Widget _buildAppointmentsTab() {
+    return _buildListTab(_appointments, 'appointment', 'لا توجد مواعيد', 'ابدأ بإضافة موعد جديد');
+  }
+  
+  Widget _buildExpensesTab() {
+    return _buildListTab(_expenses, 'expense', 'لا توجد مصروفات', 'ابدأ بإضافة مصروف جديد');
+  }
+  
+  Widget _buildQuotesTab() {
+    return _buildListTab(_quotes, 'quote', 'لا توجد اقتباسات', 'ابدأ بإضافة اقتباس جديد');
+  }
+  
+  Widget _buildListTab(List<Map<String, dynamic>> items, String type, String emptyTitle, String emptySubtitle) {
+    return AnimationLimiter(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          await _loadData();
+        },
+        color: const Color(0xFF58CC02),
+        child: items.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _getTypeIcon(type),
+                      size: 80,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      emptyTitle,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      emptySubtitle,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    child: SlideAnimation(
+                      verticalOffset: 50,
+                      child: FadeInAnimation(
+                        child: _buildNoteCard(items[index], showActions: true),
+                      ),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
+  /// Build Note Card
+  Widget _buildNoteCard(Map<String, dynamic> note, String docId) {
+    final category = note['category'] ?? 'note';
+    final title = note['title'] ?? 'بدون عنوان';
+    final content = note['content'] ?? '';
+    final color = _getCategoryColor(category);
+    final icon = _getCategoryIcon(category);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold, fontSize: 16),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          content,
+          style: GoogleFonts.tajawal(fontSize: 14),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: PopupMenuButton(
+          icon: const Icon(Icons.more_vert),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              child: Row(
+                children: [
+                  const Icon(Icons.edit, size: 20),
+                  const SizedBox(width: 8),
+                  Text('تعديل', style: GoogleFonts.tajawal()),
+                ],
+              ),
+              onTap: () => _editNote(docId, note),
+            ),
+            PopupMenuItem(
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 20, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text('حذف', style: GoogleFonts.tajawal(color: Colors.red)),
+                ],
+              ),
+              onTap: () => _deleteNote(docId),
+            ),
+          ],
+        ),
+        onTap: () => _showNoteDetails(note),
+      ),
+    );
+  }
+
+  /// Build Empty State
+  Widget _buildEmptyState(String title, String subtitle, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.tajawal(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: GoogleFonts.tajawal(
+              fontSize: 16,
+              color: Colors.grey[500],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get Category Icon
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'todo':
+      case 'مهمة':
+        return Icons.check_box;
+      case 'appointment':
+      case 'موعد':
+        return Icons.calendar_today;
+      case 'expense':
+      case 'مصروف':
+        return Icons.attach_money;
+      case 'note':
+      case 'ملاحظة':
+      default:
+        return Icons.note;
+    }
+  }
+
+  /// Get Category Color
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'todo':
+      case 'مهمة':
+        return Colors.blue;
+      case 'appointment':
+      case 'موعد':
+        return Colors.green;
+      case 'expense':
+      case 'مصروف':
+        return Colors.orange;
+      case 'note':
+      case 'ملاحظة':
+      default:
+        return const Color(0xFFFFB800);
+    }
+  }
+
+  /// Show Add Note Dialog
+  void _showAddNoteDialog() {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    String selectedCategory = 'note';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'إضافة ملاحظة جديدة',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'العنوان',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'المحتوى',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'الفئة',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'note', child: Text('ملاحظة')),
+                  DropdownMenuItem(value: 'todo', child: Text('مهمة')),
+                  DropdownMenuItem(value: 'appointment', child: Text('موعد')),
+                  DropdownMenuItem(value: 'expense', child: Text('مصروف')),
+                ],
+                onChanged: (value) {
+                  if (value != null) selectedCategory = value;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (titleController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('يرجى إدخال العنوان')),
+                );
+                return;
+              }
+
+              final user = FirebaseAuth.instance.currentUser;
+              if (user == null) return;
+
+              await FirebaseFirestore.instance.collection('notes').add({
+                'userId': user.uid,
+                'title': titleController.text.trim(),
+                'content': contentController.text.trim(),
+                'category': selectedCategory,
+                'createdAt': FieldValue.serverTimestamp(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم إضافة الملاحظة بنجاح')),
+                );
+              }
+            },
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Edit Note
+  void _editNote(String docId, Map<String, dynamic> note) {
+    final titleController = TextEditingController(text: note['title']);
+    final contentController = TextEditingController(text: note['content']);
+    String selectedCategory = note['category'] ?? 'note';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'تعديل الملاحظة',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'العنوان',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'المحتوى',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'الفئة',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'note', child: Text('ملاحظة')),
+                  DropdownMenuItem(value: 'todo', child: Text('مهمة')),
+                  DropdownMenuItem(value: 'appointment', child: Text('موعد')),
+                  DropdownMenuItem(value: 'expense', child: Text('مصروف')),
+                ],
+                onChanged: (value) {
+                  if (value != null) selectedCategory = value;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('notes')
+                  .doc(docId)
+                  .update({
+                'title': titleController.text.trim(),
+                'content': contentController.text.trim(),
+                'category': selectedCategory,
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم تحديث الملاحظة بنجاح')),
+                );
+              }
+            },
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Delete Note
+  void _deleteNote(String docId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'حذف الملاحظة',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
+        content: const Text('هل أنت متأكد من حذف هذه الملاحظة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('notes')
+                  .doc(docId)
+                  .delete();
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم حذف الملاحظة')),
+                );
+              }
+            },
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show Note Details
+  void _showNoteDetails(Map<String, dynamic> note) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          note['title'] ?? 'بدون عنوان',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                note['content'] ?? 'لا يوجد محتوى',
+                style: GoogleFonts.tajawal(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(
+                    _getCategoryIcon(note['category'] ?? 'note'),
+                    color: _getCategoryColor(note['category'] ?? 'note'),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    note['category'] ?? 'ملاحظة',
+                    style: GoogleFonts.tajawal(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show Search Dialog
+  void _showSearchDialog() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('قريباً: البحث في الملاحظات')),
+    );
+  }
+
+  /// Handle Logout
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'تسجيل الخروج',
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
+        ),
+        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تسجيل الخروج'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const AnimatedSplashScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    }
+  }
+}

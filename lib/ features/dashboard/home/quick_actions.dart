@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 /// Quick Actions Widget
 /// Provides quick access to common actions
@@ -18,6 +19,61 @@ class QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actions = [
+      _ActionData(
+        icon: Icons.note_add_outlined,
+        label: 'Add Note',
+        color: Colors.blue,
+        onTap: onAddNote ??
+            () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Add note feature coming soon!'),
+                ),
+              );
+            },
+      ),
+      _ActionData(
+        icon: Icons.add_task_outlined,
+        label: 'Add Task',
+        color: Colors.green,
+        onTap: onAddTask ??
+            () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Add task feature coming soon!'),
+                ),
+              );
+            },
+      ),
+      _ActionData(
+        icon: Icons.add_circle_outline,
+        label: 'Add Expense',
+        color: Colors.orange,
+        onTap: onAddExpense ??
+            () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Add expense feature coming soon!'),
+                ),
+              );
+            },
+      ),
+      _ActionData(
+        icon: Icons.event_available_outlined,
+        label: 'Schedule',
+        color: Colors.purple,
+        onTap: onAddAppointment ??
+            () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Schedule feature coming soon!'),
+                ),
+              );
+            },
+      ),
+    ];
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -32,67 +88,47 @@ class QuickActions extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _QuickActionButton(
-                icon: Icons.note_add_outlined,
-                label: 'Add Note',
-                color: Colors.blue,
-                onTap: onAddNote ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Add note feature coming soon!'),
-                        ),
-                      );
-                    },
+          AnimationLimiter(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(
+                actions.length,
+                (index) => AnimationConfiguration.staggeredList(
+                  position: index,
+                  duration: const Duration(milliseconds: 375),
+                  child: ScaleAnimation(
+                    child: FadeInAnimation(
+                      child: _QuickActionButton(
+                        icon: actions[index].icon,
+                        label: actions[index].label,
+                        color: actions[index].color,
+                        onTap: actions[index].onTap,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              _QuickActionButton(
-                icon: Icons.add_task_outlined,
-                label: 'Add Task',
-                color: Colors.green,
-                onTap: onAddTask ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Add task feature coming soon!'),
-                        ),
-                      );
-                    },
-              ),
-              _QuickActionButton(
-                icon: Icons.add_circle_outline,
-                label: 'Add Expense',
-                color: Colors.orange,
-                onTap: onAddExpense ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Add expense feature coming soon!'),
-                        ),
-                      );
-                    },
-              ),
-              _QuickActionButton(
-                icon: Icons.event_available_outlined,
-                label: 'Schedule',
-                color: Colors.purple,
-                onTap: onAddAppointment ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Schedule feature coming soon!'),
-                        ),
-                      );
-                    },
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+/// Action data holder
+class _ActionData {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  _ActionData({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 }
 
 /// Quick Action Button

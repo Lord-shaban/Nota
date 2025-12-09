@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'welcome_card.dart';
 import 'quick_actions.dart';
 
@@ -97,9 +98,18 @@ class HomeView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _NoteCard(note: notes[index]),
+                    (context, index) => AnimationConfiguration.staggeredList(
+                      position: index,
+                      duration: const Duration(milliseconds: 375),
+                      child: SlideAnimation(
+                        verticalOffset: 50.0,
+                        child: FadeInAnimation(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _NoteCard(note: notes[index]),
+                          ),
+                        ),
+                      ),
                     ),
                     childCount: notes.length > 10 ? 10 : notes.length,
                   ),
