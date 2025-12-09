@@ -4,6 +4,7 @@ import '../../../core/models/task_group.dart';
 import '../../../core/models/task_model.dart';
 import '../../../core/theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'create_task_dialog.dart';
 
 /// Task Group Card with expandable tasks list
 /// 
@@ -446,16 +447,19 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
   }
 
   void _showTaskDetails(TaskModel task) {
-    // Will be implemented later
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('تفاصيل المهمة: ${task.title}')),
+    showDialog(
+      context: context,
+      builder: (context) => CreateTaskDialog(
+        groupId: widget.group.id,
+        task: task,
+      ),
     );
   }
 
   void _showAddTaskDialog() {
-    // Will be implemented later
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('قريباً: إضافة مهمة جديدة')),
+    showDialog(
+      context: context,
+      builder: (context) => CreateTaskDialog(groupId: widget.group.id),
     );
   }
 }
