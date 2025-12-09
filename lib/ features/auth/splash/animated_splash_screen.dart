@@ -201,7 +201,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
               // App Name
               const Text(
-                'Nota',
+                'النوتة',
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
@@ -224,7 +224,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
               // Tagline
               const Text(
-                'مذكرات ذكية مع الذكاء الاصطناعي',
+                'مذكراتك الذكية في مكان واحد',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white70,

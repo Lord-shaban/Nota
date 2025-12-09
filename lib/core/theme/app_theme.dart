@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 /// 
 /// Co-authored-by: Ali-0110
 class AppTheme {
-  // Primary Colors
-  static const Color primaryColor = Color(0xFF6366F1); // Indigo
-  static const Color secondaryColor = Color(0xFF8B5CF6); // Purple
-  static const Color accentColor = Color(0xFF06B6D4); // Cyan
+  // Primary Colors - alNota Theme
+  static const Color primaryColor = Color(0xFF58CC02); // alNota Green
+  static const Color secondaryColor = Color(0xFF45A801); // Dark Green
+  static const Color accentColor = Color(0xFFFFD900); // alNota Yellow
   
   // Background Colors
-  static const Color backgroundColor = Color(0xFFF8FAFC);
+  static const Color backgroundColor = Color(0xFFF7F7F7); // alNota Background
   static const Color surfaceColor = Colors.white;
   static const Color cardColor = Colors.white;
   
