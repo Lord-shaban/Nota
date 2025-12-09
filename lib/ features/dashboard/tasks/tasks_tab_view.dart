@@ -42,29 +42,38 @@ class _TasksTabViewState extends State<TasksTabView>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: Column(
-        children: [
-          // Header with filters
-          _buildHeader(),
-          
-          // Tab Bar
-          _buildTabBar(),
-          
-          // Tab Views
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildGroupsView(),
-                _buildAllTasksView(),
-              ],
+    return Stack(
+      children: [
+        Column(
+          children: [
+            // Header with filters
+            _buildHeader(),
+            
+            // Tab Bar
+            _buildTabBar(),
+            
+            // Tab Views
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildGroupsView(),
+                  _buildAllTasksView(),
+                ],
+              ),
             ),
+          ],
+        ),
+        // FAB positioned at bottom
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _buildFloatingActionButton(),
           ),
-        ],
-      ),
-      floatingActionButton: _buildFloatingActionButton(),
+        ),
+      ],
     );
   }
 
@@ -445,8 +454,15 @@ class _TasksTabViewState extends State<TasksTabView>
     return FloatingActionButton.extended(
       onPressed: _showCreateGroupDialog,
       backgroundColor: AppTheme.primaryColor,
-      icon: const Icon(Icons.add),
-      label: const Text('مجموعة جديدة'),
+      elevation: 6,
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: const Text(
+        'مجموعة جديدة',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 

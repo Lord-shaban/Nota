@@ -13,6 +13,7 @@ import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:lottie/lottie.dart';
 import '../auth/splash/animated_splash_screen.dart';
+import 'tasks/tasks_tab_view.dart';
 
 // Cloudinary Configuration
 final cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
@@ -563,8 +564,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildTasksTab() =>
-      _buildListTab(_tasks, Icons.task_alt_rounded, 'لا توجد مهام');
+  Widget _buildTasksTab() => const TasksTabView();
   Widget _buildAppointmentsTab() => _buildListTab(
     _appointments,
     Icons.calendar_month_rounded,
