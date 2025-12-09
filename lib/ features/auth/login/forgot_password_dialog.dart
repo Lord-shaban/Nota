@@ -9,6 +9,8 @@ import '../widgets/auth_button.dart';
 /// Allows users to reset their password via email
 /// 
 /// Co-authored-by: Ali-0110
+/// Co-authored-by: abdelrahman-hesham11
+/// Co-authored-by: Mahmoud13MA
 class ForgotPasswordDialog extends StatefulWidget {
   const ForgotPasswordDialog({super.key});
 
@@ -31,6 +33,9 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Hide keyboard
+    FocusScope.of(context).unfocus();
+
     setState(() => _isLoading = true);
 
     try {
@@ -38,11 +43,14 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
         _emailController.text.trim(),
       );
 
+      debugPrint('✅ Password reset email sent to: ${_emailController.text.trim()}');
+
       setState(() {
         _emailSent = true;
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('❌ Password reset error: $e');
       setState(() => _isLoading = false);
       
       if (mounted) {
@@ -50,6 +58,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
           SnackBar(
             content: Text(e.toString()),
             backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

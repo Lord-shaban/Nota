@@ -158,10 +158,17 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
 
     await _stopListening();
 
+    // Pass the raw transcription to be processed by Gemini later
+    // This enables alNota-style smart processing:
+    // 1. Text cleanup and punctuation
+    // 2. Auto-categorization
+    // 3. Multi-item extraction
     widget.onSave({
       'text': finalText.trim(),
       'timestamp': DateTime.now().toIso8601String(),
       'duration': DateTime.now().difference(DateTime.now()).inSeconds,
+      'needsProcessing': true, // Flag for Gemini processing
+      'inputType': 'voice', // Helps Gemini understand context
     });
 
     await _fadeController.reverse();

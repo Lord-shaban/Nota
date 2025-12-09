@@ -42,35 +42,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(
           content: Text('يرجى الموافقة على الشروط والأحكام'),
           backgroundColor: AppTheme.warningColor,
+          duration: Duration(seconds: 3),
         ),
       );
       return;
     }
 
+    // Hide keyboard
+    FocusScope.of(context).unfocus();
+
     setState(() => _isLoading = true);
 
     try {
-      await AuthService().signUpWithEmailAndPassword(
+      final credential = await AuthService().signUpWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         displayName: _nameController.text.trim(),
       );
 
+      debugPrint('✅ Registration successful: ${credential.user?.email}');
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم إنشاء الحساب بنجاح! تم إرسال رابط التفعيل إلى بريدك'),
-            backgroundColor: AppTheme.successColor,
+        // Show success dialog
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            icon: const Icon(
+              Icons.check_circle,
+              color: AppTheme.successColor,
+              size: 64,
+            ),
+            title: const Text('تم إنشاء الحساب بنجاح!'),
+            content: const Text(
+              'تم إرسال رابط التفعيل إلى بريدك الإلكتروني.\n'
+              'يرجى التحقق من بريدك وتفعيل الحساب.',
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(); // Go back to login
+                },
+                child: const Text('حسناً'),
+              ),
+            ],
           ),
         );
-        Navigator.of(context).pop();
       }
     } catch (e) {
+      debugPrint('❌ Registration error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
             backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
