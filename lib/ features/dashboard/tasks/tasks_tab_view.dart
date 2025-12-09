@@ -6,6 +6,7 @@ import '../../../core/models/task_group.dart';
 import '../../../core/theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'task_group_card.dart';
+import 'create_task_group_dialog.dart';
 
 /// Enhanced Tasks Tab View with Groups and Completion Tracking
 /// 
@@ -391,8 +392,9 @@ class _TasksTabViewState extends State<TasksTabView>
   }
 
   void _showEditGroupDialog(TaskGroup group) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('قريباً: تعديل ${group.title}')),
+    showDialog(
+      context: context,
+      builder: (context) => CreateTaskGroupDialog(group: group),
     );
   }
 
@@ -447,9 +449,9 @@ class _TasksTabViewState extends State<TasksTabView>
   }
 
   void _showCreateGroupDialog() {
-    // Will be implemented in the next commit
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('قريباً: إنشاء مجموعة جديدة')),
+    showDialog(
+      context: context,
+      builder: (context) => const CreateTaskGroupDialog(),
     );
   }
 }
