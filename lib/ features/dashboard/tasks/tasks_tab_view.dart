@@ -5,6 +5,7 @@ import '../../../core/models/task_model.dart';
 import '../../../core/models/task_group.dart';
 import '../../../core/theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'task_group_card.dart';
 
 /// Enhanced Tasks Tab View with Groups and Completion Tracking
 /// 
@@ -382,8 +383,51 @@ class _TasksTabViewState extends State<TasksTabView>
   }
 
   Widget _buildTaskGroupCard(TaskGroup group) {
-    // This will be implemented in the next file
-    return const SizedBox.shrink();
+    return TaskGroupCard(
+      group: group,
+      onEdit: () => _showEditGroupDialog(group),
+      onDelete: () => _deleteGroup(group),
+    );
+  }
+
+  void _showEditGroupDialog(TaskGroup group) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('قريباً: تعديل ${group.title}')),
+    );
+  }
+
+  Future<void> _deleteGroup(TaskGroup group) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('حذف المجموعة'),
+        content: Text('هل تريد حذف "${group.title}"؟\nسيتم حذف جميع المهام المرتبطة.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseFirestore.instance
+          .collection('task_groups')
+          .doc(group.id)
+          .delete();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم حذف المجموعة')),
+        );
+      }
+    }
   }
 
   Widget _buildAllTasksView() {
