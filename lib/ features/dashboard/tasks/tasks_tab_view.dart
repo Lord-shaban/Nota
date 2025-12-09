@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'task_group_card.dart';
 import 'create_task_group_dialog.dart';
+import 'all_tasks_view.dart';
 
 /// Enhanced Tasks Tab View with Groups and Completion Tracking
 /// 
@@ -433,9 +434,10 @@ class _TasksTabViewState extends State<TasksTabView>
   }
 
   Widget _buildAllTasksView() {
-    // This will show filtered tasks
-    return const Center(
-      child: Text('All Tasks View - Coming Soon'),
+    return AllTasksView(
+      userId: _userId,
+      selectedFilter: _selectedFilter,
+      selectedPriority: _selectedPriority,
     );
   }
 
