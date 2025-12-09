@@ -68,6 +68,10 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      // Rebuild to show/hide FAB based on current tab
+      if (mounted) setState(() {});
+    });
     _speech = stt.SpeechToText();
     _initializeGemini();
     _loadUserData();
@@ -175,7 +179,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      floatingActionButton: _buildFAB(),
+      // Hide main FAB when in tasks tab (index 1)
+      floatingActionButton: _tabController.index != 1 ? _buildFAB() : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       drawer: _buildDrawer(),
     );
