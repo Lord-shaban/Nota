@@ -49,7 +49,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
             const SizedBox(width: 12),
             Text(
               'المهام الأخيرة',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -59,7 +59,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
               onPressed: widget.onViewAll,
               child: Text(
                 'عرض الكل',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   color: const Color(0xFF58CC02),
                   fontWeight: FontWeight.w600,
                 ),
@@ -212,7 +212,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
             const SizedBox(height: 16),
             Text(
               'لا توجد مهام بعد',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 color: const Color(0xFF1F2937),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -221,7 +221,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
             const SizedBox(height: 8),
             Text(
               'ابدأ بإضافة مهامك من الزر أدناه',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 color: Colors.grey.shade600,
                 fontSize: 14,
               ),
@@ -232,7 +232,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
               icon: const Icon(Icons.add_task, size: 20),
               label: Text(
                 'إضافة مهمة',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -399,7 +399,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                         Expanded(
                           child: Text(
                             task.title,
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: task.isCompleted
@@ -432,7 +432,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           ),
                           child: Text(
                             groupTitle,
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                               color: Color(int.parse(
@@ -465,7 +465,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           const SizedBox(width: 2),
                           Text(
                             _formatDueDate(task.dueDate!),
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 10,
                               color: task.isOverdue
                                   ? Colors.red
@@ -551,7 +551,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
           SnackBar(
             content: Text(
               'حدث خطأ أثناء التحديث',
-              style: GoogleFonts.cairo(),
+              style: GoogleFonts.tajawal(),
             ),
             backgroundColor: Colors.red,
           ),
@@ -655,7 +655,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                         Expanded(
                           child: Text(
                             title,
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: isCompleted
@@ -688,7 +688,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           ),
                           child: Text(
                             groupTitle,
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                               color: Color(int.parse(
@@ -722,7 +722,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           task['title'] ?? 'مهمة',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -731,14 +731,14 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
             if (task['content'] != null && task['content'].toString().isNotEmpty)
               Text(
                 task['content'],
-                style: GoogleFonts.cairo(),
+                style: GoogleFonts.tajawal(),
               ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('إغلاق', style: GoogleFonts.cairo()),
+            child: Text('إغلاق', style: GoogleFonts.tajawal()),
           ),
         ],
       ),
@@ -765,7 +765,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
           SnackBar(
             content: Text(
               'حدث خطأ أثناء التحديث',
-              style: GoogleFonts.cairo(),
+              style: GoogleFonts.tajawal(),
             ),
             backgroundColor: Colors.red,
           ),

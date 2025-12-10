@@ -195,7 +195,7 @@ class ImagePickerHandler {
                     const SizedBox(width: 12),
                     Text(
                       title,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -223,7 +223,7 @@ class ImagePickerHandler {
                         onPressed: () => Navigator.of(context).pop(false),
                         child: Text(
                           'إلغاء',
-                          style: GoogleFonts.cairo(color: Colors.grey[600]),
+                          style: GoogleFonts.tajawal(color: Colors.grey[600]),
                         ),
                       ),
                     ),
@@ -250,7 +250,7 @@ class ImagePickerHandler {
                             const SizedBox(width: 8),
                             Text(
                               'استخدام الصورة',
-                              style: GoogleFonts.cairo(
+                              style: GoogleFonts.tajawal(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -289,20 +289,20 @@ class ImagePickerHandler {
               const SizedBox(width: 12),
               Text(
                 'صلاحية مطلوبة',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
               ),
             ],
           ),
           content: Text(
             'يحتاج التطبيق إلى صلاحية الوصول إلى $feature لتتمكن من استخدام هذه الميزة.',
-            style: GoogleFonts.cairo(fontSize: 14),
+            style: GoogleFonts.tajawal(fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'إلغاء',
-                style: GoogleFonts.cairo(color: Colors.grey[600]),
+                style: GoogleFonts.tajawal(color: Colors.grey[600]),
               ),
             ),
             ElevatedButton(
@@ -318,7 +318,7 @@ class ImagePickerHandler {
               ),
               child: Text(
                 'فتح الإعدادات',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -351,7 +351,7 @@ class ImagePickerHandler {
               const SizedBox(height: 20),
               Text(
                 message,
-                style: GoogleFonts.cairo(fontSize: 16),
+                style: GoogleFonts.tajawal(fontSize: 16),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -376,11 +376,11 @@ class ImagePickerHandler {
               const SizedBox(width: 12),
               Text(
                 'خطأ',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
               ),
             ],
           ),
-          content: Text(error, style: GoogleFonts.cairo(fontSize: 14)),
+          content: Text(error, style: GoogleFonts.tajawal(fontSize: 14)),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -392,7 +392,7 @@ class ImagePickerHandler {
               ),
               child: Text(
                 'حسناً',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),

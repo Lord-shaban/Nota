@@ -246,7 +246,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
               children: [
                 Text(
                   'تسجيل صوتي',
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.tajawal(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -254,7 +254,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
                 ),
                 Text(
                   _isListening ? 'جاري التسجيل...' : 'اضغط لبدء التحدث',
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.tajawal(
                     fontSize: 13,
                     color: Colors.white.withOpacity(0.9),
                   ),
@@ -346,7 +346,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
               Center(
                 child: Text(
                   'النص المسجل سيظهر هنا...',
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.tajawal(
                     color: Colors.grey[400],
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
@@ -356,7 +356,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
             else
               Text(
                 displayText,
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontSize: 14,
                   height: 1.6,
                   color: AppTheme.textPrimaryColor,
@@ -378,7 +378,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
                     Expanded(
                       child: Text(
                         _speechText,
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           fontSize: 14,
                           color: const Color(0xFFFFB800),
                           fontWeight: FontWeight.w500,
@@ -410,7 +410,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
           Expanded(
             child: Text(
               _errorMessage!,
-              style: GoogleFonts.cairo(fontSize: 12, color: Colors.red[700]),
+              style: GoogleFonts.tajawal(fontSize: 12, color: Colors.red[700]),
             ),
           ),
         ],
@@ -430,7 +430,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
               onPressed: _handleCancel,
               child: Text(
                 'إلغاء',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   color: Colors.grey[600],
                   fontSize: 15,
                 ),
@@ -461,7 +461,7 @@ class _VoiceRecorderDialogState extends State<VoiceRecorderDialog>
                   const SizedBox(width: 8),
                   Text(
                     'حفظ التسجيل',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       color: hasContent ? Colors.white : Colors.grey[600],
                       fontWeight: FontWeight.w600,
                       fontSize: 15,

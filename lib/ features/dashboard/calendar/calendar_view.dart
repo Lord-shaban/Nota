@@ -74,7 +74,7 @@ class _CalendarViewState extends State<CalendarView> {
           Expanded(
             child: Text(
               'التقويم',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -155,7 +155,7 @@ class _CalendarViewState extends State<CalendarView> {
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
-          titleTextStyle: GoogleFonts.cairo(
+          titleTextStyle: GoogleFonts.tajawal(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -163,8 +163,8 @@ class _CalendarViewState extends State<CalendarView> {
           rightChevronIcon: const Icon(Icons.chevron_right, color: Color(0xFFFFB800)),
         ),
         daysOfWeekStyle: DaysOfWeekStyle(
-          weekdayStyle: GoogleFonts.cairo(fontWeight: FontWeight.w600),
-          weekendStyle: GoogleFonts.cairo(
+          weekdayStyle: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+          weekendStyle: GoogleFonts.tajawal(
             fontWeight: FontWeight.w600,
             color: Colors.red,
           ),
@@ -230,7 +230,7 @@ class _CalendarViewState extends State<CalendarView> {
           const SizedBox(height: 16),
           Text(
             'لا توجد مواعيد',
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.grey.shade600,
@@ -239,7 +239,7 @@ class _CalendarViewState extends State<CalendarView> {
           const SizedBox(height: 8),
           Text(
             'اختر يوماً آخر لرؤية المواعيد',
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 14,
               color: Colors.grey.shade500,
             ),
@@ -298,7 +298,7 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.tajawal(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -311,7 +311,7 @@ class _CalendarViewState extends State<CalendarView> {
                       const SizedBox(width: 4),
                       Text(
                         time,
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           fontSize: 13,
                           color: Colors.grey.shade600,
                         ),
@@ -327,7 +327,7 @@ class _CalendarViewState extends State<CalendarView> {
                       const SizedBox(width: 4),
                       Text(
                         location,
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           fontSize: 13,
                           color: Colors.grey.shade600,
                         ),

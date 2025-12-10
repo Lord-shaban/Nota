@@ -227,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(width: 12),
           Text(
             'النوتة',
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF3C3C3C),
@@ -288,10 +288,10 @@ class _HomeScreenState extends State<HomeScreen>
           controller: _searchController,
           onChanged: _filterNotes,
           autofocus: true,
-          style: GoogleFonts.cairo(),
+          style: GoogleFonts.tajawal(),
           decoration: InputDecoration(
             hintText: 'ابحث في ملاحظاتك...',
-            hintStyle: GoogleFonts.cairo(color: Colors.grey),
+            hintStyle: GoogleFonts.tajawal(color: Colors.grey),
             prefixIcon: const Icon(Icons.search, color: Colors.grey),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
@@ -323,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen>
         indicatorWeight: 3,
         labelColor: const Color(0xFF58CC02),
         unselectedLabelColor: Colors.grey,
-        labelStyle: GoogleFonts.cairo(
+        labelStyle: GoogleFonts.tajawal(
           fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
@@ -359,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               child: Text(
                 count.toString(),
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -382,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen>
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
           'إضافة جديد',
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.tajawal(
             fontWeight: FontWeight.w600,
             color: Colors.white,
             fontSize: 16,
@@ -426,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const SizedBox(height: 16),
                   Text(
                     _userData?['name'] ?? 'المستخدم',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -434,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   Text(
                     user?.email ?? '',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       fontSize: 14,
                       color: Colors.white70,
                     ),
@@ -447,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen>
                 Icons.analytics_rounded,
                 color: const Color(0xFF58CC02),
               ),
-              title: Text('الإحصائيات', style: GoogleFonts.cairo()),
+              title: Text('الإحصائيات', style: GoogleFonts.tajawal()),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
@@ -455,13 +455,13 @@ class _HomeScreenState extends State<HomeScreen>
                 Icons.settings_rounded,
                 color: const Color(0xFF58CC02),
               ),
-              title: Text('الإعدادات', style: GoogleFonts.cairo()),
+              title: Text('الإعدادات', style: GoogleFonts.tajawal()),
               onTap: () => Navigator.pop(context),
             ),
             const Divider(),
             ListTile(
               leading: Icon(Icons.logout_rounded, color: Colors.red),
-              title: Text('تسجيل الخروج', style: GoogleFonts.cairo()),
+              title: Text('تسجيل الخروج', style: GoogleFonts.tajawal()),
               onTap: () {
                 Navigator.pop(context);
                 _handleLogout();
@@ -526,7 +526,7 @@ class _HomeScreenState extends State<HomeScreen>
                     _isSearching
                         ? 'نتائج البحث (${notes.length})'
                         : 'آخر الملاحظات',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -559,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen>
                         const SizedBox(height: 12),
                         Text(
                           _isSearching ? 'لا توجد نتائج' : 'لا توجد ملاحظات',
-                          style: GoogleFonts.cairo(
+                          style: GoogleFonts.tajawal(
                             color: Colors.grey,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -609,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 16),
                     Text(
                       emptyText,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[700],
@@ -700,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Text(
                       '$greeting، ${_userData?['name'] ?? 'صديقي'}',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -709,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 8),
                     Text(
                       message,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
                         color: Colors.white.withOpacity(0.9),
@@ -850,7 +850,7 @@ class _HomeScreenState extends State<HomeScreen>
                 children: [
                   Text(
                     value,
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
                       color: color,
@@ -859,7 +859,7 @@ class _HomeScreenState extends State<HomeScreen>
                   if (subtitle != null)
                     Text(
                       subtitle,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                         color: Colors.grey[500],
@@ -871,7 +871,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           Text(
             title,
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Colors.grey[700],
@@ -901,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           Text(
             'إجراءات سريعة',
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -961,7 +961,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -1062,7 +1062,7 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           Text(
                             note['title'] ?? '',
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1072,7 +1072,7 @@ class _HomeScreenState extends State<HomeScreen>
                           const SizedBox(height: 4),
                           Text(
                             note['content'] ?? '',
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               fontSize: 14,
                               color: Colors.grey[600],
                             ),
@@ -1090,7 +1090,7 @@ class _HomeScreenState extends State<HomeScreen>
                             children: [
                               const Icon(Icons.edit, size: 20),
                               const SizedBox(width: 12),
-                              Text('تعديل', style: GoogleFonts.cairo()),
+                              Text('تعديل', style: GoogleFonts.tajawal()),
                             ],
                           ),
                           onTap: () => Future.delayed(
@@ -1109,7 +1109,7 @@ class _HomeScreenState extends State<HomeScreen>
                               const SizedBox(width: 12),
                               Text(
                                 'حذف',
-                                style: GoogleFonts.cairo(color: Colors.red),
+                                style: GoogleFonts.tajawal(color: Colors.red),
                               ),
                             ],
                           ),
@@ -1184,7 +1184,7 @@ class _HomeScreenState extends State<HomeScreen>
                     children: [
                       Text(
                         dateStr.split('-')[2],
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: color,
@@ -1192,7 +1192,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       Text(
                         dateStr.split('-')[1],
-                        style: GoogleFonts.cairo(fontSize: 12, color: color),
+                        style: GoogleFonts.tajawal(fontSize: 12, color: color),
                       ),
                     ],
                   ),
@@ -1213,7 +1213,7 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Text(
                       appointment['title'] ?? '',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1230,7 +1230,7 @@ class _HomeScreenState extends State<HomeScreen>
                           const SizedBox(width: 4),
                           Text(
                             appointment['time'],
-                            style: GoogleFonts.cairo(
+                            style: GoogleFonts.tajawal(
                               color: Colors.grey[600],
                               fontSize: 14,
                             ),
@@ -1240,7 +1240,7 @@ class _HomeScreenState extends State<HomeScreen>
                     if (appointment['content'] != null)
                       Text(
                         appointment['content'],
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           color: Colors.grey[600],
                           fontSize: 14,
                         ),
@@ -1301,7 +1301,7 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Text(
                       expense['title'] ?? '',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1309,7 +1309,7 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 4),
                     Text(
                       expense['content'] ?? '',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         color: Colors.grey[600],
                         fontSize: 14,
                       ),
@@ -1321,7 +1321,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               Text(
                 '${expense['amount'] ?? 0} ${expense['currency'] ?? 'ر.س'}',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: color,
@@ -1364,7 +1364,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 12),
             Text(
               quote['content'] ?? quote['title'] ?? '',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
@@ -1417,7 +1417,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 20),
             Text(
               'إضافة جديد',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -1436,7 +1436,7 @@ class _HomeScreenState extends State<HomeScreen>
                 children: [
                   Text(
                     'إدخال ذكي بالـ AI',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1491,7 +1491,7 @@ class _HomeScreenState extends State<HomeScreen>
             // الإضافة اليدوية
             Text(
               'أو إضافة يدوية',
-              style: GoogleFonts.cairo(fontSize: 14, color: Colors.grey),
+              style: GoogleFonts.tajawal(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 12),
             GridView.count(
@@ -1554,7 +1554,7 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 8),
           Text(
             label,
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -1585,7 +1585,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(width: 12),
             Text(
               'إدخال ذكي',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -1596,7 +1596,7 @@ class _HomeScreenState extends State<HomeScreen>
               controller: _noteController,
               decoration: InputDecoration(
                 hintText: 'اكتب أي شيء وسأستخرجه تلقائياً...',
-                hintStyle: GoogleFonts.cairo(color: Colors.grey),
+                hintStyle: GoogleFonts.tajawal(color: Colors.grey),
                 border: const OutlineInputBorder(),
               ),
               maxLines: 5,
@@ -1620,7 +1620,7 @@ class _HomeScreenState extends State<HomeScreen>
                   Expanded(
                     child: Text(
                       'مثال: اشتري حليب غداً، اجتماع الساعة 3، دفعت 50 جنيه',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 11,
                         color: Colors.grey[600],
                       ),
@@ -1634,7 +1634,7 @@ class _HomeScreenState extends State<HomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1648,7 +1648,7 @@ class _HomeScreenState extends State<HomeScreen>
             },
             child: Text(
               'تحليل',
-              style: GoogleFonts.cairo(color: Colors.white),
+              style: GoogleFonts.tajawal(color: Colors.white),
             ),
           ),
         ],
@@ -1681,7 +1681,7 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 8),
           Text(
             label,
-            style: GoogleFonts.cairo(
+            style: GoogleFonts.tajawal(
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -1711,7 +1711,7 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (ctx) => AlertDialog(
         title: Text(
           'إضافة $typeLabel',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1737,7 +1737,7 @@ class _HomeScreenState extends State<HomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1766,7 +1766,7 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               }
             },
-            child: Text('حفظ', style: GoogleFonts.cairo(color: Colors.white)),
+            child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
           ),
         ],
       ),
@@ -1807,7 +1807,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(width: 12),
             Text(
               'اختر المجموعة',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -1831,11 +1831,11 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   title: Text(
                     'بدون مجموعة',
-                    style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
                     'إنشاء مهمة مستقلة',
-                    style: GoogleFonts.cairo(fontSize: 12),
+                    style: GoogleFonts.tajawal(fontSize: 12),
                   ),
                   onTap: () => Navigator.pop(ctx, 'NO_GROUP'),
                 ),
@@ -1859,11 +1859,11 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                           title: Text(
                             group.title,
-                            style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                            style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(
                             group.description ?? '',
-                            style: GoogleFonts.cairo(fontSize: 12),
+                            style: GoogleFonts.tajawal(fontSize: 12),
                           ),
                           onTap: () => Navigator.pop(ctx, group.id),
                         ),
@@ -1878,7 +1878,7 @@ class _HomeScreenState extends State<HomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
           if (groupsSnapshot.docs.isEmpty)
             TextButton(
@@ -1891,7 +1891,7 @@ class _HomeScreenState extends State<HomeScreen>
               },
               child: Text(
                 'إنشاء مجموعة',
-                style: GoogleFonts.cairo(color: const Color(0xFF58CC02)),
+                style: GoogleFonts.tajawal(color: const Color(0xFF58CC02)),
               ),
             ),
         ],
@@ -1937,7 +1937,7 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(width: 12),
               Text(
                 'مهمة سريعة',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -1948,7 +1948,7 @@ class _HomeScreenState extends State<HomeScreen>
                 controller: titleCtrl,
                 decoration: InputDecoration(
                   labelText: 'عنوان المهمة',
-                  labelStyle: GoogleFonts.cairo(),
+                  labelStyle: GoogleFonts.tajawal(),
                   border: const OutlineInputBorder(),
                 ),
                 autofocus: true,
@@ -1958,7 +1958,7 @@ class _HomeScreenState extends State<HomeScreen>
                 controller: descCtrl,
                 decoration: InputDecoration(
                   labelText: 'الوصف (اختياري)',
-                  labelStyle: GoogleFonts.cairo(),
+                  labelStyle: GoogleFonts.tajawal(),
                   border: const OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -1968,7 +1968,7 @@ class _HomeScreenState extends State<HomeScreen>
                 children: [
                   Text(
                     'الأولوية:',
-                    style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1979,10 +1979,10 @@ class _HomeScreenState extends State<HomeScreen>
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       items: [
-                        DropdownMenuItem(value: 'urgent', child: Text('🔴 عاجل', style: GoogleFonts.cairo())),
-                        DropdownMenuItem(value: 'high', child: Text('🟠 عالي', style: GoogleFonts.cairo())),
-                        DropdownMenuItem(value: 'medium', child: Text('🟡 متوسط', style: GoogleFonts.cairo())),
-                        DropdownMenuItem(value: 'low', child: Text('🟢 منخفض', style: GoogleFonts.cairo())),
+                        DropdownMenuItem(value: 'urgent', child: Text('🔴 عاجل', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'high', child: Text('🟠 عالي', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'medium', child: Text('🟡 متوسط', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'low', child: Text('🟢 منخفض', style: GoogleFonts.tajawal())),
                       ],
                       onChanged: (value) {
                         if (value != null) {
@@ -1998,7 +1998,7 @@ class _HomeScreenState extends State<HomeScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('إلغاء', style: GoogleFonts.cairo()),
+              child: Text('إلغاء', style: GoogleFonts.tajawal()),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -2028,13 +2028,13 @@ class _HomeScreenState extends State<HomeScreen>
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('تم إنشاء المهمة بنجاح', style: GoogleFonts.cairo()),
+                      content: Text('تم إنشاء المهمة بنجاح', style: GoogleFonts.tajawal()),
                       backgroundColor: const Color(0xFF58CC02),
                     ),
                   );
                 }
               },
-              child: Text('حفظ', style: GoogleFonts.cairo(color: Colors.white)),
+              child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
             ),
           ],
         ),
@@ -2048,16 +2048,16 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (ctx) => AlertDialog(
         title: Text(
           note['title'] ?? 'بدون عنوان',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
         ),
         content: Text(
           note['content'] ?? 'لا يوجد محتوى',
-          style: GoogleFonts.cairo(fontSize: 16),
+          style: GoogleFonts.tajawal(fontSize: 16),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إغلاق', style: GoogleFonts.cairo()),
+            child: Text('إغلاق', style: GoogleFonts.tajawal()),
           ),
         ],
       ),
@@ -2074,7 +2074,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             ListTile(
               leading: const Icon(Icons.edit, color: Color(0xFF58CC02)),
-              title: Text('تعديل', style: GoogleFonts.cairo()),
+              title: Text('تعديل', style: GoogleFonts.tajawal()),
               onTap: () {
                 Navigator.pop(ctx);
                 _editNote(note);
@@ -2082,7 +2082,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: Text('حذف', style: GoogleFonts.cairo(color: Colors.red)),
+              title: Text('حذف', style: GoogleFonts.tajawal(color: Colors.red)),
               onTap: () {
                 Navigator.pop(ctx);
                 _deleteNote(note['id']);
@@ -2103,7 +2103,7 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (ctx) => AlertDialog(
         title: Text(
           'تعديل الملاحظة',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2129,7 +2129,7 @@ class _HomeScreenState extends State<HomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -2155,7 +2155,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ).showSnackBar(const SnackBar(content: Text('تم التحديث')));
               }
             },
-            child: Text('حفظ', style: GoogleFonts.cairo(color: Colors.white)),
+            child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
           ),
         ],
       ),
@@ -2169,13 +2169,13 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (ctx) => AlertDialog(
         title: Text(
           'حذف الملاحظة',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
         ),
-        content: Text('هل أنت متأكد؟', style: GoogleFonts.cairo()),
+        content: Text('هل أنت متأكد؟', style: GoogleFonts.tajawal()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -2195,7 +2195,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ).showSnackBar(const SnackBar(content: Text('تم الحذف')));
               }
             },
-            child: Text('حذف', style: GoogleFonts.cairo(color: Colors.white)),
+            child: Text('حذف', style: GoogleFonts.tajawal(color: Colors.white)),
           ),
         ],
       ),
@@ -2208,20 +2208,20 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (ctx) => AlertDialog(
         title: Text(
           'تسجيل الخروج',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
+          style: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
         ),
-        content: Text('هل أنت متأكد؟', style: GoogleFonts.cairo()),
+        content: Text('هل أنت متأكد؟', style: GoogleFonts.tajawal()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: GoogleFonts.cairo()),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               'تسجيل الخروج',
-              style: GoogleFonts.cairo(color: Colors.white),
+              style: GoogleFonts.tajawal(color: Colors.white),
             ),
           ),
         ],
@@ -2326,7 +2326,7 @@ class _HomeScreenState extends State<HomeScreen>
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('خطأ في تحليل الاستجابة من الذكاء الاصطناعي', style: GoogleFonts.cairo()),
+                  content: Text('خطأ في تحليل الاستجابة من الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
                   backgroundColor: Colors.orange,
                   action: SnackBarAction(
                     label: 'تفاصيل',
@@ -2335,14 +2335,14 @@ class _HomeScreenState extends State<HomeScreen>
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('تفاصيل الخطأ', style: GoogleFonts.cairo()),
+                          title: Text('تفاصيل الخطأ', style: GoogleFonts.tajawal()),
                           content: SingleChildScrollView(
-                            child: Text('$e\n\nResponse:\n$jsonStr', style: GoogleFonts.cairo(fontSize: 12)),
+                            child: Text('$e\n\nResponse:\n$jsonStr', style: GoogleFonts.tajawal(fontSize: 12)),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text('إغلاق', style: GoogleFonts.cairo()),
+                              child: Text('إغلاق', style: GoogleFonts.tajawal()),
                             ),
                           ],
                         ),
@@ -2361,7 +2361,7 @@ class _HomeScreenState extends State<HomeScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('لم يتم استقبال رد من الذكاء الاصطناعي', style: GoogleFonts.cairo()),
+              content: Text('لم يتم استقبال رد من الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
               backgroundColor: Colors.orange,
             ),
           );
@@ -2376,7 +2376,7 @@ class _HomeScreenState extends State<HomeScreen>
           'content': text,
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.cairo())),
+          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
         );
       }
     } catch (e) {
@@ -2389,7 +2389,7 @@ class _HomeScreenState extends State<HomeScreen>
         // Show detailed error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في الاتصال بالذكاء الاصطناعي', style: GoogleFonts.cairo()),
+            content: Text('خطأ في الاتصال بالذكاء الاصطناعي', style: GoogleFonts.tajawal()),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
@@ -2399,25 +2399,25 @@ class _HomeScreenState extends State<HomeScreen>
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text('خطأ في الذكاء الاصطناعي', style: GoogleFonts.cairo()),
+                    title: Text('خطأ في الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
                     content: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('الخطأ:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
-                          Text('$e', style: GoogleFonts.cairo(fontSize: 12)),
+                          Text('الخطأ:', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                          Text('$e', style: GoogleFonts.tajawal(fontSize: 12)),
                           const SizedBox(height: 12),
-                          Text('الحل المحتمل:', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                          Text('الحل المحتمل:', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
                           Text('• تحقق من اتصال الإنترنت\n• تأكد من صحة API Key\n• حاول مرة أخرى لاحقاً', 
-                            style: GoogleFonts.cairo(fontSize: 12)),
+                            style: GoogleFonts.tajawal(fontSize: 12)),
                         ],
                       ),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text('إغلاق', style: GoogleFonts.cairo()),
+                        child: Text('إغلاق', style: GoogleFonts.tajawal()),
                       ),
                     ],
                   ),
@@ -2434,7 +2434,7 @@ class _HomeScreenState extends State<HomeScreen>
         });
         
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.cairo())),
+          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
         );
       }
     }
@@ -2452,7 +2452,7 @@ class _HomeScreenState extends State<HomeScreen>
         SnackBar(
           content: Text(
             'التعرف على الصوت غير متاح',
-            style: GoogleFonts.cairo(),
+            style: GoogleFonts.tajawal(),
           ),
           backgroundColor: Colors.red,
         ),
@@ -2506,7 +2506,7 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(height: 20),
               Text(
                 _isListening ? 'أستمع إليك...' : 'اضغط للتحدث',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2527,7 +2527,7 @@ class _HomeScreenState extends State<HomeScreen>
                     _fullSpeechText.isEmpty
                         ? 'ابدأ بالتحدث...'
                         : _fullSpeechText,
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.tajawal(
                       color: _fullSpeechText.isEmpty
                           ? Colors.grey
                           : Colors.black,
@@ -2552,7 +2552,7 @@ class _HomeScreenState extends State<HomeScreen>
                     icon: const Icon(Icons.close, color: Colors.white),
                     label: Text(
                       'إلغاء',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2589,7 +2589,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     label: Text(
                       _isListening ? 'حفظ' : 'تحدث',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2721,7 +2721,7 @@ class _HomeScreenState extends State<HomeScreen>
               'imageUrl': cloudinaryResponse.secureUrl,
             });
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم حفظ الصورة', style: GoogleFonts.cairo())),
+              SnackBar(content: Text('تم حفظ الصورة', style: GoogleFonts.tajawal())),
             );
           }
         } catch (e) {
@@ -2730,7 +2730,7 @@ class _HomeScreenState extends State<HomeScreen>
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('خطأ في معالجة الصورة', style: GoogleFonts.cairo()),
+                content: Text('خطأ في معالجة الصورة', style: GoogleFonts.tajawal()),
                 backgroundColor: Colors.red,
               ),
             );
@@ -2742,7 +2742,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في اختيار الصورة', style: GoogleFonts.cairo()),
+            content: Text('خطأ في اختيار الصورة', style: GoogleFonts.tajawal()),
             backgroundColor: Colors.red,
           ),
         );
@@ -2759,7 +2759,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             const CircularProgressIndicator(color: Color(0xFF58CC02)),
             const SizedBox(width: 20),
-            Expanded(child: Text(message, style: GoogleFonts.cairo())),
+            Expanded(child: Text(message, style: GoogleFonts.tajawal())),
           ],
         ),
       ),
@@ -2788,7 +2788,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(width: 12),
             Text(
               'تم استخراج ${_extractedItems.length} عنصر',
-              style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -2810,7 +2810,7 @@ class _HomeScreenState extends State<HomeScreen>
             },
             child: Text(
               'إلغاء',
-              style: GoogleFonts.cairo(color: Colors.grey[600]),
+              style: GoogleFonts.tajawal(color: Colors.grey[600]),
             ),
           ),
           ElevatedButton(
@@ -2823,7 +2823,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             child: Text(
               'حفظ الكل',
-              style: GoogleFonts.cairo(color: Colors.white),
+              style: GoogleFonts.tajawal(color: Colors.white),
             ),
           ),
         ],
@@ -2901,7 +2901,7 @@ class _HomeScreenState extends State<HomeScreen>
             Expanded(
               child: Text(
                 item['title'] ?? 'بدون عنوان',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
               ),
             ),
             if (priorityEmoji != null)
@@ -2919,7 +2919,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Text(
               item['content'] ?? '',
-              style: GoogleFonts.cairo(fontSize: 12),
+              style: GoogleFonts.tajawal(fontSize: 12),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -2939,7 +2939,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       child: Text(
                         item['suggestedGroup'],
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
                           color: color,
@@ -2951,7 +2951,7 @@ class _HomeScreenState extends State<HomeScreen>
                   if (priorityLabel != null)
                     Text(
                       priorityLabel,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.tajawal(
                         fontSize: 10,
                         color: Colors.grey[600],
                       ),
@@ -3020,7 +3020,7 @@ class _HomeScreenState extends State<HomeScreen>
         SnackBar(
           content: Text(
             'تم حفظ $savedCount عنصر',
-            style: GoogleFonts.cairo(),
+            style: GoogleFonts.tajawal(),
           ),
           backgroundColor: const Color(0xFF58CC02),
         ),

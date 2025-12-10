@@ -168,20 +168,20 @@ class _TextInputDialogState extends State<TextInputDialog>
               const SizedBox(width: 12),
               Text(
                 'تجاهل التغييرات؟',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
               ),
             ],
           ),
           content: Text(
             'لديك نص غير محفوظ. هل تريد تجاهله والخروج؟',
-            style: GoogleFonts.cairo(fontSize: 14),
+            style: GoogleFonts.tajawal(fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'متابعة الكتابة',
-                style: GoogleFonts.cairo(color: Colors.grey[600]),
+                style: GoogleFonts.tajawal(color: Colors.grey[600]),
               ),
             ),
             ElevatedButton(
@@ -197,7 +197,7 @@ class _TextInputDialogState extends State<TextInputDialog>
               ),
               child: Text(
                 'تجاهل',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -255,14 +255,14 @@ class _TextInputDialogState extends State<TextInputDialog>
             children: [
               Text(
                 'أضف ملاحظة جديدة',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontWeight: FontWeight.w600,
                   fontSize: 18,
                 ),
               ),
               Text(
                 'اكتب ملاحظتك ودعنا ننظمها لك',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontSize: 12,
                   color: Colors.grey[600],
                 ),
@@ -313,7 +313,7 @@ class _TextInputDialogState extends State<TextInputDialog>
           maxLines: 8,
           maxLength: 5000,
           enabled: !_isProcessing,
-          style: GoogleFonts.cairo(fontSize: 14, height: 1.5),
+          style: GoogleFonts.tajawal(fontSize: 14, height: 1.5),
           decoration: InputDecoration(
             hintText:
                 'اكتب ملاحظتك هنا...\n\n'
@@ -322,7 +322,7 @@ class _TextInputDialogState extends State<TextInputDialog>
                 '• مواعيد: "موعد الطبيب يوم الخميس الساعة 3"\n'
                 '• مصروفات: "دفعت 50 ريال للبقالة"\n'
                 '• أي شيء آخر تريد تذكره',
-            hintStyle: GoogleFonts.cairo(
+            hintStyle: GoogleFonts.tajawal(
               color: Colors.grey[400],
               fontSize: 13,
             ),
@@ -369,7 +369,7 @@ class _TextInputDialogState extends State<TextInputDialog>
             ),
             child: Text(
               '${_noteController.text.length}/5000',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 11,
                 color: _noteController.text.length > 4500
                     ? Colors.red
@@ -401,7 +401,7 @@ class _TextInputDialogState extends State<TextInputDialog>
           Expanded(
             child: Text(
               'سيقوم الذكاء الاصطناعي بتحليل النص وتنظيمه تلقائياً',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
                 color: Colors.grey[700],
@@ -428,7 +428,7 @@ class _TextInputDialogState extends State<TextInputDialog>
           Expanded(
             child: Text(
               _errorMessage!,
-              style: GoogleFonts.cairo(fontSize: 12, color: Colors.red[700]),
+              style: GoogleFonts.tajawal(fontSize: 12, color: Colors.red[700]),
             ),
           ),
         ],
@@ -444,7 +444,7 @@ class _TextInputDialogState extends State<TextInputDialog>
             onPressed: _isProcessing ? null : _handleCancel,
             child: Text(
               'إلغاء',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.tajawal(
                 color: _isProcessing ? Colors.grey[400] : Colors.grey[600],
                 fontSize: 15,
               ),
@@ -481,7 +481,7 @@ class _TextInputDialogState extends State<TextInputDialog>
                       const SizedBox(width: 8),
                       Text(
                         'جاري المعالجة...',
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
@@ -500,7 +500,7 @@ class _TextInputDialogState extends State<TextInputDialog>
                       const SizedBox(width: 8),
                       Text(
                         'حفظ الملاحظة',
-                        style: GoogleFonts.cairo(
+                        style: GoogleFonts.tajawal(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,

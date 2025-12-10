@@ -76,7 +76,7 @@ class NotaApp extends StatelessWidget {
   ThemeData _buildAlNotaTheme() {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.cairo().fontFamily,
+      fontFamily: GoogleFonts.tajawal().fontFamily,
       primaryColor: const Color(0xFFFFB800), // Golden yellow from alNota
       scaffoldBackgroundColor: const Color(0xFFF5F5F5),
       colorScheme: ColorScheme.light(
@@ -90,7 +90,7 @@ class NotaApp extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.cairo(
+        titleTextStyle: GoogleFonts.tajawal(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,
@@ -116,7 +116,7 @@ class NotaApp extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.cairo(
+          textStyle: GoogleFonts.tajawal(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -137,8 +137,8 @@ class NotaApp extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFFFB800), width: 2),
         ),
-        labelStyle: GoogleFonts.cairo(color: Colors.grey.shade700),
-        hintStyle: GoogleFonts.cairo(color: Colors.grey.shade400),
+        labelStyle: GoogleFonts.tajawal(color: Colors.grey.shade700),
+        hintStyle: GoogleFonts.tajawal(color: Colors.grey.shade400),
       ),
     );
   }

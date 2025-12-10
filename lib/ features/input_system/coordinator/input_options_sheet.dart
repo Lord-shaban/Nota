@@ -134,7 +134,7 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
               // Title
               Text(
                 'اختر طريقة الإدخال',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimaryColor,
@@ -143,7 +143,7 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
               const SizedBox(height: 8),
               Text(
                 'اختر الطريقة المناسبة لإضافة ملاحظتك',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.tajawal(
                   fontSize: 14,
                   color: Colors.grey[600],
                 ),
@@ -220,7 +220,7 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
                         const SizedBox(width: 8),
                         Text(
                           'نصائح',
-                          style: GoogleFonts.cairo(
+                          style: GoogleFonts.tajawal(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.orange[700],
@@ -310,7 +310,7 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
                             children: [
                               Text(
                                 title,
-                                style: GoogleFonts.cairo(
+                                style: GoogleFonts.tajawal(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.textPrimaryColor,
@@ -319,7 +319,7 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
                               const SizedBox(height: 4),
                               Text(
                                 subtitle,
-                                style: GoogleFonts.cairo(
+                                style: GoogleFonts.tajawal(
                                   fontSize: 13,
                                   color: Colors.grey[600],
                                 ),
@@ -349,7 +349,7 @@ class _InputOptionsSheetState extends State<InputOptionsSheet>
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         text,
-        style: GoogleFonts.cairo(fontSize: 12, color: Colors.grey[700]),
+        style: GoogleFonts.tajawal(fontSize: 12, color: Colors.grey[700]),
       ),
     );
   }
