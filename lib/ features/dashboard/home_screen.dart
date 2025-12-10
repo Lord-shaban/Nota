@@ -1770,15 +1770,15 @@ class _HomeScreenState extends State<HomeScreen>
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: Text(
-                    group.emoji,
+                    group.icon,
                     style: const TextStyle(fontSize: 32),
                   ),
                   title: Text(
-                    group.name,
+                    group.title,
                     style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    group.description,
+                    group.description ?? '',
                     style: GoogleFonts.tajawal(fontSize: 12),
                   ),
                   onTap: () => Navigator.pop(ctx, group.id),
@@ -2715,7 +2715,7 @@ class _HomeScreenState extends State<HomeScreen>
           .get();
 
       final existingGroup = groupsSnapshot.docs.firstWhere(
-        (doc) => TaskGroup.fromFirestore(doc).name == suggestedGroup,
+        (doc) => TaskGroup.fromFirestore(doc).title == suggestedGroup,
         orElse: () => groupsSnapshot.docs.first,
       );
 
@@ -2746,10 +2746,14 @@ class _HomeScreenState extends State<HomeScreen>
           .doc(userId)
           .collection('taskGroups')
           .add({
-        'name': '📝 عام',
-        'emoji': '📝',
+        'title': '📝 عام',
+        'icon': '📝',
         'description': 'مجموعة عامة للمهام',
         'color': '#58CC02',
+        'userId': userId,
+        'totalTasks': 0,
+        'completedTasks': 0,
+        'taskIds': [],
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -2777,7 +2781,7 @@ class _HomeScreenState extends State<HomeScreen>
       notes: '',
       isCompleted: false,
       createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      userId: userId,
     );
 
     await _firestore
