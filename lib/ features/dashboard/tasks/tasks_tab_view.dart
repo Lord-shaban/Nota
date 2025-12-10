@@ -264,11 +264,22 @@ class _TasksTabViewState extends State<TasksTabView>
 
   Widget _buildTabSelector() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 44,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      height: 46,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TabBar(
         controller: _tabController,
@@ -279,8 +290,8 @@ class _TasksTabViewState extends State<TasksTabView>
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF58CC02).withOpacity(0.3),
-              blurRadius: 8,
+              color: const Color(0xFF58CC02).withOpacity(0.25),
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -288,27 +299,23 @@ class _TasksTabViewState extends State<TasksTabView>
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey.shade600,
+        unselectedLabelColor: Colors.grey.shade700,
         labelStyle: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 14,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
         tabs: const [
           Tab(
-            icon: Icon(Icons.folder_outlined, size: 18),
-            text: 'المجموعات',
-            iconMargin: EdgeInsets.only(bottom: 2),
-            height: 42,
+            text: '📁  المجموعات',
+            height: 44,
           ),
           Tab(
-            icon: Icon(Icons.format_list_bulleted, size: 18),
-            text: 'كل المهام',
-            iconMargin: EdgeInsets.only(bottom: 2),
-            height: 42,
+            text: '✅  كل المهام',
+            height: 44,
           ),
         ],
       ),
