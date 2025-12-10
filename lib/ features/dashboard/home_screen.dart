@@ -500,7 +500,11 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(height: 20),
                 _buildQuickActions(),
                 const SizedBox(height: 20),
-                const RecentTasksWidget(),
+                RecentTasksWidget(
+                  onViewAll: () {
+                    _tabController.animateTo(1); // Navigate to tasks tab
+                  },
+                ),
                 const SizedBox(height: 20),
               ],
               Row(
