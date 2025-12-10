@@ -29,7 +29,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
   String get searchFieldLabel => 'ابحث في الملاحظات...';
 
   @override
-  TextStyle get searchFieldStyle => GoogleFonts.tajawal(fontSize: 16);
+  TextStyle get searchFieldStyle => GoogleFonts.cairo(fontSize: 16);
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -40,14 +40,14 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        hintStyle: GoogleFonts.tajawal(
+        hintStyle: GoogleFonts.cairo(
           color: Colors.white70,
           fontSize: 16,
         ),
         border: InputBorder.none,
       ),
       textTheme: TextTheme(
-        titleLarge: GoogleFonts.tajawal(
+        titleLarge: GoogleFonts.cairo(
           color: Colors.white,
           fontSize: 18,
         ),
@@ -203,7 +203,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
                   Expanded(
                     child: Text(
                       item['title'] ?? 'بدون عنوان',
-                      style: GoogleFonts.tajawal(
+                      style: GoogleFonts.cairo(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -218,7 +218,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
               const SizedBox(height: 8),
               Text(
                 item['content'] ?? '',
-                style: GoogleFonts.tajawal(
+                style: GoogleFonts.cairo(
                   fontSize: 14,
                   color: Colors.grey.shade600,
                 ),
@@ -232,7 +232,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
                   const SizedBox(width: 4),
                   Text(
                     _formatDate(item['createdAt']),
-                    style: GoogleFonts.tajawal(
+                    style: GoogleFonts.cairo(
                       fontSize: 12,
                       color: Colors.grey,
                     ),
@@ -252,11 +252,11 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
       leading: _getCategoryIcon(item['category']),
       title: Text(
         item['title'] ?? 'بدون عنوان',
-        style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+        style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
         item['content'] ?? '',
-        style: GoogleFonts.tajawal(fontSize: 13),
+        style: GoogleFonts.cairo(fontSize: 13),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -280,7 +280,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
           const SizedBox(height: 16),
           Text(
             'ابحث في ملاحظاتك',
-            style: GoogleFonts.tajawal(
+            style: GoogleFonts.cairo(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.grey.shade600,
@@ -289,7 +289,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
           const SizedBox(height: 8),
           Text(
             'ابدأ الكتابة للبحث',
-            style: GoogleFonts.tajawal(
+            style: GoogleFonts.cairo(
               fontSize: 14,
               color: Colors.grey.shade500,
             ),
@@ -309,7 +309,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
           const SizedBox(height: 16),
           Text(
             'لا توجد نتائج',
-            style: GoogleFonts.tajawal(
+            style: GoogleFonts.cairo(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.grey.shade600,
@@ -318,7 +318,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
           const SizedBox(height: 8),
           Text(
             'جرب كلمات مفتاحية أخرى',
-            style: GoogleFonts.tajawal(
+            style: GoogleFonts.cairo(
               fontSize: 14,
               color: Colors.grey.shade500,
             ),
@@ -333,7 +333,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('تصفية النتائج', style: GoogleFonts.tajawal()),
+        title: Text('تصفية النتائج', style: GoogleFonts.cairo()),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -343,7 +343,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
                 value: _selectedCategory,
                 decoration: InputDecoration(
                   labelText: 'الفئة',
-                  labelStyle: GoogleFonts.tajawal(),
+                  labelStyle: GoogleFonts.cairo(),
                 ),
                 items: [
                   DropdownMenuItem(value: null, child: Text('الكل')),
@@ -360,7 +360,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
                 value: _sortBy,
                 decoration: InputDecoration(
                   labelText: 'الترتيب',
-                  labelStyle: GoogleFonts.tajawal(),
+                  labelStyle: GoogleFonts.cairo(),
                 ),
                 items: [
                   DropdownMenuItem(value: 'recent', child: Text('الأحدث')),
@@ -382,14 +382,14 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
               Navigator.pop(context);
               showResults(context);
             },
-            child: Text('إعادة تعيين', style: GoogleFonts.tajawal()),
+            child: Text('إعادة تعيين', style: GoogleFonts.cairo()),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               showResults(context);
             },
-            child: Text('تطبيق', style: GoogleFonts.tajawal()),
+            child: Text('تطبيق', style: GoogleFonts.cairo()),
           ),
         ],
       ),
@@ -463,7 +463,7 @@ class NotaSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
       ),
       child: Text(
         priority.toUpperCase(),
-        style: GoogleFonts.tajawal(
+        style: GoogleFonts.cairo(
           fontSize: 10,
           fontWeight: FontWeight.bold,
           color: color,

@@ -1,4 +1,4 @@
-ï»¿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import '../../../core/theme/app_theme.dart';
 import '../services/auth_service.dart';
@@ -114,13 +114,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ø¹ÙˆØ¯ØªÙƒ!',
+                  'ãÑÍÈÇğ ÈÚæÏÊß!',
                   style: Theme.of(context).textTheme.displaySmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ø³Ø¬Ù‘Ù„ Ø¯Ø®ÙˆÙ„Ùƒ Ù„Ù„Ù…ØªØ§Ø¨Ø¹Ø©',
+                  'ÓÌøá ÏÎæáß ááãÊÇÈÚÉ',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -129,17 +129,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 AuthTextField(
                   controller: _emailController,
-                  label: 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ',
+                  label: 'ÇáÈÑíÏ ÇáÅáßÊÑæäí',
                   hint: 'example@email.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ';
+                      return 'íÑÌì ÅÏÎÇá ÇáÈÑíÏ ÇáÅáßÊÑæäí';
                     }
                     if (!EmailValidator.validate(value.trim())) {
-                      return 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ØºÙŠØ± ØµØ§Ù„Ø­';
+                      return 'ÇáÈÑíÏ ÇáÅáßÊÑæäí ÛíÑ ÕÇáÍ';
                     }
                     return null;
                   },
@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 AuthTextField(
                   controller: _passwordController,
-                  label: 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±',
+                  label: 'ßáãÉ ÇáãÑæÑ',
                   hint: '',
                   prefixIcon: Icons.lock_outlined,
                   isPassword: true,
@@ -155,10 +155,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   onSubmitted: (_) => _handleLogin(),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±';
+                      return 'íÑÌì ÅÏÎÇá ßáãÉ ÇáãÑæÑ';
                     }
                     if (value.length < 6) {
-                      return 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 6 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„';
+                      return 'ßáãÉ ÇáãÑæÑ íÌÈ Ãä Êßæä 6 ÃÍÑİ Úáì ÇáÃŞá';
                     }
                     return null;
                   },
@@ -168,12 +168,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: _showForgotPasswordDialog,
-                    child: const Text('Ù†Ø³ÙŠØª ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±ØŸ'),
+                    child: const Text('äÓíÊ ßáãÉ ÇáãÑæÑ¿'),
                   ),
                 ),
                 const SizedBox(height: 24),
                 AuthButton(
-                  text: 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„',
+                  text: 'ÊÓÌíá ÇáÏÎæá',
                   onPressed: _handleLogin,
                   isLoading: _isLoading,
                   icon: Icons.login,
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'Ø£Ùˆ',
+                        'Ãæ',
                         style: TextStyle(
                           color: AppTheme.textSecondaryColor,
                         ),
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ Ø­Ø³Ø§Ø¨ØŸ ',
+                      'áíÓ áÏíß ÍÓÇÈ¿ ',
                       style: TextStyle(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       onPressed: _navigateToRegister,
                       child: const Text(
-                        'Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨ Ø¬Ø¯ÙŠØ¯',
+                        'ÅäÔÇÁ ÍÓÇÈ ÌÏíÏ',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -217,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Ø¨ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ØŒ Ø£Ù†Øª ØªÙˆØ§ÙÙ‚ Ø¹Ù„Ù‰ Ø´Ø±ÙˆØ· Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù…',
+                  'ÈÊÓÌíá ÇáÏÎæá¡ ÃäÊ ÊæÇİŞ Úáì ÔÑæØ ÇáÇÓÊÎÏÇã',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),

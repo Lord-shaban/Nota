@@ -146,7 +146,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                   const SizedBox(width: 8),
                   Text(
                     'معاينة الصورة',
-                    style: GoogleFonts.tajawal(
+                    style: GoogleFonts.cairo(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -180,7 +180,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                       },
                       child: Text(
                         'إعادة',
-                        style: GoogleFonts.tajawal(color: Colors.grey[600]),
+                        style: GoogleFonts.cairo(color: Colors.grey[600]),
                       ),
                     ),
                   ),
@@ -201,7 +201,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                       ),
                       child: Text(
                         'استخدام الصورة',
-                        style: GoogleFonts.tajawal(
+                        style: GoogleFonts.cairo(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
@@ -220,7 +220,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.tajawal()),
+        content: Text(message, style: GoogleFonts.cairo()),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -294,7 +294,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                   ),
                   Text(
                     'التقاط صورة',
-                    style: GoogleFonts.tajawal(
+                    style: GoogleFonts.cairo(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
