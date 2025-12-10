@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/models/task_model.dart';
 import '../../../core/models/task_group.dart';
-import '../../../core/theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'task_group_card.dart';
 import 'create_task_group_dialog.dart';
@@ -446,11 +445,6 @@ class _TasksTabViewState extends State<TasksTabView>
               label: const Text(
                 'إصلاح المهام القديمة (اضغط مرة واحدة فقط)',
                 style: TextStyle(fontSize: 13),
-              ),
-            ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 4,
               ),
             ),
           ],
