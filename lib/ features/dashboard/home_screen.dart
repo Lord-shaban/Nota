@@ -711,44 +711,71 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildStatsCards() {
-    final pending = _tasks.where((t) => t['completed'] != true).length;
-    final totalExp = _expenses.fold<double>(
-      0,
-      (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble(),
-    );
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
-      children: [
-        _buildStatCard(
-          'المهام المعلقة',
-          pending.toString(),
-          Icons.pending_actions_rounded,
-          const Color(0xFF58CC02),
-        ),
-        _buildStatCard(
-          'المواعيد',
-          _appointments.length.toString(),
-          Icons.event_available_rounded,
-          const Color(0xFFFFB800),
-        ),
-        _buildStatCard(
-          'المصروفات',
-          totalExp.toStringAsFixed(0),
-          Icons.account_balance_wallet_rounded,
-          Colors.blue,
-        ),
-        _buildStatCard(
-          'الاقتباسات',
-          _quotes.length.toString(),
-          Icons.format_quote_rounded,
-          Colors.purple,
-        ),
-      ],
+    final userId = _auth.currentUser?.uid;
+    
+    return StreamBuilder<QuerySnapshot>(
+      stream: userId != null
+          ? _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('taskGroups')
+              .snapshots()
+          : null,
+      builder: (context, groupSnapshot) {
+        int totalTasks = 0;
+        int completedTasks = 0;
+        
+        if (groupSnapshot.hasData) {
+          for (var doc in groupSnapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            totalTasks += (data['totalTasks'] ?? 0) as int;
+            completedTasks += (data['completedTasks'] ?? 0) as int;
+          }
+        }
+        
+        final pending = totalTasks - completedTasks;
+        final totalExp = _expenses.fold<double>(
+          0,
+          (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble(),
+        );
+        
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.5,
+          children: [
+            _buildStatCard(
+              'المهام المعلقة',
+              pending.toString(),
+              Icons.pending_actions_rounded,
+              const Color(0xFF58CC02),
+              subtitle: completedTasks > 0 ? 'مكتمل: $completedTasks' : null,
+            ),
+            _buildStatCard(
+              'المواعيد',
+              _appointments.length.toString(),
+              Icons.event_available_rounded,
+              const Color(0xFFFFB800),
+            ),
+            _buildStatCard(
+              'المصروفات',
+              totalExp.toStringAsFixed(0),
+              Icons.account_balance_wallet_rounded,
+              Colors.blue,
+              subtitle: 'ر.س',
+            ),
+            _buildStatCard(
+              'الاقتباسات',
+              _quotes.length.toString(),
+              Icons.format_quote_rounded,
+              Colors.purple,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -756,8 +783,9 @@ class _HomeScreenState extends State<HomeScreen>
     String title,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    String? subtitle,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -786,13 +814,27 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
-              Text(
-                value,
-                style: GoogleFonts.tajawal(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    value,
+                    style: GoogleFonts.tajawal(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
