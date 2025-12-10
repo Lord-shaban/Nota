@@ -15,6 +15,10 @@ import 'package:lottie/lottie.dart';
 import '../auth/splash/animated_splash_screen.dart';
 import 'tasks/tasks_tab_view.dart';
 import 'widgets/recent_tasks_widget.dart';
+import 'tasks/create_task_dialog.dart';
+import 'tasks/create_task_group_dialog.dart';
+import '../../core/models/task_model.dart';
+import '../../core/models/task_group.dart';
 
 // Cloudinary Configuration
 final cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
@@ -1610,12 +1614,16 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showAddDialog(String type) {
+  void _showAddDialog(String type) async {
+    if (type == 'task') {
+      // استخدام نظام المهام الجديد
+      await _showTaskCreationFlow();
+      return;
+    }
+
     final titleCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
-    final typeLabel = type == 'task'
-        ? 'مهمة'
-        : type == 'appointment'
+    final typeLabel = type == 'appointment'
         ? 'موعد'
         : type == 'expense'
         ? 'مصروف'
@@ -1686,6 +1694,114 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _showTaskCreationFlow() async {
+    // جلب المجموعات الموجودة
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    final groupsSnapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('taskGroups')
+        .get();
+
+    if (!mounted) return;
+
+    if (groupsSnapshot.docs.isEmpty) {
+      // لا توجد مجموعات - إنشاء مجموعة أولاً
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'قم بإنشاء مجموعة أولاً من تبويب المهام',
+            style: GoogleFonts.tajawal(),
+          ),
+          backgroundColor: const Color(0xFFFFB800),
+          action: SnackBarAction(
+            label: 'إنشاء مجموعة',
+            textColor: Colors.white,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const CreateTaskGroupDialog(),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    // عرض قائمة المجموعات للاختيار
+    final selectedGroupId = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.folder_rounded,
+                color: Color(0xFF58CC02),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'اختر المجموعة',
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: groupsSnapshot.docs.length,
+            itemBuilder: (context, index) {
+              final doc = groupsSnapshot.docs[index];
+              final group = TaskGroup.fromFirestore(doc);
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: Text(
+                    group.emoji,
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                  title: Text(
+                    group.name,
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    group.description,
+                    style: GoogleFonts.tajawal(fontSize: 12),
+                  ),
+                  onTap: () => Navigator.pop(ctx, group.id),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedGroupId != null && mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => CreateTaskDialog(groupId: selectedGroupId),
+      );
+    }
   }
 
   void _showNoteDetails(Map<String, dynamic> note) {
@@ -1897,6 +2013,8 @@ class _HomeScreenState extends State<HomeScreen>
 
 استخرج العناصر التالية:
 - المهام: أي شيء يحتاج إنجاز (مثل: اشتري، اعمل، راجع، اتصل)
+  * اقترح مجموعة مناسبة للمهمة من: 📚 مذاكرة، 🛒 تسوق، 💼 عمل، 🏠 منزل، 🏋️ رياضة، 🎯 شخصي
+  * حدد الأولوية: urgent (عاجل)، high (عالي)، medium (متوسط)، low (منخفض)
 - المواعيد: أي حدث بتاريخ/وقت (مثل: اجتماع، موعد، غداً، الساعة)
 - المصروفات: أي ذكر للمال (مثل: دفعت، اشتريت، جنيه، ريال، دولار)
 - الاقتباسات: عبارات ملهمة أو حكم
@@ -1912,7 +2030,9 @@ class _HomeScreenState extends State<HomeScreen>
       "date": "YYYY-MM-DD أو null",
       "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "ر.س/جنيه/دولار أو null"
+      "currency": "ر.س/جنيه/دولار أو null",
+      "suggestedGroup": "اسم المجموعة مع الإيموجي (للمهام فقط)",
+      "priority": "urgent/high/medium/low (للمهام فقط، افتراضي medium)"
     }
   ]
 }
@@ -1922,6 +2042,7 @@ class _HomeScreenState extends State<HomeScreen>
 - type يجب أن يكون: task أو appointment أو expense أو quote أو note
 - التاريخ بصيغة YYYY-MM-DD
 - الوقت بصيغة 24 ساعة HH:MM
+- suggestedGroup و priority للمهام فقط
 ''';
 
       final content = [Content.text(prompt)];
@@ -2406,6 +2527,30 @@ class _HomeScreenState extends State<HomeScreen>
         color = Colors.grey;
     }
 
+    // معلومات إضافية للمهام
+    String? priorityEmoji;
+    String? priorityLabel;
+    if (item['type'] == 'task' && item['priority'] != null) {
+      switch (item['priority']) {
+        case 'urgent':
+          priorityEmoji = '🔴';
+          priorityLabel = 'عاجل';
+          break;
+        case 'high':
+          priorityEmoji = '🟠';
+          priorityLabel = 'عالي';
+          break;
+        case 'medium':
+          priorityEmoji = '🟡';
+          priorityLabel = 'متوسط';
+          break;
+        case 'low':
+          priorityEmoji = '🟢';
+          priorityLabel = 'منخفض';
+          break;
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -2422,15 +2567,70 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: Icon(icon, color: color),
         ),
-        title: Text(
-          item['title'] ?? 'بدون عنوان',
-          style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item['title'] ?? 'بدون عنوان',
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (priorityEmoji != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  priorityEmoji,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+          ],
         ),
-        subtitle: Text(
-          item['content'] ?? '',
-          style: GoogleFonts.tajawal(fontSize: 12),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item['content'] ?? '',
+              style: GoogleFonts.tajawal(fontSize: 12),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (item['type'] == 'task') ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  if (item['suggestedGroup'] != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item['suggestedGroup'],
+                        style: GoogleFonts.tajawal(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (priorityLabel != null)
+                    Text(
+                      priorityLabel,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
         trailing: IconButton(
           icon: const Icon(Icons.close, size: 20),
@@ -2464,13 +2664,23 @@ class _HomeScreenState extends State<HomeScreen>
 
     _showLoadingDialog('جاري الحفظ...');
 
+    int savedCount = 0;
+
     for (var item in _extractedItems) {
-      await _firestore.collection('users').doc(userId).collection('notes').add({
-        ...item,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'completed': false,
-      });
+      if (item['type'] == 'task') {
+        // معالجة المهام بنظام المجموعات الجديد
+        await _saveTaskWithGroup(item);
+        savedCount++;
+      } else {
+        // معالجة العناصر الأخرى كما هي
+        await _firestore.collection('users').doc(userId).collection('notes').add({
+          ...item,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'completed': false,
+        });
+        savedCount++;
+      }
     }
 
     Navigator.pop(context);
@@ -2480,11 +2690,112 @@ class _HomeScreenState extends State<HomeScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'تم حفظ ${_extractedItems.length} عنصر',
+            'تم حفظ $savedCount عنصر',
             style: GoogleFonts.tajawal(),
           ),
+          backgroundColor: const Color(0xFF58CC02),
         ),
       );
     }
+  }
+
+  Future<void> _saveTaskWithGroup(Map<String, dynamic> item) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    String? groupId;
+    final suggestedGroup = item['suggestedGroup'] as String?;
+
+    if (suggestedGroup != null && suggestedGroup.isNotEmpty) {
+      // البحث عن المجموعة بالاسم
+      final groupsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .get();
+
+      final existingGroup = groupsSnapshot.docs.firstWhere(
+        (doc) => TaskGroup.fromFirestore(doc).name == suggestedGroup,
+        orElse: () => groupsSnapshot.docs.first,
+      );
+
+      if (existingGroup.exists) {
+        groupId = existingGroup.id;
+      } else if (groupsSnapshot.docs.isNotEmpty) {
+        // استخدام أول مجموعة متاحة
+        groupId = groupsSnapshot.docs.first.id;
+      }
+    } else {
+      // لا يوجد اقتراح - استخدام أول مجموعة متاحة
+      final groupsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .limit(1)
+          .get();
+
+      if (groupsSnapshot.docs.isNotEmpty) {
+        groupId = groupsSnapshot.docs.first.id;
+      }
+    }
+
+    if (groupId == null) {
+      // إنشاء مجموعة افتراضية إذا لم توجد مجموعات
+      final newGroupRef = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .add({
+        'name': '📝 عام',
+        'emoji': '📝',
+        'description': 'مجموعة عامة للمهام',
+        'color': '#58CC02',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      groupId = newGroupRef.id;
+    }
+
+    // إنشاء المهمة
+    DateTime? dueDate;
+    if (item['date'] != null) {
+      try {
+        dueDate = DateTime.parse(item['date']);
+      } catch (e) {
+        print('Error parsing date: $e');
+      }
+    }
+
+    final task = TaskModel(
+      id: '',
+      title: item['title'] ?? '',
+      description: item['content'] ?? '',
+      groupId: groupId,
+      priority: item['priority'] ?? 'medium',
+      dueDate: dueDate,
+      tags: [],
+      notes: '',
+      isCompleted: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('taskGroups')
+        .doc(groupId)
+        .collection('tasks')
+        .add(task.toFirestore());
+
+    // تحديث إحصائيات المجموعة
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('taskGroups')
+        .doc(groupId)
+        .update({
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }
