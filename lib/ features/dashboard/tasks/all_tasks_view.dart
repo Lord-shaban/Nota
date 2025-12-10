@@ -38,6 +38,9 @@ class AllTasksView extends StatelessWidget {
             .map((doc) => TaskModel.fromFirestore(doc))
             .toList();
 
+        // Sort by createdAt descending (newest first)
+        tasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
         // Apply filters
         tasks = _applyFilters(tasks);
 
@@ -101,7 +104,7 @@ class AllTasksView extends StatelessWidget {
       query = query.where('priority', isEqualTo: selectedPriority);
     }
 
-    return query.orderBy('createdAt', descending: true).snapshots();
+    return query.orderBy('createdAt').snapshots();
   }
 
   List<TaskModel> _applyFilters(List<TaskModel> tasks) {

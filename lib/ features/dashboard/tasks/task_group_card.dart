@@ -269,7 +269,7 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
           .collection('notes')
           .where('type', isEqualTo: 'task')
           .where('groupId', isEqualTo: widget.group.id)
-          .orderBy('createdAt', descending: false)
+          .orderBy('createdAt')
           .snapshots(),
       builder: (context, snapshot) {
         print('📡 Tasks stream state: ${snapshot.connectionState}');

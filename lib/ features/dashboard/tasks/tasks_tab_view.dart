@@ -291,22 +291,24 @@ class _TasksTabViewState extends State<TasksTabView>
         unselectedLabelColor: Colors.grey.shade600,
         labelStyle: const TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: 14,
+          fontSize: 12,
         ),
         unselectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.w500,
-          fontSize: 14,
+          fontSize: 12,
         ),
         tabs: const [
           Tab(
-            icon: Icon(Icons.folder_outlined, size: 20),
+            icon: Icon(Icons.folder_outlined, size: 18),
             text: 'المجموعات',
             iconMargin: EdgeInsets.only(bottom: 2),
+            height: 42,
           ),
           Tab(
-            icon: Icon(Icons.format_list_bulleted, size: 20),
+            icon: Icon(Icons.format_list_bulleted, size: 18),
             text: 'كل المهام',
             iconMargin: EdgeInsets.only(bottom: 2),
+            height: 42,
           ),
         ],
       ),
@@ -322,7 +324,7 @@ class _TasksTabViewState extends State<TasksTabView>
       stream: FirebaseFirestore.instance
           .collection('task_groups')
           .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
+          .orderBy('createdAt')
           .snapshots(),
       builder: (context, snapshot) {
         print('📡 Stream state: ${snapshot.connectionState}');
@@ -351,6 +353,9 @@ class _TasksTabViewState extends State<TasksTabView>
               return TaskGroup.fromFirestore(doc);
             })
             .toList();
+        
+        // Sort by createdAt descending (newest first)
+        groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         
         print('✅ Found ${groups.length} groups');
 
