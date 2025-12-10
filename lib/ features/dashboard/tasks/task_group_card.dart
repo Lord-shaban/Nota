@@ -471,23 +471,34 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
       onTap: () => _toggleTaskCompletion(task),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        width: 28,
-        height: 28,
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(
-          color: task.isCompleted ? AppTheme.successColor : Colors.transparent,
+          color: task.isCompleted 
+              ? AppTheme.successColor 
+              : Colors.white,
           border: Border.all(
             color: task.isCompleted
                 ? AppTheme.successColor
-                : AppTheme.textLightColor,
-            width: 2,
+                : Colors.grey.shade400,
+            width: 2.5,
           ),
           borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            if (task.isCompleted)
+              BoxShadow(
+                color: AppTheme.successColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+          ],
         ),
         child: task.isCompleted
             ? const Icon(
-                Icons.check,
+                Icons.check_rounded,
                 color: Colors.white,
-                size: 18,
+                size: 22,
+                weight: 700,
               )
             : null,
       ),
