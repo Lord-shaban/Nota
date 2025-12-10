@@ -95,80 +95,30 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                   );
                 }
 
-                // Collect all tasks
-                final allTasks = <Map<String, dynamic>>[];
+                // Collect all tasks synchronously
+                return FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _collectAllTasks(groupSnapshot, standaloneSnapshot, userId),
+                  builder: (context, tasksFuture) {
+                    if (!tasksFuture.hasData) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF58CC02),
+                          ),
+                        ),
+                      );
+                    }
 
-                // Add tasks from groups
-                if (groupSnapshot.hasData && groupSnapshot.data!.docs.isNotEmpty) {
-                  final groups = groupSnapshot.data!.docs;
-                  
-                  return StreamBuilder<List<QuerySnapshot>>(
-                    stream: Stream.fromFuture(
-                      Future.wait(
-                        groups.map((groupDoc) {
-                          return _firestore
-                              .collection('users')
-                              .doc(userId)
-                              .collection('taskGroups')
-                              .doc(groupDoc.id)
-                              .collection('tasks')
-                              .snapshots()
-                              .first;
-                        }).toList(),
-                      ),
-                    ),
-                    builder: (context, tasksSnapshot) {
-                      final groupTasks = <Map<String, dynamic>>[];
-                      
-                      if (tasksSnapshot.hasData) {
-                        for (int i = 0; i < tasksSnapshot.data!.length; i++) {
-                          final taskDocs = tasksSnapshot.data![i].docs;
-                          final groupId = groups[i].id;
-                          final groupData = TaskGroup.fromFirestore(groups[i]);
-                          
-                          for (var taskDoc in taskDocs) {
-                            try {
-                              final task = TaskModel.fromFirestore(taskDoc);
-                              groupTasks.add({
-                                'task': task,
-                                'groupId': groupId,
-                                'groupIcon': groupData.icon,
-                                'groupTitle': groupData.title,
-                                'groupColor': groupData.color,
-                                'isStandalone': false,
-                              });
-                            } catch (e) {
-                              // Skip invalid tasks
-                            }
-                          }
-                        }
-                      }
+                    final allTasks = tasksFuture.data!;
 
-                      // Add standalone tasks
-                      if (standaloneSnapshot.hasData) {
-                        for (var doc in standaloneSnapshot.data!.docs) {
-                          try {
-                            final data = doc.data() as Map<String, dynamic>;
-                            groupTasks.add({
-                              'task': data,
-                              'taskId': doc.id,
-                              'groupIcon': '📝',
-                              'groupTitle': 'بدون مجموعة',
-                              'groupColor': '#6B7280',
-                              'isStandalone': true,
-                            });
-                          } catch (e) {
-                            // Skip invalid tasks
-                          }
-                        }
-                      }
+                    if (allTasks.isEmpty) {
+                      return _buildEmptyState();
+                    }
 
-                      if (groupTasks.isEmpty) {
-                        return _buildEmptyState();
-                      }
-
-                      // Sort by createdAt (newest first) and take 5
-                      groupTasks.sort((a, b) {
+                    // Sort by createdAt (newest first)
+                    allTasks.sort((a, b) {
+                      try {
                         if (a['isStandalone'] == true && b['isStandalone'] == true) {
                           final aData = a['task'] as Map<String, dynamic>;
                           final bData = b['task'] as Map<String, dynamic>;
@@ -182,66 +132,42 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           final taskA = a['task'] as TaskModel;
                           final taskB = b['task'] as TaskModel;
                           return taskB.createdAt.compareTo(taskA.createdAt);
+                        } else {
+                          // Mix standalone and group tasks by timestamp
+                          final aTime = a['isStandalone'] == true
+                              ? (a['task'] as Map<String, dynamic>)['createdAt'] as Timestamp?
+                              : (a['task'] as TaskModel).createdAt;
+                          final bTime = b['isStandalone'] == true
+                              ? (b['task'] as Map<String, dynamic>)['createdAt'] as Timestamp?
+                              : (b['task'] as TaskModel).createdAt;
+                          
+                          if (aTime is Timestamp && bTime is Timestamp) {
+                            return bTime.compareTo(aTime);
+                          } else if (aTime is DateTime && bTime is DateTime) {
+                            return bTime.compareTo(aTime);
+                          } else if (aTime is Timestamp && bTime is DateTime) {
+                            return bTime.compareTo(aTime.toDate());
+                          } else if (aTime is DateTime && bTime is Timestamp) {
+                            return bTime.toDate().compareTo(aTime);
+                          }
+                          return 0;
                         }
+                      } catch (e) {
                         return 0;
-                      });
-                      
-                      final recentTasks = groupTasks.take(5).toList();
+                      }
+                    });
 
-                      return Column(
-                        children: recentTasks
-                            .map((taskData) => taskData['isStandalone'] == true
-                                ? _buildStandaloneTaskCard(context, taskData)
-                                : _buildTaskCard(context, taskData))
-                            .toList(),
-                      );
-                    },
-                  );
-                }
+                    final recentTasks = allTasks.take(5).toList();
 
-                // No groups, only standalone tasks
-                if (standaloneSnapshot.hasData && standaloneSnapshot.data!.docs.isNotEmpty) {
-                  for (var doc in standaloneSnapshot.data!.docs) {
-                    try {
-                      final data = doc.data() as Map<String, dynamic>;
-                      allTasks.add({
-                        'task': data,
-                        'taskId': doc.id,
-                        'groupIcon': '📝',
-                        'groupTitle': 'بدون مجموعة',
-                        'groupColor': '#6B7280',
-                        'isStandalone': true,
-                      });
-                    } catch (e) {
-                      // Skip invalid tasks
-                    }
-                  }
-
-                  if (allTasks.isEmpty) {
-                    return _buildEmptyState();
-                  }
-
-                  allTasks.sort((a, b) {
-                    final aData = a['task'] as Map<String, dynamic>;
-                    final bData = b['task'] as Map<String, dynamic>;
-                    final aTime = aData['createdAt'] as Timestamp?;
-                    final bTime = bData['createdAt'] as Timestamp?;
-                    if (aTime != null && bTime != null) {
-                      return bTime.compareTo(aTime);
-                    }
-                    return 0;
-                  });
-
-                  final recentTasks = allTasks.take(5).toList();
-
-                  return Column(
-                    children: recentTasks
-                        .map((taskData) => _buildStandaloneTaskCard(context, taskData))
-                        .toList(),
-                  );
-                }
-
-                return _buildEmptyState();
+                    return Column(
+                      children: recentTasks
+                          .map((taskData) => taskData['isStandalone'] == true
+                              ? _buildStandaloneTaskCard(context, taskData)
+                              : _buildTaskCard(context, taskData))
+                          .toList(),
+                    );
+                  },
+                );
               },
             );
           },
@@ -326,6 +252,74 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
         ),
       ),
     );
+  }
+
+  Future<List<Map<String, dynamic>>> _collectAllTasks(
+    AsyncSnapshot<QuerySnapshot> groupSnapshot,
+    AsyncSnapshot<QuerySnapshot> standaloneSnapshot,
+    String userId,
+  ) async {
+    final allTasks = <Map<String, dynamic>>[];
+
+    // Add tasks from groups
+    if (groupSnapshot.hasData && groupSnapshot.data!.docs.isNotEmpty) {
+      final groups = groupSnapshot.data!.docs;
+      
+      for (var groupDoc in groups) {
+        try {
+          final groupId = groupDoc.id;
+          final groupData = TaskGroup.fromFirestore(groupDoc);
+          
+          // Get tasks for this group
+          final tasksSnapshot = await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('taskGroups')
+              .doc(groupId)
+              .collection('tasks')
+              .get();
+          
+          for (var taskDoc in tasksSnapshot.docs) {
+            try {
+              final task = TaskModel.fromFirestore(taskDoc);
+              allTasks.add({
+                'task': task,
+                'groupId': groupId,
+                'groupIcon': groupData.icon,
+                'groupTitle': groupData.title,
+                'groupColor': groupData.color,
+                'isStandalone': false,
+              });
+            } catch (e) {
+              // Skip invalid tasks
+            }
+          }
+        } catch (e) {
+          // Skip invalid group
+        }
+      }
+    }
+
+    // Add standalone tasks
+    if (standaloneSnapshot.hasData && standaloneSnapshot.data!.docs.isNotEmpty) {
+      for (var doc in standaloneSnapshot.data!.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          allTasks.add({
+            'task': data,
+            'taskId': doc.id,
+            'groupIcon': '📝',
+            'groupTitle': 'بدون مجموعة',
+            'groupColor': '#6B7280',
+            'isStandalone': true,
+          });
+        } catch (e) {
+          // Skip invalid tasks
+        }
+      }
+    }
+
+    return allTasks;
   }
 
   Widget _buildTaskCard(BuildContext context, Map<String, dynamic> taskData) {
