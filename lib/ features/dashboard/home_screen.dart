@@ -640,73 +640,104 @@ class _HomeScreenState extends State<HomeScreen>
   // ==================== Widgets ====================
 
   Widget _buildWelcomeCard() {
+    final userId = _auth.currentUser?.uid;
     final hour = DateTime.now().hour;
     final greeting = hour < 12
         ? 'صباح الخير'
         : hour < 18
         ? 'مساء الخير'
         : 'مساء الخير';
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF58CC02), Color(0xFF45A801)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF58CC02).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+        
+    return StreamBuilder<QuerySnapshot>(
+      stream: userId != null
+          ? _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('taskGroups')
+              .snapshots()
+          : null,
+      builder: (context, snapshot) {
+        int pendingTasks = 0;
+        int urgentTasks = 0;
+        
+        if (snapshot.hasData) {
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final total = (data['totalTasks'] ?? 0) as int;
+            final completed = (data['completedTasks'] ?? 0) as int;
+            pendingTasks += (total - completed);
+          }
+        }
+        
+        String message = pendingTasks == 0
+            ? 'لا توجد مهام معلقة، أحسنت!'
+            : pendingTasks == 1
+            ? 'لديك مهمة واحدة غير مكتملة'
+            : 'لديك $pendingTasks مهمة غير مكتملة';
+            
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF58CC02), Color(0xFF45A801)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF58CC02).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$greeting، ${_userData?['name'] ?? 'صديقي'}',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$greeting، ${_userData?['name'] ?? 'صديقي'}',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      message,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'لديك ${_tasks.where((t) => t['completed'] != true).length} مهمة غير مكتملة',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-              ],
-            ),
+                child: Icon(
+                  hour < 12
+                      ? Icons.wb_sunny_rounded
+                      : hour < 18
+                      ? Icons.wb_twilight_rounded
+                      : Icons.nightlight_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              hour < 12
-                  ? Icons.wb_sunny_rounded
-                  : hour < 18
-                  ? Icons.wb_twilight_rounded
-                  : Icons.nightlight_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
