@@ -44,7 +44,6 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      fontFamily: 'Tajawal',
       colorScheme: ColorScheme.light(
         primary: primaryColor,
         secondary: secondaryColor,
@@ -173,91 +172,91 @@ class AppTheme {
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         headlineLarge: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         headlineMedium: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         headlineSmall: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         titleLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         titleMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         titleSmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textLightColor,
-          fontFamily: 'Tajawal',
+          
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textSecondaryColor,
-          fontFamily: 'Tajawal',
+          
         ),
         labelSmall: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
           color: textLightColor,
-          fontFamily: 'Tajawal',
+          
         ),
       ),
       
