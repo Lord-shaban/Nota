@@ -1709,31 +1709,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (!mounted) return;
 
-    if (groupsSnapshot.docs.isEmpty) {
-      // لا توجد مجموعات - إنشاء مجموعة أولاً
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'قم بإنشاء مجموعة أولاً من تبويب المهام',
-            style: GoogleFonts.tajawal(),
-          ),
-          backgroundColor: const Color(0xFFFFB800),
-          action: SnackBarAction(
-            label: 'إنشاء مجموعة',
-            textColor: Colors.white,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const CreateTaskGroupDialog(),
-              );
-            },
-          ),
-        ),
-      );
-      return;
-    }
-
-    // عرض قائمة المجموعات للاختيار
+    // عرض قائمة المجموعات للاختيار أو إنشاء مهمة بدون مجموعة
     final selectedGroupId = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1760,31 +1736,66 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         content: SizedBox(
           width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: groupsSnapshot.docs.length,
-            itemBuilder: (context, index) {
-              final doc = groupsSnapshot.docs[index];
-              final group = TaskGroup.fromFirestore(doc);
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // خيار إنشاء مهمة بدون مجموعة
+              Card(
+                color: const Color(0xFFF8F8F8),
+                margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  leading: Text(
-                    group.icon,
-                    style: const TextStyle(fontSize: 32),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.task_alt, size: 24),
                   ),
                   title: Text(
-                    group.title,
+                    'بدون مجموعة',
                     style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    group.description ?? '',
+                    'إنشاء مهمة مستقلة',
                     style: GoogleFonts.tajawal(fontSize: 12),
                   ),
-                  onTap: () => Navigator.pop(ctx, group.id),
+                  onTap: () => Navigator.pop(ctx, 'NO_GROUP'),
                 ),
-              );
-            },
+              ),
+              if (groupsSnapshot.docs.isNotEmpty) ...[
+                const Divider(),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: groupsSnapshot.docs.length,
+                    itemBuilder: (context, index) {
+                      final doc = groupsSnapshot.docs[index];
+                      final group = TaskGroup.fromFirestore(doc);
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: Text(
+                            group.icon,
+                            style: const TextStyle(fontSize: 32),
+                          ),
+                          title: Text(
+                            group.title,
+                            style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            group.description ?? '',
+                            style: GoogleFonts.tajawal(fontSize: 12),
+                          ),
+                          onTap: () => Navigator.pop(ctx, group.id),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         actions: [
@@ -1792,16 +1803,166 @@ class _HomeScreenState extends State<HomeScreen>
             onPressed: () => Navigator.pop(ctx),
             child: Text('إلغاء', style: GoogleFonts.tajawal()),
           ),
+          if (groupsSnapshot.docs.isEmpty)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                showDialog(
+                  context: context,
+                  builder: (context) => const CreateTaskGroupDialog(),
+                );
+              },
+              child: Text(
+                'إنشاء مجموعة',
+                style: GoogleFonts.tajawal(color: const Color(0xFF58CC02)),
+              ),
+            ),
         ],
       ),
     );
 
     if (selectedGroupId != null && mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => CreateTaskDialog(groupId: selectedGroupId),
-      );
+      if (selectedGroupId == 'NO_GROUP') {
+        // إنشاء مهمة بدون مجموعة
+        _showQuickTaskDialog();
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => CreateTaskDialog(groupId: selectedGroupId),
+        );
+      }
     }
+  }
+
+  void _showQuickTaskDialog() {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    String selectedPriority = 'medium';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF58CC02).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.task_alt,
+                  color: Color(0xFF58CC02),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'مهمة سريعة',
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleCtrl,
+                decoration: InputDecoration(
+                  labelText: 'عنوان المهمة',
+                  labelStyle: GoogleFonts.tajawal(),
+                  border: const OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descCtrl,
+                decoration: InputDecoration(
+                  labelText: 'الوصف (اختياري)',
+                  labelStyle: GoogleFonts.tajawal(),
+                  border: const OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    'الأولوية:',
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: selectedPriority,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      items: [
+                        DropdownMenuItem(value: 'urgent', child: Text('🔴 عاجل', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'high', child: Text('🟠 عالي', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'medium', child: Text('🟡 متوسط', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'low', child: Text('🟢 منخفض', style: GoogleFonts.tajawal())),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedPriority = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('إلغاء', style: GoogleFonts.tajawal()),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF58CC02),
+              ),
+              onPressed: () async {
+                if (titleCtrl.text.trim().isEmpty) return;
+                
+                final userId = _auth.currentUser?.uid;
+                if (userId == null) return;
+
+                await _firestore
+                    .collection('users')
+                    .doc(userId)
+                    .collection('notes')
+                    .add({
+                  'type': 'task',
+                  'title': titleCtrl.text.trim(),
+                  'content': descCtrl.text.trim(),
+                  'priority': selectedPriority,
+                  'completed': false,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+
+                if (context.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('تم إنشاء المهمة بنجاح', style: GoogleFonts.tajawal()),
+                      backgroundColor: const Color(0xFF58CC02),
+                    ),
+                  );
+                }
+              },
+              child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showNoteDetails(Map<String, dynamic> note) {
