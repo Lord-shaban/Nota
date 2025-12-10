@@ -32,40 +32,84 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF58CC02).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.task_alt_rounded,
-                color: Color(0xFF58CC02),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'المهام الأخيرة',
-              style: GoogleFonts.tajawal(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: widget.onViewAll,
-              child: Text(
-                'عرض الكل',
-                style: GoogleFonts.tajawal(
-                  color: const Color(0xFF58CC02),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
+        StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('taskGroups')
+              .snapshots(),
+          builder: (context, groupSnapshot) {
+            return StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .where('type', isEqualTo: 'task')
+                  .snapshots(),
+              builder: (context, standaloneSnapshot) {
+                return FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _collectAllTasks(groupSnapshot, standaloneSnapshot, userId),
+                  builder: (context, tasksFuture) {
+                    final tasksCount = tasksFuture.hasData ? tasksFuture.data!.length : 0;
+                    
+                    return Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF58CC02).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.task_alt_rounded,
+                            color: Color(0xFF58CC02),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'المهام الأخيرة',
+                          style: GoogleFonts.tajawal(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (tasksCount > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF58CC02),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$tasksCount',
+                              style: GoogleFonts.tajawal(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        TextButton(
+                          onPressed: widget.onViewAll,
+                          child: Text(
+                            'عرض الكل',
+                            style: GoogleFonts.tajawal(
+                              color: const Color(0xFF58CC02),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
         ),
         const SizedBox(height: 12),
         StreamBuilder<QuerySnapshot>(
