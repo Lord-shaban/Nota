@@ -351,45 +351,39 @@ class AllTasksView extends StatelessWidget {
   }
 
   Widget _buildTaskCheckbox(BuildContext context, TaskModel task) {
-    return GestureDetector(
+    return InkWell(
       onTap: () => _toggleTaskCompletion(context, task),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: 32,
-        height: 32,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 36,
+        height: 36,
+        padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           color: task.isCompleted 
-              ? AppTheme.successColor 
-              : Colors.white,
+              ? const Color(0xFF10B981)
+              : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: task.isCompleted
-                ? AppTheme.successColor
-                : Colors.grey.shade400,
-            width: 2.5,
+                ? const Color(0xFF10B981)
+                : const Color(0xFFD1D5DB),
+            width: 2,
           ),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            if (task.isCompleted)
-              BoxShadow(
-                color: AppTheme.successColor.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-          ],
         ),
         child: task.isCompleted
             ? const Icon(
-                Icons.check_rounded,
+                Icons.check,
                 color: Colors.white,
-                size: 22,
-                weight: 700,
+                size: 20,
               )
-            : null,
+            : Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
       ),
-    ).animate(target: task.isCompleted ? 1 : 0).scale(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutBack,
-        );
+    );
   }
 
   Future<void> _toggleTaskCompletion(
