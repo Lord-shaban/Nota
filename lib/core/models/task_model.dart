@@ -117,6 +117,7 @@ class TaskModel {
   // Convert to Firestore document
   Map<String, dynamic> toFirestore() {
     return {
+      'type': 'task',
       'title': title,
       'description': description,
       'isCompleted': isCompleted,

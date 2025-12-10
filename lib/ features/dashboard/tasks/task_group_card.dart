@@ -34,15 +34,20 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Color(int.parse(widget.group.color.replaceFirst('#', '0xFF')))
+              .withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -66,22 +71,35 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
                     children: [
                       // Icon
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
-                          color: Color(int.parse(
-                                  widget.group.color.replaceFirst('#', '0xFF')))
-                              .withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(15),
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(int.parse(widget.group.color.replaceFirst('#', '0xFF'))),
+                              Color(int.parse(widget.group.color.replaceFirst('#', '0xFF'))).withOpacity(0.7),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(int.parse(widget.group.color.replaceFirst('#', '0xFF')))
+                                  .withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Center(
                           child: Text(
                             widget.group.icon,
-                            style: const TextStyle(fontSize: 24),
+                            style: const TextStyle(fontSize: 22),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 15),
+                      const SizedBox(width: 12),
                       
                       // Title and Description
                       Expanded(
@@ -114,18 +132,29 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
                       
                       // Menu
                       PopupMenuButton(
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: AppTheme.textSecondaryColor,
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.textLightColor.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.more_horiz,
+                            color: AppTheme.textSecondaryColor,
+                            size: 20,
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         itemBuilder: (context) => [
                           const PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 12),
-                                Text('تعديل'),
+                                Icon(Icons.edit_outlined, size: 18),
+                                SizedBox(width: 10),
+                                Text('تعديل', style: TextStyle(fontSize: 14)),
                               ],
                             ),
                           ),
@@ -133,9 +162,9 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, size: 20, color: Colors.red),
-                                SizedBox(width: 12),
-                                Text('حذف', style: TextStyle(color: Colors.red)),
+                                Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                SizedBox(width: 10),
+                                Text('حذف', style: TextStyle(color: Colors.red, fontSize: 14)),
                               ],
                             ),
                           ),
@@ -156,7 +185,7 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
                     ],
                   ),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   
                   // Progress Bar
                   Column(
@@ -165,36 +194,57 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${widget.group.completedTasks} من ${widget.group.totalTasks}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.textSecondaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 14,
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${widget.group.completedTasks} / ${widget.group.totalTasks}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            '${widget.group.completionPercentage.toStringAsFixed(0)}%',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: widget.group.isCompleted
+                                  ? AppTheme.successColor.withOpacity(0.1)
+                                  : AppTheme.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${widget.group.completionPercentage.toStringAsFixed(0)}%',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: widget.group.isCompleted
+                                    ? AppTheme.successColor
+                                    : AppTheme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: widget.group.completionPercentage / 100,
-                          backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                          backgroundColor: AppTheme.textLightColor.withOpacity(0.08),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             widget.group.isCompleted
                                 ? AppTheme.successColor
                                 : AppTheme.primaryColor,
                           ),
-                          minHeight: 8,
+                          minHeight: 6,
                         ),
                       ),
                     ],
@@ -212,15 +262,24 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
   }
 
   Widget _buildTasksList() {
+    print('🔍 Loading tasks for group: ${widget.group.id}');
+    
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('notes')
           .where('type', isEqualTo: 'task')
           .where('groupId', isEqualTo: widget.group.id)
-          .orderBy('sortOrder')
           .orderBy('createdAt', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
+        print('📡 Tasks stream state: ${snapshot.connectionState}');
+        print('📡 Has data: ${snapshot.hasData}');
+        print('📡 Tasks count: ${snapshot.data?.docs.length ?? 0}');
+        
+        if (snapshot.hasError) {
+          print('❌ Tasks error: ${snapshot.error}');
+        }
+        
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
             padding: EdgeInsets.all(20),
@@ -229,12 +288,18 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          print('📭 No tasks found for group ${widget.group.id}');
           return _buildEmptyTasksState();
         }
 
         final tasks = snapshot.data!.docs
-            .map((doc) => TaskModel.fromFirestore(doc))
+            .map((doc) {
+              print('📝 Task doc: ${doc.id}, data: ${doc.data()}');
+              return TaskModel.fromFirestore(doc);
+            })
             .toList();
+        
+        print('✅ Loaded ${tasks.length} tasks');
 
         return Container(
           decoration: BoxDecoration(
@@ -291,25 +356,25 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
 
   Widget _buildTaskItem(TaskModel task) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: task.isCompleted
               ? AppTheme.successColor.withOpacity(0.3)
-              : Colors.transparent,
-          width: 1.5,
+              : AppTheme.textLightColor.withOpacity(0.1),
+          width: 1,
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         leading: _buildTaskCheckbox(task),
         title: Text(
           task.title,
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
             color: task.isCompleted
                 ? AppTheme.textLightColor
                 : AppTheme.textPrimaryColor,
@@ -322,7 +387,7 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
             ? Text(
                 task.description!,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: AppTheme.textSecondaryColor,
                 ),
                 maxLines: 1,
@@ -334,34 +399,48 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
           children: [
             // Priority Indicator
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
                 color: Color(int.parse(
                         task.priorityColor.replaceFirst('#', '0xFF')))
-                    .withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                    .withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
               ),
-              child: Text(
-                task.priorityIcon,
-                style: const TextStyle(fontSize: 14),
+              child: Center(
+                child: Text(
+                  task.priorityIcon,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             ),
             
             // Due Date
             if (task.dueDate != null) ...[
-              const SizedBox(width: 8),
-              Icon(
-                task.isOverdue
-                    ? Icons.error
-                    : task.isDueToday
-                        ? Icons.today
-                        : Icons.calendar_today,
-                size: 16,
-                color: task.isOverdue
-                    ? Colors.red
-                    : task.isDueToday
-                        ? AppTheme.accentColor
-                        : AppTheme.textSecondaryColor,
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: task.isOverdue
+                      ? Colors.red.withOpacity(0.1)
+                      : task.isDueToday
+                          ? AppTheme.accentColor.withOpacity(0.1)
+                          : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Icon(
+                  task.isOverdue
+                      ? Icons.error_outline
+                      : task.isDueToday
+                          ? Icons.today
+                          : Icons.calendar_today_outlined,
+                  size: 14,
+                  color: task.isOverdue
+                      ? Colors.red
+                      : task.isDueToday
+                          ? AppTheme.accentColor
+                          : AppTheme.textSecondaryColor,
+                ),
               ),
             ],
           ],
@@ -403,17 +482,38 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
   }
 
   Widget _buildAddTaskButton() {
-    return OutlinedButton.icon(
-      onPressed: () => _showAddTaskDialog(),
-      icon: const Icon(Icons.add, size: 20),
-      label: const Text('إضافة مهمة'),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.primaryColor,
-        side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.5)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: () => _showAddTaskDialog(),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryColor.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppTheme.primaryColor.withOpacity(0.2),
+            width: 1,
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_circle_outline,
+              size: 18,
+              color: AppTheme.primaryColor,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'إضافة مهمة',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
