@@ -76,38 +76,16 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
               .collection('taskGroups')
               .snapshots(),
           builder: (context, groupSnapshot) {
-            if (groupSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: CircularProgressIndicator(
-                    color: Color(0xFF58CC02),
-                  ),
-                ),
-              );
-            }
-
-            if (!groupSnapshot.hasData || groupSnapshot.data!.docs.isEmpty) {
-              return _buildEmptyState();
-            }
-
-            // Get all tasks from all groups
-            final groups = groupSnapshot.data!.docs;
-            
-            return FutureBuilder<List<QuerySnapshot>>(
-              future: Future.wait(
-                groups.map((groupDoc) {
-                  return _firestore
-                      .collection('users')
-                      .doc(userId)
-                      .collection('taskGroups')
-                      .doc(groupDoc.id)
-                      .collection('tasks')
-                      .get();
-                }).toList(),
-              ),
-              builder: (context, tasksSnapshot) {
-                if (tasksSnapshot.connectionState == ConnectionState.waiting) {
+            return StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .where('type', isEqualTo: 'task')
+                  .snapshots(),
+              builder: (context, standaloneSnapshot) {
+                if (groupSnapshot.connectionState == ConnectionState.waiting ||
+                    standaloneSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20),
@@ -118,50 +96,153 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                   );
                 }
 
-                if (!tasksSnapshot.hasData) {
-                  return _buildEmptyState();
+                // Collect all tasks
+                final allTasks = <Map<String, dynamic>>[];
+
+                // Add tasks from groups
+                if (groupSnapshot.hasData && groupSnapshot.data!.docs.isNotEmpty) {
+                  final groups = groupSnapshot.data!.docs;
+                  
+                  return StreamBuilder<List<QuerySnapshot>>(
+                    stream: Stream.fromFutures(
+                      Future.wait(
+                        groups.map((groupDoc) {
+                          return _firestore
+                              .collection('users')
+                              .doc(userId)
+                              .collection('taskGroups')
+                              .doc(groupDoc.id)
+                              .collection('tasks')
+                              .snapshots()
+                              .first;
+                        }).toList(),
+                      ),
+                    ).asStream(),
+                    builder: (context, tasksSnapshot) {
+                      final groupTasks = <Map<String, dynamic>>[];
+                      
+                      if (tasksSnapshot.hasData) {
+                        for (int i = 0; i < tasksSnapshot.data!.length; i++) {
+                          final taskDocs = tasksSnapshot.data![i].docs;
+                          final groupId = groups[i].id;
+                          final groupData = TaskGroup.fromFirestore(groups[i]);
+                          
+                          for (var taskDoc in taskDocs) {
+                            try {
+                              final task = TaskModel.fromFirestore(taskDoc);
+                              groupTasks.add({
+                                'task': task,
+                                'groupId': groupId,
+                                'groupIcon': groupData.icon,
+                                'groupTitle': groupData.title,
+                                'groupColor': groupData.color,
+                                'isStandalone': false,
+                              });
+                            } catch (e) {
+                              // Skip invalid tasks
+                            }
+                          }
+                        }
+                      }
+
+                      // Add standalone tasks
+                      if (standaloneSnapshot.hasData) {
+                        for (var doc in standaloneSnapshot.data!.docs) {
+                          try {
+                            final data = doc.data() as Map<String, dynamic>;
+                            groupTasks.add({
+                              'task': data,
+                              'taskId': doc.id,
+                              'groupIcon': '📝',
+                              'groupTitle': 'بدون مجموعة',
+                              'groupColor': '#6B7280',
+                              'isStandalone': true,
+                            });
+                          } catch (e) {
+                            // Skip invalid tasks
+                          }
+                        }
+                      }
+
+                      if (groupTasks.isEmpty) {
+                        return _buildEmptyState();
+                      }
+
+                      // Sort by createdAt (newest first) and take 5
+                      groupTasks.sort((a, b) {
+                        if (a['isStandalone'] == true && b['isStandalone'] == true) {
+                          final aData = a['task'] as Map<String, dynamic>;
+                          final bData = b['task'] as Map<String, dynamic>;
+                          final aTime = aData['createdAt'] as Timestamp?;
+                          final bTime = bData['createdAt'] as Timestamp?;
+                          if (aTime != null && bTime != null) {
+                            return bTime.compareTo(aTime);
+                          }
+                          return 0;
+                        } else if (a['isStandalone'] == false && b['isStandalone'] == false) {
+                          final taskA = a['task'] as TaskModel;
+                          final taskB = b['task'] as TaskModel;
+                          return taskB.createdAt.compareTo(taskA.createdAt);
+                        }
+                        return 0;
+                      });
+                      
+                      final recentTasks = groupTasks.take(5).toList();
+
+                      return Column(
+                        children: recentTasks
+                            .map((taskData) => taskData['isStandalone'] == true
+                                ? _buildStandaloneTaskCard(context, taskData)
+                                : _buildTaskCard(context, taskData))
+                            .toList(),
+                      );
+                    },
+                  );
                 }
 
-                // Combine all tasks
-                final allTasks = <Map<String, dynamic>>[];
-                for (int i = 0; i < tasksSnapshot.data!.length; i++) {
-                  final taskDocs = tasksSnapshot.data![i].docs;
-                  final groupId = groups[i].id;
-                  final groupData = TaskGroup.fromFirestore(groups[i]);
-                  
-                  for (var taskDoc in taskDocs) {
+                // No groups, only standalone tasks
+                if (standaloneSnapshot.hasData && standaloneSnapshot.data!.docs.isNotEmpty) {
+                  for (var doc in standaloneSnapshot.data!.docs) {
                     try {
-                      final task = TaskModel.fromFirestore(taskDoc);
+                      final data = doc.data() as Map<String, dynamic>;
                       allTasks.add({
-                        'task': task,
-                        'groupId': groupId,
-                        'groupIcon': groupData.icon,
-                        'groupTitle': groupData.title,
-                        'groupColor': groupData.color,
+                        'task': data,
+                        'taskId': doc.id,
+                        'groupIcon': '📝',
+                        'groupTitle': 'بدون مجموعة',
+                        'groupColor': '#6B7280',
+                        'isStandalone': true,
                       });
                     } catch (e) {
                       // Skip invalid tasks
                     }
                   }
+
+                  if (allTasks.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  allTasks.sort((a, b) {
+                    final aData = a['task'] as Map<String, dynamic>;
+                    final bData = b['task'] as Map<String, dynamic>;
+                    final aTime = aData['createdAt'] as Timestamp?;
+                    final bTime = bData['createdAt'] as Timestamp?;
+                    if (aTime != null && bTime != null) {
+                      return bTime.compareTo(aTime);
+                    }
+                    return 0;
+                  });
+
+                  final recentTasks = allTasks.take(5).toList();
+
+                  return Column(
+                    children: recentTasks
+                        .map((taskData) => _buildStandaloneTaskCard(context, taskData))
+                        .toList(),
+                  );
                 }
 
-                if (allTasks.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                // Sort by createdAt (newest first) and take 5
-                allTasks.sort((a, b) {
-                  final taskA = a['task'] as TaskModel;
-                  final taskB = b['task'] as TaskModel;
-                  return taskB.createdAt.compareTo(taskA.createdAt);
-                });
-                final recentTasks = allTasks.take(5).toList();
-
-                return Column(
-                  children: recentTasks
-                      .map((taskData) => _buildTaskCard(context, taskData))
-                      .toList(),
-                );
+                return _buildEmptyState();
               },
             );
           },
@@ -480,8 +561,224 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
+          const SnackBar(
+            content: Text(
+              'حدث خطأ أثناء التحديث',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildStandaloneTaskCard(BuildContext context, Map<String, dynamic> taskData) {
+    final task = taskData['task'] as Map<String, dynamic>;
+    final taskId = taskData['taskId'] as String;
+    final groupIcon = taskData['groupIcon'] as String;
+    final groupTitle = taskData['groupTitle'] as String;
+    final groupColor = taskData['groupColor'] as String;
+
+    final title = task['title'] as String? ?? 'بدون عنوان';
+    final isCompleted = task['completed'] as bool? ?? false;
+    final priority = task['priority'] as String? ?? 'medium';
+
+    // Priority icon
+    String priorityIcon = '🟡';
+    switch (priority) {
+      case 'urgent':
+        priorityIcon = '🔴';
+        break;
+      case 'high':
+        priorityIcon = '🟠';
+        break;
+      case 'low':
+        priorityIcon = '🟢';
+        break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isCompleted
+              ? AppTheme.successColor.withOpacity(0.3)
+              : Color(int.parse(groupColor.replaceFirst('#', '0xFF')))
+                  .withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showStandaloneTaskDetails(context, task, taskId),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Checkbox
+              InkWell(
+                onTap: () => _toggleStandaloneTaskComplete(taskId, isCompleted),
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: isCompleted 
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isCompleted
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFD1D5DB),
+                      width: 2,
+                    ),
+                  ),
+                  child: isCompleted
+                      ? const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 20,
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Task content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          groupIcon,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Tajawal',
+                              color: isCompleted
+                                  ? AppTheme.textLightColor
+                                  : AppTheme.textPrimaryColor,
+                              decoration: isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        // Group badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(int.parse(
+                                    groupColor.replaceFirst('#', '0xFF')))
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            groupTitle,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Tajawal',
+                              color: Color(int.parse(
+                                  groupColor.replaceFirst('#', '0xFF'))),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // Priority
+                        Text(
+                          priorityIcon,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showStandaloneTaskDetails(BuildContext context, Map<String, dynamic> task, String taskId) {
+    // For now, just show a simple dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          task['title'] ?? 'مهمة',
+          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (task['content'] != null && task['content'].toString().isNotEmpty)
+              Text(
+                task['content'],
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleStandaloneTaskComplete(String taskId, bool currentStatus) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('notes')
+          .doc(taskId)
+          .update({
+        'completed': !currentStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
               'حدث خطأ أثناء التحديث',
               style: TextStyle(fontFamily: 'Tajawal'),
             ),
