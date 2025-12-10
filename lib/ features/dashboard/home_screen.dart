@@ -2283,14 +2283,16 @@ class _HomeScreenState extends State<HomeScreen>
 - suggestedGroup و priority للمهام فقط
 ''';
 
+      print('🤖 Sending request to Gemini 2.5 Flash...');
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
 
       if (mounted) Navigator.pop(context);
 
+      print('✅ Gemini Response received');
+      print('📝 Response text: ${response.text}');
+
       if (response.text != null && response.text!.isNotEmpty) {
-        print('AI Response: ${response.text}'); // للتشخيص
-        
         var jsonStr = response.text!.trim();
         
         // تنظيف النص
@@ -2314,11 +2316,55 @@ class _HomeScreenState extends State<HomeScreen>
               });
               _showExtractedItemsDialog();
               return;
+            } else {
+              print('⚠️ No items found in response');
             }
           } catch (e) {
-            print('JSON Parse Error: $e'); // للتشخيص
-            print('JSON String: $jsonStr'); // للتشخيص
+            print('❌ JSON Parse Error: $e');
+            print('📄 JSON String: $jsonStr');
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('خطأ في تحليل الاستجابة من الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+                  backgroundColor: Colors.orange,
+                  action: SnackBarAction(
+                    label: 'تفاصيل',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('تفاصيل الخطأ', style: GoogleFonts.tajawal()),
+                          content: SingleChildScrollView(
+                            child: Text('$e\n\nResponse:\n$jsonStr', style: GoogleFonts.tajawal(fontSize: 12)),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text('إغلاق', style: GoogleFonts.tajawal()),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            }
           }
+        } else {
+          print('⚠️ No JSON found in response');
+        }
+      } else {
+        print('⚠️ Empty response from Gemini');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('لم يتم استقبال رد من الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       }
       
@@ -2334,16 +2380,61 @@ class _HomeScreenState extends State<HomeScreen>
         );
       }
     } catch (e) {
-      print('AI Error: $e'); // للتشخيص
+      print('❌ AI Error: $e');
+      print('Stack trace: ${StackTrace.current}');
+      
       if (mounted) {
         Navigator.pop(context);
+        
+        // Show detailed error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في الاتصال بالذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'تفاصيل',
+              textColor: Colors.white,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('خطأ في الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('الخطأ:', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                          Text('$e', style: GoogleFonts.tajawal(fontSize: 12)),
+                          const SizedBox(height: 12),
+                          Text('الحل المحتمل:', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                          Text('• تحقق من اتصال الإنترنت\n• تأكد من صحة API Key\n• حاول مرة أخرى لاحقاً', 
+                            style: GoogleFonts.tajawal(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('إغلاق', style: GoogleFonts.tajawal()),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        
         await _saveNote({
           'type': 'note',
           'title': text.length > 30 ? '${text.substring(0, 30)}...' : text,
           'content': text,
         });
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في التحليل. تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal()), backgroundColor: Colors.orange),
+          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
         );
       }
     }
