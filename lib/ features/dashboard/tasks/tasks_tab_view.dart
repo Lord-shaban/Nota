@@ -529,7 +529,7 @@ class _TasksTabViewState extends State<TasksTabView>
 
   Widget _buildFloatingActionButton() {
     return FloatingActionButton(
-      onPressed: _showCreateGroupDialog,
+      onPressed: _showQuickActionsMenu,
       backgroundColor: const Color(0xFF58CC02),
       elevation: 8,
       child: Container(
@@ -557,6 +557,277 @@ class _TasksTabViewState extends State<TasksTabView>
         ),
       ),
     );
+  }
+
+  void _showQuickActionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'إنشاء جديد',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildQuickActionButton(
+              icon: Icons.task_alt_rounded,
+              title: 'مهمة سريعة',
+              subtitle: 'إنشاء مهمة بدون مجموعة',
+              color: const Color(0xFF58CC02),
+              onTap: () {
+                Navigator.pop(context);
+                _showQuickTaskDialog();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildQuickActionButton(
+              icon: Icons.folder_rounded,
+              title: 'مجموعة مهام جديدة',
+              subtitle: 'تنظيم المهام في مجموعات',
+              color: const Color(0xFFFFB800),
+              onTap: () {
+                Navigator.pop(context);
+                _showCreateGroupDialog();
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showQuickTaskDialog() {
+    final titleController = TextEditingController();
+    String selectedPriority = 'medium';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.task_alt_rounded,
+                color: Color(0xFF58CC02),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'مهمة سريعة',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: titleController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'اكتب المهمة هنا...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'الأولوية',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            StatefulBuilder(
+              builder: (context, setState) {
+                return Wrap(
+                  spacing: 8,
+                  children: [
+                    _buildPriorityChip('urgent', '🔴 عاجل', selectedPriority, (value) {
+                      setState(() => selectedPriority = value);
+                    }),
+                    _buildPriorityChip('high', '🟠 عالي', selectedPriority, (value) {
+                      setState(() => selectedPriority = value);
+                    }),
+                    _buildPriorityChip('medium', '🟡 متوسط', selectedPriority, (value) {
+                      setState(() => selectedPriority = value);
+                    }),
+                    _buildPriorityChip('low', '🟢 منخفض', selectedPriority, (value) {
+                      setState(() => selectedPriority = value);
+                    }),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (titleController.text.trim().isEmpty) return;
+              
+              await _createStandaloneTask(
+                titleController.text.trim(),
+                selectedPriority,
+              );
+              
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('تم إنشاء المهمة بنجاح'),
+                    backgroundColor: Color(0xFF58CC02),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF58CC02),
+            ),
+            child: const Text('إنشاء', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityChip(
+    String value,
+    String label,
+    String selectedValue,
+    Function(String) onSelected,
+  ) {
+    final isSelected = value == selectedValue;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(value),
+      backgroundColor: Colors.grey[100],
+      selectedColor: const Color(0xFF58CC02).withOpacity(0.2),
+      checkmarkColor: const Color(0xFF58CC02),
+    );
+  }
+
+  Future<void> _createStandaloneTask(String title, String priority) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('notes')
+          .add({
+        'title': title,
+        'content': '',
+        'type': 'task',
+        'priority': priority,
+        'completed': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'userId': _userId,
+      });
+    } catch (e) {
+      print('Error creating standalone task: $e');
+    }
   }
 
   void _showCreateGroupDialog() {

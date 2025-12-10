@@ -25,93 +25,164 @@ class AllTasksView extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: _getTasksStream(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      builder: (context, groupTasksSnapshot) {
+        return StreamBuilder<QuerySnapshot>(
+          stream: _getStandaloneTasksStream(),
+          builder: (context, standaloneSnapshot) {
+            if (groupTasksSnapshot.connectionState == ConnectionState.waiting ||
+                standaloneSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return _buildEmptyState(context);
-        }
+            // Get group tasks
+            var groupTasks = <TaskModel>[];
+            if (groupTasksSnapshot.hasData) {
+              groupTasks = groupTasksSnapshot.data!.docs
+                  .map((doc) {
+                    try {
+                      return TaskModel.fromFirestore(doc);
+                    } catch (e) {
+                      return null;
+                    }
+                  })
+                  .where((task) => task != null)
+                  .cast<TaskModel>()
+                  .where((task) => task.userId == userId && task.groupId != null)
+                  .toList();
+            }
 
-        // Filter and sort in code to avoid Firestore index requirements
-        var tasks = snapshot.data!.docs
-            .map((doc) {
-              try {
-                return TaskModel.fromFirestore(doc);
-              } catch (e) {
-                return null;
+            // Get standalone tasks
+            var standaloneTasks = <Map<String, dynamic>>[];
+            if (standaloneSnapshot.hasData) {
+              standaloneTasks = standaloneSnapshot.data!.docs
+                  .map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return {
+                      'id': doc.id,
+                      'title': data['title'] ?? '',
+                      'priority': data['priority'] ?? 'medium',
+                      'completed': data['completed'] ?? false,
+                      'createdAt': data['createdAt'],
+                    };
+                  })
+                  .toList();
+            }
+
+            if (groupTasks.isEmpty && standaloneTasks.isEmpty) {
+              return _buildEmptyState(context);
+            }
+
+            // Apply filters to group tasks
+            if (selectedPriority != 'all') {
+              groupTasks = groupTasks.where((t) => t.priority == selectedPriority).toList();
+              standaloneTasks = standaloneTasks
+                  .where((t) => t['priority'] == selectedPriority)
+                  .toList();
+            }
+
+            // Sort by createdAt
+            groupTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            standaloneTasks.sort((a, b) {
+              final aTime = a['createdAt'] as Timestamp?;
+              final bTime = b['createdAt'] as Timestamp?;
+              if (aTime != null && bTime != null) {
+                return bTime.compareTo(aTime);
               }
-            })
-            .where((task) => task != null)
-            .cast<TaskModel>()
-            .where((task) => task.userId == userId && task.groupId != null)
-            .toList();
-        
-        // Apply priority filter
-        if (selectedPriority != 'all') {
-          tasks = tasks.where((t) => t.priority == selectedPriority).toList();
-        }
-        
-        // Sort by createdAt descending (newest first)
-        tasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        
-        // Apply date filters
-        tasks = _applyFilters(tasks);
+              return 0;
+            });
 
-        if (tasks.isEmpty) {
-          return _buildNoResultsState(context);
-        }
+            // Apply date filters
+            groupTasks = _applyFilters(groupTasks);
 
-        // Group tasks by completion status
-        final incompleteTasks = tasks.where((t) => !t.isCompleted).toList();
-        final completedTasks = tasks.where((t) => t.isCompleted).toList();
+            // Group by completion status
+            final incompleteGroupTasks = groupTasks.where((t) => !t.isCompleted).toList();
+            final completedGroupTasks = groupTasks.where((t) => t.isCompleted).toList();
+            final incompleteStandalone =
+                standaloneTasks.where((t) => t['completed'] == false).toList();
+            final completedStandalone =
+                standaloneTasks.where((t) => t['completed'] == true).toList();
 
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            // Incomplete Tasks
-            if (incompleteTasks.isNotEmpty) ...[
-              _buildSectionHeader(
-                'المهام النشطة',
-                incompleteTasks.length,
-                Icons.pending_actions,
-                AppTheme.primaryColor,
-              ),
-              const SizedBox(height: 12),
-              ...incompleteTasks
-                  .asMap()
-                  .entries
-                  .map((entry) => _buildTaskCard(context, entry.value, entry.key))
-                  .toList(),
-              const SizedBox(height: 24),
-            ],
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                // Standalone Tasks Section
+                if (incompleteStandalone.isNotEmpty || completedStandalone.isNotEmpty) ...[
+                  _buildSectionHeader(
+                    'المهام السريعة',
+                    incompleteStandalone.length,
+                    Icons.flash_on_rounded,
+                    const Color(0xFFFFB800),
+                  ),
+                  const SizedBox(height: 12),
+                  ...incompleteStandalone
+                      .asMap()
+                      .entries
+                      .map((entry) =>
+                          _buildStandaloneTaskCard(context, entry.value, entry.key))
+                      .toList(),
+                  if (completedStandalone.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    ...completedStandalone
+                        .asMap()
+                        .entries
+                        .map((entry) =>
+                            _buildStandaloneTaskCard(context, entry.value, entry.key))
+                        .toList(),
+                  ],
+                  const SizedBox(height: 24),
+                ],
 
-            // Completed Tasks
-            if (completedTasks.isNotEmpty) ...[
-              _buildSectionHeader(
-                'المهام المنجزة',
-                completedTasks.length,
-                Icons.check_circle,
-                AppTheme.successColor,
-              ),
-              const SizedBox(height: 12),
-              ...completedTasks
-                  .asMap()
-                  .entries
-                  .map((entry) => _buildTaskCard(context, entry.value, entry.key))
-                  .toList(),
-            ],
-          ],
+                // Group Tasks - Incomplete
+                if (incompleteGroupTasks.isNotEmpty) ...[
+                  _buildSectionHeader(
+                    'مهام المجموعات',
+                    incompleteGroupTasks.length,
+                    Icons.pending_actions,
+                    AppTheme.primaryColor,
+                  ),
+                  const SizedBox(height: 12),
+                  ...incompleteGroupTasks
+                      .asMap()
+                      .entries
+                      .map((entry) => _buildTaskCard(context, entry.value, entry.key))
+                      .toList(),
+                  const SizedBox(height: 24),
+                ],
+
+                // Group Tasks - Completed
+                if (completedGroupTasks.isNotEmpty) ...[
+                  _buildSectionHeader(
+                    'المهام المنجزة',
+                    completedGroupTasks.length,
+                    Icons.check_circle,
+                    AppTheme.successColor,
+                  ),
+                  const SizedBox(height: 12),
+                  ...completedGroupTasks
+                      .asMap()
+                      .entries
+                      .map((entry) => _buildTaskCard(context, entry.value, entry.key))
+                      .toList(),
+                ],
+              ],
+            );
+          },
         );
       },
     );
   }
 
   Stream<QuerySnapshot> _getTasksStream() {
-    // Get all notes without filters to avoid index requirements
+    // Get all notes without filters
+    return FirebaseFirestore.instance.collection('notes').snapshots();
+  }
+
+  Stream<QuerySnapshot> _getStandaloneTasksStream() {
     return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
         .collection('notes')
+        .where('type', isEqualTo: 'task')
         .snapshots();
   }
 
@@ -427,6 +498,245 @@ class AllTasksView extends StatelessWidget {
         ),
       );
     }
+  }
+
+  Widget _buildStandaloneTaskCard(
+      BuildContext context, Map<String, dynamic> task, int index) {
+    final title = task['title'] ?? '';
+    final priority = task['priority'] ?? 'medium';
+    final isCompleted = task['completed'] ?? false;
+    final taskId = task['id'] ?? '';
+
+    String priorityIcon = '🟡';
+    String priorityLabel = 'متوسط';
+    switch (priority) {
+      case 'urgent':
+        priorityIcon = '🔴';
+        priorityLabel = 'عاجل';
+        break;
+      case 'high':
+        priorityIcon = '🟠';
+        priorityLabel = 'عالي';
+        break;
+      case 'low':
+        priorityIcon = '🟢';
+        priorityLabel = 'منخفض';
+        break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isCompleted
+              ? AppTheme.successColor.withOpacity(0.3)
+              : const Color(0xFFFFB800).withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: InkWell(
+          onTap: () =>
+              _toggleStandaloneTaskCompletion(context, taskId, isCompleted),
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            width: 36,
+            height: 36,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: isCompleted
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: isCompleted
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFFD1D5DB),
+                width: 2,
+              ),
+            ),
+            child: isCompleted
+                ? const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 20,
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+          ),
+        ),
+        title: Row(
+          children: [
+            const Text(
+              '⚡',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isCompleted
+                      ? AppTheme.textLightColor
+                      : AppTheme.textPrimaryColor,
+                  decoration: isCompleted
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB800).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(priorityIcon, style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    priorityLabel,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFB800).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.flash_on_rounded,
+                        size: 12, color: Color(0xFFFFB800)),
+                    SizedBox(width: 4),
+                    Text(
+                      'مهمة سريعة',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFFFB800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        onTap: () => _showStandaloneTaskDetails(context, task),
+      ),
+    )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: index * 50))
+        .slideX(begin: 0.2, end: 0);
+  }
+
+  Future<void> _toggleStandaloneTaskCompletion(
+      BuildContext context, String taskId, bool currentStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notes')
+          .doc(taskId)
+          .update({
+        'completed': !currentStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
+  void _showStandaloneTaskDetails(
+      BuildContext context, Map<String, dynamic> task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Text('⚡', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'مهمة سريعة',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(userId)
+                    .collection('notes')
+                    .doc(task['id'])
+                    .delete();
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم حذف المهمة')),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              task['title'] ?? '',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showTaskDetails(BuildContext context, TaskModel task) {
