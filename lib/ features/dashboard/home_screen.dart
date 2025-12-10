@@ -14,6 +14,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:lottie/lottie.dart';
 import '../auth/splash/animated_splash_screen.dart';
 import 'tasks/tasks_tab_view.dart';
+import 'widgets/recent_tasks_widget.dart';
 
 // Cloudinary Configuration
 final cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
@@ -494,6 +495,8 @@ class _HomeScreenState extends State<HomeScreen>
                 _buildStatsCards(),
                 const SizedBox(height: 20),
                 _buildQuickActions(),
+                const SizedBox(height: 20),
+                const RecentTasksWidget(),
                 const SizedBox(height: 20),
               ],
               Row(
