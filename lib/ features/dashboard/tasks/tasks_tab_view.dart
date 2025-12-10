@@ -323,8 +323,6 @@ class _TasksTabViewState extends State<TasksTabView>
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('task_groups')
-          .where('userId', isEqualTo: userId)
-          .orderBy('createdAt')
           .snapshots(),
       builder: (context, snapshot) {
         print('📡 Stream state: ${snapshot.connectionState}');
@@ -347,12 +345,19 @@ class _TasksTabViewState extends State<TasksTabView>
           return _buildEmptyGroupsState();
         }
 
+        // Filter by userId and sort in code
         final groups = snapshot.data!.docs
             .map((doc) {
               print('📄 Doc ID: ${doc.id}, Data: ${doc.data()}');
               return TaskGroup.fromFirestore(doc);
             })
+            .where((group) => group.userId == userId)
             .toList();
+        
+        if (groups.isEmpty) {
+          print('📭 No groups for this user - showing empty state');
+          return _buildEmptyGroupsState();
+        }
         
         // Sort by createdAt descending (newest first)
         groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));

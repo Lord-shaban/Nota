@@ -267,9 +267,6 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('notes')
-          .where('type', isEqualTo: 'task')
-          .where('groupId', isEqualTo: widget.group.id)
-          .orderBy('createdAt')
           .snapshots(),
       builder: (context, snapshot) {
         print('📡 Tasks stream state: ${snapshot.connectionState}');
@@ -287,17 +284,36 @@ class _TaskGroupCardState extends State<TaskGroupCard> {
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          print('📭 No tasks found for group ${widget.group.id}');
+        if (!snapshot.hasData) {
+          print('📭 No data from stream');
           return _buildEmptyTasksState();
         }
 
+        // Filter tasks by groupId in code to avoid Firestore index
         final tasks = snapshot.data!.docs
             .map((doc) {
-              print('📝 Task doc: ${doc.id}, data: ${doc.data()}');
-              return TaskModel.fromFirestore(doc);
+              try {
+                final data = doc.data() as Map<String, dynamic>?;
+                if (data != null && data['type'] == 'task' && data['groupId'] == widget.group.id) {
+                  print('📝 Task doc: ${doc.id}, data: $data');
+                  return TaskModel.fromFirestore(doc);
+                }
+              } catch (e) {
+                print('⚠️ Error parsing task: $e');
+              }
+              return null;
             })
+            .where((task) => task != null)
+            .cast<TaskModel>()
             .toList();
+        
+        if (tasks.isEmpty) {
+          print('📭 No tasks found for group ${widget.group.id}');
+          return _buildEmptyTasksState();
+        }
+        
+        // Sort by createdAt (oldest first for better UX)
+        tasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         
         print('✅ Loaded ${tasks.length} tasks');
 

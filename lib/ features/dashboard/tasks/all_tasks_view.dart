@@ -34,14 +34,29 @@ class AllTasksView extends StatelessWidget {
           return _buildEmptyState(context);
         }
 
+        // Filter and sort in code to avoid Firestore index requirements
         var tasks = snapshot.data!.docs
-            .map((doc) => TaskModel.fromFirestore(doc))
+            .map((doc) {
+              try {
+                return TaskModel.fromFirestore(doc);
+              } catch (e) {
+                return null;
+              }
+            })
+            .where((task) => task != null)
+            .cast<TaskModel>()
+            .where((task) => task.userId == userId && task.groupId != null)
             .toList();
-
+        
+        // Apply priority filter
+        if (selectedPriority != 'all') {
+          tasks = tasks.where((t) => t.priority == selectedPriority).toList();
+        }
+        
         // Sort by createdAt descending (newest first)
         tasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         
-        // Apply filters
+        // Apply date filters
         tasks = _applyFilters(tasks);
 
         if (tasks.isEmpty) {
@@ -94,17 +109,10 @@ class AllTasksView extends StatelessWidget {
   }
 
   Stream<QuerySnapshot> _getTasksStream() {
-    var query = FirebaseFirestore.instance
+    // Get all notes without filters to avoid index requirements
+    return FirebaseFirestore.instance
         .collection('notes')
-        .where('userId', isEqualTo: userId)
-        .where('type', isEqualTo: 'task');
-
-    // Apply priority filter at database level if selected
-    if (selectedPriority != 'all') {
-      query = query.where('priority', isEqualTo: selectedPriority);
-    }
-
-    return query.orderBy('createdAt').snapshots();
+        .snapshots();
   }
 
   List<TaskModel> _applyFilters(List<TaskModel> tasks) {
