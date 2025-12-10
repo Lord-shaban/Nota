@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/task_model.dart';
 import '../../../core/models/task_group.dart';
 import '../../../core/theme/app_theme.dart';
@@ -46,22 +47,20 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               'المهام الأخيرة',
-              style: TextStyle(
+              style: GoogleFonts.cairo(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                fontFamily: 'Tajawal',
               ),
             ),
             const Spacer(),
             TextButton(
               onPressed: widget.onViewAll,
-              child: const Text(
+              child: Text(
                 'عرض الكل',
-                style: TextStyle(
-                  color: Color(0xFF58CC02),
-                  fontFamily: 'Tajawal',
+                style: GoogleFonts.cairo(
+                  color: const Color(0xFF58CC02),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -104,7 +103,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                   final groups = groupSnapshot.data!.docs;
                   
                   return StreamBuilder<List<QuerySnapshot>>(
-                    stream: Stream.fromFutures(
+                    stream: Stream.fromFuture(
                       Future.wait(
                         groups.map((groupDoc) {
                           return _firestore
@@ -117,7 +116,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                               .first;
                         }).toList(),
                       ),
-                    ).asStream(),
+                    ),
                     builder: (context, tasksSnapshot) {
                       final groupTasks = <Map<String, dynamic>>[];
                       
@@ -285,32 +284,29 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'لا توجد مهام بعد',
-              style: TextStyle(
-                color: Color(0xFF1F2937),
+              style: GoogleFonts.cairo(
+                color: const Color(0xFF1F2937),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                fontFamily: 'Tajawal',
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'ابدأ بإضافة مهامك من الزر أدناه',
-              style: TextStyle(
+              style: GoogleFonts.cairo(
                 color: Colors.grey.shade600,
                 fontSize: 14,
-                fontFamily: 'Tajawal',
               ),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: widget.onViewAll,
               icon: const Icon(Icons.add_task, size: 20),
-              label: const Text(
+              label: Text(
                 'إضافة مهمة',
-                style: TextStyle(
-                  fontFamily: 'Tajawal',
+                style: GoogleFonts.cairo(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -409,10 +405,9 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                         Expanded(
                           child: Text(
                             task.title,
-                            style: TextStyle(
+                            style: GoogleFonts.cairo(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              fontFamily: 'Tajawal',
                               color: task.isCompleted
                                   ? AppTheme.textLightColor
                                   : AppTheme.textPrimaryColor,
@@ -443,10 +438,9 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           ),
                           child: Text(
                             groupTitle,
-                            style: TextStyle(
+                            style: GoogleFonts.cairo(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Tajawal',
                               color: Color(int.parse(
                                   groupColor.replaceFirst('#', '0xFF'))),
                             ),
@@ -477,9 +471,8 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           const SizedBox(width: 2),
                           Text(
                             _formatDueDate(task.dueDate!),
-                            style: TextStyle(
+                            style: GoogleFonts.cairo(
                               fontSize: 10,
-                              fontFamily: 'Tajawal',
                               color: task.isOverdue
                                   ? Colors.red
                                   : AppTheme.textSecondaryColor,
@@ -561,10 +554,10 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
               'حدث خطأ أثناء التحديث',
-              style: TextStyle(fontFamily: 'Tajawal'),
+              style: GoogleFonts.cairo(),
             ),
             backgroundColor: Colors.red,
           ),
@@ -668,10 +661,9 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                         Expanded(
                           child: Text(
                             title,
-                            style: TextStyle(
+                            style: GoogleFonts.cairo(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              fontFamily: 'Tajawal',
                               color: isCompleted
                                   ? AppTheme.textLightColor
                                   : AppTheme.textPrimaryColor,
@@ -702,10 +694,9 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
                           ),
                           child: Text(
                             groupTitle,
-                            style: TextStyle(
+                            style: GoogleFonts.cairo(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'Tajawal',
                               color: Color(int.parse(
                                   groupColor.replaceFirst('#', '0xFF'))),
                             ),
@@ -737,7 +728,7 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           task['title'] ?? 'مهمة',
-          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600),
+          style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -746,14 +737,14 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
             if (task['content'] != null && task['content'].toString().isNotEmpty)
               Text(
                 task['content'],
-                style: const TextStyle(fontFamily: 'Tajawal'),
+                style: GoogleFonts.cairo(),
               ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق', style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text('إغلاق', style: GoogleFonts.cairo()),
           ),
         ],
       ),
@@ -777,10 +768,10 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
               'حدث خطأ أثناء التحديث',
-              style: TextStyle(fontFamily: 'Tajawal'),
+              style: GoogleFonts.cairo(),
             ),
             backgroundColor: Colors.red,
           ),
