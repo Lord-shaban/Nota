@@ -27,7 +27,6 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   late Animation<double> _progressAnimation;
 
   String _loadingMessage = 'جاري التحميل...';
-  bool _isInitialized = false;
 
   @override
   void initState() {
@@ -97,8 +96,6 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     if (!mounted) return;
 
     try {
-      setState(() => _isInitialized = true);
-
       // Check auth state from provider
       final user = context.read<User?>();
 
