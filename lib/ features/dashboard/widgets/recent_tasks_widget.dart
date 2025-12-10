@@ -172,40 +172,77 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF58CC02).withOpacity(0.05),
+            const Color(0xFFFFD900).withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
+          color: const Color(0xFF58CC02).withOpacity(0.1),
+          width: 2,
         ),
       ),
       child: Center(
         child: Column(
           children: [
-            Icon(
-              Icons.task_rounded,
-              size: 48,
-              color: Colors.grey.shade400,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.task_alt_rounded,
+                size: 48,
+                color: Color(0xFF58CC02),
+              ),
             ),
-            const SizedBox(height: 12),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               'لا توجد مهام بعد',
               style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                color: Color(0xFF1F2937),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
                 fontFamily: 'Tajawal',
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'ابدأ بإضافة مهامك الآن',
+              'ابدأ بإضافة مهامك من الزر أدناه',
               style: TextStyle(
-                color: Colors.grey.shade400,
+                color: Colors.grey.shade600,
                 fontSize: 14,
                 fontFamily: 'Tajawal',
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: widget.onViewAll,
+              icon: const Icon(Icons.add_task, size: 20),
+              label: const Text(
+                'إضافة مهمة',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF58CC02),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
