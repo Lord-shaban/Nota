@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
-import '../../../core/theme/app_theme.dart';
-import '../services/auth_service.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/auth_button.dart';
-import '../register/register_screen.dart';
-import '../../dashboard/home_screen.dart';
-import 'forgot_password_dialog.dart';
+import 'package:nota/core/theme/app_theme.dart';
+import 'package:nota/features/auth/services/auth_service.dart';
+import 'package:nota/features/auth/widgets/auth_text_field.dart';
+import 'package:nota/features/auth/widgets/auth_button.dart';
+import 'package:nota/features/auth/register/register_screen.dart';
+import 'package:nota/features/dashboard/home_screen.dart';
+import 'package:nota/features/auth/login/forgot_password_dialog.dart';
 
 /// Login Screen
 /// Handles user authentication with email and password
@@ -114,13 +114,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'ãÑÍÈÇğ ÈÚæÏÊß!',
+                  'Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨Ø¹ÙˆØ¯ØªÙƒ!',
                   style: Theme.of(context).textTheme.displaySmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'ÓÌøá ÏÎæáß ááãÊÇÈÚÉ',
+                  'Ø³Ø¬Ù„ Ø¯Ø®ÙˆÙ„ Ù„Ø­Ø³Ø§Ø¨Ùƒ',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -129,17 +129,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 AuthTextField(
                   controller: _emailController,
-                  label: 'ÇáÈÑíÏ ÇáÅáßÊÑæäí',
+                  label: 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ',
                   hint: 'example@email.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'íÑÌì ÅÏÎÇá ÇáÈÑíÏ ÇáÅáßÊÑæäí';
+                      return 'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ';
                     }
                     if (!EmailValidator.validate(value.trim())) {
-                      return 'ÇáÈÑíÏ ÇáÅáßÊÑæäí ÛíÑ ÕÇáÍ';
+                      return 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ØºÙŠØ± ØµØ§Ù„Ø­';
                     }
                     return null;
                   },
@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 AuthTextField(
                   controller: _passwordController,
-                  label: 'ßáãÉ ÇáãÑæÑ',
+                  label: 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±',
                   hint: '',
                   prefixIcon: Icons.lock_outlined,
                   isPassword: true,
@@ -155,10 +155,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   onSubmitted: (_) => _handleLogin(),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'íÑÌì ÅÏÎÇá ßáãÉ ÇáãÑæÑ';
+                      return 'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±';
                     }
                     if (value.length < 6) {
-                      return 'ßáãÉ ÇáãÑæÑ íÌÈ Ãä Êßæä 6 ÃÍÑİ Úáì ÇáÃŞá';
+                      return 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 6 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„';
                     }
                     return null;
                   },
@@ -168,12 +168,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: _showForgotPasswordDialog,
-                    child: const Text('äÓíÊ ßáãÉ ÇáãÑæÑ¿'),
+                    child: const Text('Ù†Ø³ÙŠØª ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±ØŸ'),
                   ),
                 ),
                 const SizedBox(height: 24),
                 AuthButton(
-                  text: 'ÊÓÌíá ÇáÏÎæá',
+                  text: 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„',
                   onPressed: _handleLogin,
                   isLoading: _isLoading,
                   icon: Icons.login,
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'Ãæ',
+                        'Ø£Ùˆ',
                         style: TextStyle(
                           color: AppTheme.textSecondaryColor,
                         ),
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'áíÓ áÏíß ÍÓÇÈ¿ ',
+                      'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ Ø­Ø³Ø§Ø¨ØŸ ',
                       style: TextStyle(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       onPressed: _navigateToRegister,
                       child: const Text(
-                        'ÅäÔÇÁ ÍÓÇÈ ÌÏíÏ',
+                        'Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨ Ø¬Ø¯ÙŠØ¯',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -217,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'ÈÊÓÌíá ÇáÏÎæá¡ ÃäÊ ÊæÇİŞ Úáì ÔÑæØ ÇáÇÓÊÎÏÇã',
+                  'Ø¨ØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„Ùƒ Ø£Ù†Øª ØªÙˆØ§ÙÙ‚ Ø¹Ù„Ù‰ Ø´Ø±ÙˆØ· Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù…',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
