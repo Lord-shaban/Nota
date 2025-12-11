@@ -104,24 +104,76 @@ class _TasksTabViewState extends State<TasksTabView>
       child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('notes')
-            .where('userId', isEqualTo: userId)
             .where('type', isEqualTo: 'task')
             .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return _buildStatsRow(0, 0, 0, 0);
-          }
+        builder: (context, notesSnapshot) {
+          return StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(userId)
+                .collection('notes')
+                .where('type', isEqualTo: 'task')
+                .snapshots(),
+            builder: (context, standaloneSnapshot) {
+              int totalTasks = 0;
+              int completedTasks = 0;
+              int todayTasks = 0;
+              int overdueTasks = 0;
 
-          final tasks = snapshot.data!.docs
-              .map((doc) => TaskModel.fromFirestore(doc))
-              .toList();
-          
-          final totalTasks = tasks.length;
-          final completedTasks = tasks.where((t) => t.isCompleted).length;
-          final overdueTasks = tasks.where((t) => t.isOverdue).length;
-          final todayTasks = tasks.where((t) => t.isDueToday).length;
+              // Count group tasks from notes collection
+              if (notesSnapshot.hasData) {
+                final groupTasks = notesSnapshot.data!.docs
+                    .where((doc) {
+                      final data = doc.data() as Map<String, dynamic>?;
+                      return data != null && 
+                             data['groupId'] != null && 
+                             data['groupId'] != '';
+                    })
+                    .map((doc) => TaskModel.fromFirestore(doc))
+                    .toList();
+                
+                totalTasks += groupTasks.length;
+                completedTasks += groupTasks.where((t) => t.isCompleted).length;
+                overdueTasks += groupTasks.where((t) => t.isOverdue).length;
+                todayTasks += groupTasks.where((t) => t.isDueToday).length;
+              }
 
-          return _buildStatsRow(totalTasks, completedTasks, todayTasks, overdueTasks);
+              // Count standalone tasks
+              if (standaloneSnapshot.hasData) {
+                final standaloneTasks = standaloneSnapshot.data!.docs
+                    .where((doc) {
+                      final data = doc.data() as Map<String, dynamic>?;
+                      return data != null && 
+                             (data['groupId'] == null || data['groupId'] == '');
+                    })
+                    .toList();
+                
+                totalTasks += standaloneTasks.length;
+                
+                for (var doc in standaloneTasks) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  if (data['completed'] == true) completedTasks++;
+                  
+                  // Check if task is for today or overdue
+                  final dueDate = data['dueDate'] as Timestamp?;
+                  if (dueDate != null) {
+                    final now = DateTime.now();
+                    final taskDate = dueDate.toDate();
+                    final today = DateTime(now.year, now.month, now.day);
+                    final taskDay = DateTime(taskDate.year, taskDate.month, taskDate.day);
+                    
+                    if (taskDay.isAtSameMomentAs(today)) {
+                      todayTasks++;
+                    } else if (taskDay.isBefore(today) && data['completed'] != true) {
+                      overdueTasks++;
+                    }
+                  }
+                }
+              }
+
+              return _buildStatsRow(totalTasks, completedTasks, todayTasks, overdueTasks);
+            },
+          );
         },
       ),
     );

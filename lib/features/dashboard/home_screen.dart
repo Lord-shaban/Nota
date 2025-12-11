@@ -651,53 +651,73 @@ class _HomeScreenState extends State<HomeScreen>
     return StreamBuilder<QuerySnapshot>(
       stream: userId != null
           ? _firestore
-              .collection('users')
-              .doc(userId)
-              .collection('taskGroups')
+              .collection('notes')
+              .where('type', isEqualTo: 'task')
               .snapshots()
           : null,
-      builder: (context, snapshot) {
-        int pendingTasks = 0;
-        int urgentTasks = 0;
-        
-        if (snapshot.hasData) {
-          for (var doc in snapshot.data!.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final total = (data['totalTasks'] ?? 0) as int;
-            final completed = (data['completedTasks'] ?? 0) as int;
-            pendingTasks += (total - completed);
-          }
-        }
-        
-        String message = pendingTasks == 0
-            ? 'لا توجد مهام معلقة، أحسنت!'
-            : pendingTasks == 1
-            ? 'لديك مهمة واحدة غير مكتملة'
-            : 'لديك $pendingTasks مهمة غير مكتملة';
+      builder: (context, notesSnapshot) {
+        return StreamBuilder<QuerySnapshot>(
+          stream: userId != null
+              ? _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .where('type', isEqualTo: 'task')
+                  .snapshots()
+              : null,
+          builder: (context, standaloneSnapshot) {
+            int pendingTasks = 0;
             
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF58CC02), Color(0xFF45A801)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF58CC02).withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+            // Count incomplete tasks from groups (notes collection with groupId)
+            if (notesSnapshot.hasData) {
+              pendingTasks += notesSnapshot.data!.docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>?;
+                return data != null &&
+                       data['groupId'] != null &&
+                       data['groupId'] != '' &&
+                       data['isCompleted'] != true;
+              }).length;
+            }
+            
+            // Count incomplete standalone tasks
+            if (standaloneSnapshot.hasData) {
+              pendingTasks += standaloneSnapshot.data!.docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>?;
+                return data != null &&
+                       (data['groupId'] == null || data['groupId'] == '') &&
+                       data['completed'] != true;
+              }).length;
+            }
+            
+            String message = pendingTasks == 0
+                ? 'لا توجد مهام معلقة، أحسنت!'
+                : pendingTasks == 1
+                ? 'لديك مهمة واحدة غير مكتملة'
+                : 'لديك $pendingTasks مهمة غير مكتملة';
+                
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF58CC02), Color(0xFF45A801)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF58CC02).withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     Text(
                       '$greeting، ${_userData?['name'] ?? 'صديقي'}',
                       style: GoogleFonts.tajawal(
@@ -736,6 +756,8 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ],
           ),
+        );
+          },
         );
       },
     );

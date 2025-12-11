@@ -314,13 +314,11 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
           final groupId = groupDoc.id;
           final groupData = TaskGroup.fromFirestore(groupDoc);
           
-          // Get tasks for this group
+          // Get tasks for this group from notes collection
           final tasksSnapshot = await _firestore
-              .collection('users')
-              .doc(userId)
-              .collection('taskGroups')
-              .doc(groupId)
-              .collection('tasks')
+              .collection('notes')
+              .where('type', isEqualTo: 'task')
+              .where('groupId', isEqualTo: groupId)
               .get();
           
           for (var taskDoc in tasksSnapshot.docs) {
@@ -349,14 +347,17 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
       for (var doc in standaloneSnapshot.data!.docs) {
         try {
           final data = doc.data() as Map<String, dynamic>;
-          allTasks.add({
-            'task': data,
-            'taskId': doc.id,
-            'groupIcon': '📝',
-            'groupTitle': 'بدون مجموعة',
-            'groupColor': '#6B7280',
-            'isStandalone': true,
-          });
+          // Only add if task doesn't have groupId (standalone)
+          if (data['groupId'] == null || data['groupId'] == '') {
+            allTasks.add({
+              'task': data,
+              'taskId': doc.id,
+              'groupIcon': '⚡',
+              'groupTitle': 'مهمة سريعة',
+              'groupColor': '#FFB800',
+              'isStandalone': true,
+            });
+          }
         } catch (e) {
           // Skip invalid tasks
         }
@@ -562,12 +563,9 @@ class _RecentTasksWidgetState extends State<RecentTasksWidget> {
     try {
       final newStatus = !task.isCompleted;
       
+      // Update task in notes collection
       await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('taskGroups')
-          .doc(groupId)
-          .collection('tasks')
+          .collection('notes')
           .doc(task.id)
           .update({
         'isCompleted': newStatus,
