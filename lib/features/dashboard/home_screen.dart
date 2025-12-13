@@ -3160,93 +3160,149 @@ class _HomeScreenState extends State<HomeScreen>
     final userId = _auth.currentUser?.uid;
     if (userId == null) return const SizedBox.shrink();
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('taskGroups')
-          .orderBy('updatedAt', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(color: Color(0xFF58CC02)),
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        final groups = snapshot.data!.docs
-            .map((doc) => TaskGroup.fromFirestore(doc))
-            .toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // عنوان القسم
+        Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF58CC02).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.folder_rounded,
-                    color: Color(0xFF58CC02),
-                    size: 20,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.folder_rounded,
+                color: Color(0xFF58CC02),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'مجموعات المهام',
+              style: GoogleFonts.tajawal(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => _tabController.animateTo(1),
+              child: Text(
+                'عرض الكل',
+                style: GoogleFonts.tajawal(
+                  color: const Color(0xFF58CC02),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // قائمة المجموعات
+        StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('taskGroups')
+              .orderBy('updatedAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF58CC02)),
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  'خطأ: ${snapshot.error}',
+                  style: GoogleFonts.tajawal(color: Colors.red),
+                ),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'مجموعات المهام',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (groups.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF58CC02),
-                      borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.folder_open_rounded,
+                      size: 48,
+                      color: Colors.grey.withOpacity(0.5),
                     ),
-                    child: Text(
-                      '${groups.length}',
+                    const SizedBox(height: 12),
+                    Text(
+                      'لا توجد مجموعات مهام',
                       style: GoogleFonts.tajawal(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        fontSize: 16,
+                        color: Colors.grey,
                       ),
                     ),
-                  ),
-                ],
-                const Spacer(),
-                TextButton(
-                  onPressed: () => _tabController.animateTo(1),
-                  child: Text(
-                    'عرض الكل',
-                    style: GoogleFonts.tajawal(
-                      color: const Color(0xFF58CC02),
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 8),
+                    Text(
+                      'انتقل إلى تبويب المهام لإنشاء مجموعة جديدة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 12,
+                        color: Colors.grey.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _tabController.animateTo(1),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(
+                        'إنشاء مجموعة',
+                        style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF58CC02),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // عرض المجموعات مع المهام التي فيها
-            ...groups.map((group) => _buildExpandedGroupCard(group, userId)),
-          ],
-        );
-      },
+              );
+            }
+
+            final groups = snapshot.data!.docs
+                .map((doc) => TaskGroup.fromFirestore(doc))
+                .toList();
+
+            return Column(
+              children: groups.map((group) => _buildExpandedGroupCard(group, userId)).toList(),
+            );
+          },
+        ),
+      ],
     );
   }
 
