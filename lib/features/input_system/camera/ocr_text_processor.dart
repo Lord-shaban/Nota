@@ -19,7 +19,7 @@ class OcrTextProcessor {
         _model = useMockData
             ? null
             : GenerativeModel(
-                model: 'gemini-1.5-flash', // Flash model for quick responses
+                model: 'gemini-2.5-flash', // Upgraded to 2.5 Flash for better performance
                 apiKey: apiKey,
                 generationConfig: GenerationConfig(
                   temperature: 0.4, // Lower temp for accuracy

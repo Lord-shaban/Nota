@@ -13,6 +13,12 @@ import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:lottie/lottie.dart';
 import '../auth/splash/animated_splash_screen.dart';
+import 'tasks/tasks_tab_view.dart';
+import 'widgets/recent_tasks_widget.dart';
+import 'tasks/create_task_dialog.dart';
+import 'tasks/create_task_group_dialog.dart';
+import '../../core/models/task_model.dart';
+import '../../core/models/task_group.dart';
 
 // Cloudinary Configuration
 final cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
@@ -67,6 +73,10 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      // Rebuild to show/hide FAB based on current tab
+      if (mounted) setState(() {});
+    });
     _speech = stt.SpeechToText();
     _initializeGemini();
     _loadUserData();
@@ -174,7 +184,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      floatingActionButton: _buildFAB(),
+      // Hide main FAB when in tasks tab (index 1)
+      floatingActionButton: _tabController.index != 1 ? _buildFAB() : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       drawer: _buildDrawer(),
     );
@@ -489,6 +500,14 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(height: 20),
                 _buildQuickActions(),
                 const SizedBox(height: 20),
+                _buildTaskGroupsSection(),
+                const SizedBox(height: 20),
+                RecentTasksWidget(
+                  onViewAll: () {
+                    _tabController.animateTo(1); // Navigate to tasks tab
+                  },
+                ),
+                const SizedBox(height: 20),
               ],
               Row(
                 children: [
@@ -563,8 +582,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildTasksTab() =>
-      _buildListTab(_tasks, Icons.task_alt_rounded, 'لا توجد مهام');
+  Widget _buildTasksTab() => const TasksTabView();
   Widget _buildAppointmentsTab() => _buildListTab(
     _appointments,
     Icons.calendar_month_rounded,
@@ -624,115 +642,195 @@ class _HomeScreenState extends State<HomeScreen>
   // ==================== Widgets ====================
 
   Widget _buildWelcomeCard() {
+    final userId = _auth.currentUser?.uid;
     final hour = DateTime.now().hour;
     final greeting = hour < 12
         ? 'صباح الخير'
         : hour < 18
         ? 'مساء الخير'
         : 'مساء الخير';
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF58CC02), Color(0xFF45A801)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF58CC02).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$greeting، ${_userData?['name'] ?? 'صديقي'}',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+        
+    return StreamBuilder<QuerySnapshot>(
+      stream: userId != null
+          ? _firestore
+              .collection('notes')
+              .where('type', isEqualTo: 'task')
+              .snapshots()
+          : null,
+      builder: (context, notesSnapshot) {
+        return StreamBuilder<QuerySnapshot>(
+          stream: userId != null
+              ? _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('notes')
+                  .where('type', isEqualTo: 'task')
+                  .snapshots()
+              : null,
+          builder: (context, standaloneSnapshot) {
+            int pendingTasks = 0;
+            
+            // Count incomplete tasks from groups (notes collection with groupId)
+            if (notesSnapshot.hasData) {
+              pendingTasks += notesSnapshot.data!.docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>?;
+                return data != null &&
+                       data['groupId'] != null &&
+                       data['groupId'] != '' &&
+                       data['isCompleted'] != true;
+              }).length;
+            }
+            
+            // Count incomplete standalone tasks
+            if (standaloneSnapshot.hasData) {
+              pendingTasks += standaloneSnapshot.data!.docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>?;
+                return data != null &&
+                       (data['groupId'] == null || data['groupId'] == '') &&
+                       data['completed'] != true;
+              }).length;
+            }
+            
+            String message = pendingTasks == 0
+                ? 'لا توجد مهام معلقة، أحسنت!'
+                : pendingTasks == 1
+                ? 'لديك مهمة واحدة غير مكتملة'
+                : 'لديك $pendingTasks مهمة غير مكتملة';
+                
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF58CC02), Color(0xFF45A801)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'لديك ${_tasks.where((t) => t['completed'] != true).length} مهمة غير مكتملة',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF58CC02).withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(
+                      '$greeting، ${_userData?['name'] ?? 'صديقي'}',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      message,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(
+                  hour < 12
+                      ? Icons.wb_sunny_rounded
+                      : hour < 18
+                      ? Icons.wb_twilight_rounded
+                      : Icons.nightlight_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              hour < 12
-                  ? Icons.wb_sunny_rounded
-                  : hour < 18
-                  ? Icons.wb_twilight_rounded
-                  : Icons.nightlight_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-        ],
-      ),
+        );
+          },
+        );
+      },
     );
   }
 
   Widget _buildStatsCards() {
-    final pending = _tasks.where((t) => t['completed'] != true).length;
-    final totalExp = _expenses.fold<double>(
-      0,
-      (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble(),
-    );
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
-      children: [
-        _buildStatCard(
-          'المهام المعلقة',
-          pending.toString(),
-          Icons.pending_actions_rounded,
-          const Color(0xFF58CC02),
-        ),
-        _buildStatCard(
-          'المواعيد',
-          _appointments.length.toString(),
-          Icons.event_available_rounded,
-          const Color(0xFFFFB800),
-        ),
-        _buildStatCard(
-          'المصروفات',
-          totalExp.toStringAsFixed(0),
-          Icons.account_balance_wallet_rounded,
-          Colors.blue,
-        ),
-        _buildStatCard(
-          'الاقتباسات',
-          _quotes.length.toString(),
-          Icons.format_quote_rounded,
-          Colors.purple,
-        ),
-      ],
+    final userId = _auth.currentUser?.uid;
+    
+    return StreamBuilder<QuerySnapshot>(
+      stream: userId != null
+          ? _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('taskGroups')
+              .snapshots()
+          : null,
+      builder: (context, groupSnapshot) {
+        int totalTasks = 0;
+        int completedTasks = 0;
+        
+        if (groupSnapshot.hasData) {
+          for (var doc in groupSnapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            totalTasks += (data['totalTasks'] ?? 0) as int;
+            completedTasks += (data['completedTasks'] ?? 0) as int;
+          }
+        }
+        
+        final pending = totalTasks - completedTasks;
+        final totalExp = _expenses.fold<double>(
+          0,
+          (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble(),
+        );
+        
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.5,
+          children: [
+            _buildStatCard(
+              'المهام المعلقة',
+              pending.toString(),
+              Icons.pending_actions_rounded,
+              const Color(0xFF58CC02),
+              subtitle: completedTasks > 0 ? 'مكتمل: $completedTasks' : null,
+            ),
+            _buildStatCard(
+              'المواعيد',
+              _appointments.length.toString(),
+              Icons.event_available_rounded,
+              const Color(0xFFFFB800),
+            ),
+            _buildStatCard(
+              'المصروفات',
+              totalExp.toStringAsFixed(0),
+              Icons.account_balance_wallet_rounded,
+              Colors.blue,
+              subtitle: 'ر.س',
+            ),
+            _buildStatCard(
+              'الاقتباسات',
+              _quotes.length.toString(),
+              Icons.format_quote_rounded,
+              Colors.purple,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -740,8 +838,9 @@ class _HomeScreenState extends State<HomeScreen>
     String title,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    String? subtitle,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -770,13 +869,27 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
-              Text(
-                value,
-                style: GoogleFonts.tajawal(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    value,
+                    style: GoogleFonts.tajawal(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
@@ -1602,12 +1715,16 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showAddDialog(String type) {
+  void _showAddDialog(String type) async {
+    if (type == 'task') {
+      // استخدام نظام المهام الجديد
+      await _showTaskCreationFlow();
+      return;
+    }
+
     final titleCtrl = TextEditingController();
     final contentCtrl = TextEditingController();
-    final typeLabel = type == 'task'
-        ? 'مهمة'
-        : type == 'appointment'
+    final typeLabel = type == 'appointment'
         ? 'موعد'
         : type == 'expense'
         ? 'مصروف'
@@ -1676,6 +1793,275 @@ class _HomeScreenState extends State<HomeScreen>
             child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showTaskCreationFlow() async {
+    // جلب المجموعات الموجودة
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    final groupsSnapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('taskGroups')
+        .get();
+
+    if (!mounted) return;
+
+    // عرض قائمة المجموعات للاختيار أو إنشاء مهمة بدون مجموعة
+    final selectedGroupId = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.folder_rounded,
+                color: Color(0xFF58CC02),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'اختر المجموعة',
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // خيار إنشاء مهمة بدون مجموعة
+              Card(
+                color: const Color(0xFFF8F8F8),
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.task_alt, size: 24),
+                  ),
+                  title: Text(
+                    'بدون مجموعة',
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    'إنشاء مهمة مستقلة',
+                    style: GoogleFonts.tajawal(fontSize: 12),
+                  ),
+                  onTap: () => Navigator.pop(ctx, 'NO_GROUP'),
+                ),
+              ),
+              if (groupsSnapshot.docs.isNotEmpty) ...[
+                const Divider(),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: groupsSnapshot.docs.length,
+                    itemBuilder: (context, index) {
+                      final doc = groupsSnapshot.docs[index];
+                      final group = TaskGroup.fromFirestore(doc);
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: Text(
+                            group.icon,
+                            style: const TextStyle(fontSize: 32),
+                          ),
+                          title: Text(
+                            group.title,
+                            style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            group.description ?? '',
+                            style: GoogleFonts.tajawal(fontSize: 12),
+                          ),
+                          onTap: () => Navigator.pop(ctx, group.id),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.tajawal()),
+          ),
+          if (groupsSnapshot.docs.isEmpty)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                showDialog(
+                  context: context,
+                  builder: (context) => const CreateTaskGroupDialog(),
+                );
+              },
+              child: Text(
+                'إنشاء مجموعة',
+                style: GoogleFonts.tajawal(color: const Color(0xFF58CC02)),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (selectedGroupId != null && mounted) {
+      if (selectedGroupId == 'NO_GROUP') {
+        // إنشاء مهمة بدون مجموعة
+        _showQuickTaskDialog();
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => CreateTaskDialog(groupId: selectedGroupId),
+        );
+      }
+    }
+  }
+
+  void _showQuickTaskDialog() {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    String selectedPriority = 'medium';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF58CC02).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.task_alt,
+                  color: Color(0xFF58CC02),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'مهمة سريعة',
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleCtrl,
+                decoration: InputDecoration(
+                  labelText: 'عنوان المهمة',
+                  labelStyle: GoogleFonts.tajawal(),
+                  border: const OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descCtrl,
+                decoration: InputDecoration(
+                  labelText: 'الوصف (اختياري)',
+                  labelStyle: GoogleFonts.tajawal(),
+                  border: const OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    'الأولوية:',
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: selectedPriority,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      items: [
+                        DropdownMenuItem(value: 'urgent', child: Text('🔴 عاجل', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'high', child: Text('🟠 عالي', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'medium', child: Text('🟡 متوسط', style: GoogleFonts.tajawal())),
+                        DropdownMenuItem(value: 'low', child: Text('🟢 منخفض', style: GoogleFonts.tajawal())),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedPriority = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('إلغاء', style: GoogleFonts.tajawal()),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF58CC02),
+              ),
+              onPressed: () async {
+                if (titleCtrl.text.trim().isEmpty) return;
+                
+                final userId = _auth.currentUser?.uid;
+                if (userId == null) return;
+
+                await _firestore
+                    .collection('users')
+                    .doc(userId)
+                    .collection('notes')
+                    .add({
+                  'type': 'task',
+                  'title': titleCtrl.text.trim(),
+                  'content': descCtrl.text.trim(),
+                  'priority': selectedPriority,
+                  'completed': false,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+
+                if (context.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('تم إنشاء المهمة بنجاح', style: GoogleFonts.tajawal()),
+                      backgroundColor: const Color(0xFF58CC02),
+                    ),
+                  );
+                }
+              },
+              child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1889,6 +2275,8 @@ class _HomeScreenState extends State<HomeScreen>
 
 استخرج العناصر التالية:
 - المهام: أي شيء يحتاج إنجاز (مثل: اشتري، اعمل، راجع، اتصل)
+  * اقترح مجموعة مناسبة للمهمة من: 📚 مذاكرة، 🛒 تسوق، 💼 عمل، 🏠 منزل، 🏋️ رياضة، 🎯 شخصي
+  * حدد الأولوية: urgent (عاجل)، high (عالي)، medium (متوسط)، low (منخفض)
 - المواعيد: أي حدث بتاريخ/وقت (مثل: اجتماع، موعد، غداً، الساعة)
 - المصروفات: أي ذكر للمال (مثل: دفعت، اشتريت، جنيه، ريال، دولار)
 - الاقتباسات: عبارات ملهمة أو حكم
@@ -1904,7 +2292,9 @@ class _HomeScreenState extends State<HomeScreen>
       "date": "YYYY-MM-DD أو null",
       "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "ر.س/جنيه/دولار أو null"
+      "currency": "ر.س/جنيه/دولار أو null",
+      "suggestedGroup": "اسم المجموعة مع الإيموجي (للمهام فقط)",
+      "priority": "urgent/high/medium/low (للمهام فقط، افتراضي medium)"
     }
   ]
 }
@@ -1914,16 +2304,19 @@ class _HomeScreenState extends State<HomeScreen>
 - type يجب أن يكون: task أو appointment أو expense أو quote أو note
 - التاريخ بصيغة YYYY-MM-DD
 - الوقت بصيغة 24 ساعة HH:MM
+- suggestedGroup و priority للمهام فقط
 ''';
 
+      print('🤖 Sending request to Gemini 2.5 Flash...');
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
 
       if (mounted) Navigator.pop(context);
 
+      print('✅ Gemini Response received');
+      print('📝 Response text: ${response.text}');
+
       if (response.text != null && response.text!.isNotEmpty) {
-        print('AI Response: ${response.text}'); // للتشخيص
-        
         var jsonStr = response.text!.trim();
         
         // تنظيف النص
@@ -1947,11 +2340,55 @@ class _HomeScreenState extends State<HomeScreen>
               });
               _showExtractedItemsDialog();
               return;
+            } else {
+              print('⚠️ No items found in response');
             }
           } catch (e) {
-            print('JSON Parse Error: $e'); // للتشخيص
-            print('JSON String: $jsonStr'); // للتشخيص
+            print('❌ JSON Parse Error: $e');
+            print('📄 JSON String: $jsonStr');
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('خطأ في تحليل الاستجابة من الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+                  backgroundColor: Colors.orange,
+                  action: SnackBarAction(
+                    label: 'تفاصيل',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('تفاصيل الخطأ', style: GoogleFonts.tajawal()),
+                          content: SingleChildScrollView(
+                            child: Text('$e\n\nResponse:\n$jsonStr', style: GoogleFonts.tajawal(fontSize: 12)),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text('إغلاق', style: GoogleFonts.tajawal()),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            }
           }
+        } else {
+          print('⚠️ No JSON found in response');
+        }
+      } else {
+        print('⚠️ Empty response from Gemini');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('لم يتم استقبال رد من الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       }
       
@@ -1967,16 +2404,61 @@ class _HomeScreenState extends State<HomeScreen>
         );
       }
     } catch (e) {
-      print('AI Error: $e'); // للتشخيص
+      print('❌ AI Error: $e');
+      print('Stack trace: ${StackTrace.current}');
+      
       if (mounted) {
         Navigator.pop(context);
+        
+        // Show detailed error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في الاتصال بالذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'تفاصيل',
+              textColor: Colors.white,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('خطأ في الذكاء الاصطناعي', style: GoogleFonts.tajawal()),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('الخطأ:', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                          Text('$e', style: GoogleFonts.tajawal(fontSize: 12)),
+                          const SizedBox(height: 12),
+                          Text('الحل المحتمل:', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                          Text('• تحقق من اتصال الإنترنت\n• تأكد من صحة API Key\n• حاول مرة أخرى لاحقاً', 
+                            style: GoogleFonts.tajawal(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('إغلاق', style: GoogleFonts.tajawal()),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        
         await _saveNote({
           'type': 'note',
           'title': text.length > 30 ? '${text.substring(0, 30)}...' : text,
           'content': text,
         });
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في التحليل. تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal()), backgroundColor: Colors.orange),
+          SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
         );
       }
     }
@@ -2398,6 +2880,30 @@ class _HomeScreenState extends State<HomeScreen>
         color = Colors.grey;
     }
 
+    // معلومات إضافية للمهام
+    String? priorityEmoji;
+    String? priorityLabel;
+    if (item['type'] == 'task' && item['priority'] != null) {
+      switch (item['priority']) {
+        case 'urgent':
+          priorityEmoji = '🔴';
+          priorityLabel = 'عاجل';
+          break;
+        case 'high':
+          priorityEmoji = '🟠';
+          priorityLabel = 'عالي';
+          break;
+        case 'medium':
+          priorityEmoji = '🟡';
+          priorityLabel = 'متوسط';
+          break;
+        case 'low':
+          priorityEmoji = '🟢';
+          priorityLabel = 'منخفض';
+          break;
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -2414,15 +2920,70 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: Icon(icon, color: color),
         ),
-        title: Text(
-          item['title'] ?? 'بدون عنوان',
-          style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item['title'] ?? 'بدون عنوان',
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (priorityEmoji != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  priorityEmoji,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+          ],
         ),
-        subtitle: Text(
-          item['content'] ?? '',
-          style: GoogleFonts.tajawal(fontSize: 12),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item['content'] ?? '',
+              style: GoogleFonts.tajawal(fontSize: 12),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (item['type'] == 'task') ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  if (item['suggestedGroup'] != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item['suggestedGroup'],
+                        style: GoogleFonts.tajawal(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (priorityLabel != null)
+                    Text(
+                      priorityLabel,
+                      style: GoogleFonts.tajawal(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
         trailing: IconButton(
           icon: const Icon(Icons.close, size: 20),
@@ -2456,13 +3017,23 @@ class _HomeScreenState extends State<HomeScreen>
 
     _showLoadingDialog('جاري الحفظ...');
 
+    int savedCount = 0;
+
     for (var item in _extractedItems) {
-      await _firestore.collection('users').doc(userId).collection('notes').add({
-        ...item,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'completed': false,
-      });
+      if (item['type'] == 'task') {
+        // معالجة المهام بنظام المجموعات الجديد
+        await _saveTaskWithGroup(item);
+        savedCount++;
+      } else {
+        // معالجة العناصر الأخرى كما هي
+        await _firestore.collection('users').doc(userId).collection('notes').add({
+          ...item,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'completed': false,
+        });
+        savedCount++;
+      }
     }
 
     Navigator.pop(context);
@@ -2472,11 +3043,703 @@ class _HomeScreenState extends State<HomeScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'تم حفظ ${_extractedItems.length} عنصر',
+            'تم حفظ $savedCount عنصر',
             style: GoogleFonts.tajawal(),
           ),
+          backgroundColor: const Color(0xFF58CC02),
         ),
       );
+    }
+  }
+
+  Future<void> _saveTaskWithGroup(Map<String, dynamic> item) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    String? groupId;
+    final suggestedGroup = item['suggestedGroup'] as String?;
+
+    if (suggestedGroup != null && suggestedGroup.isNotEmpty) {
+      // البحث عن المجموعة بالاسم
+      final groupsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .get();
+
+      final existingGroup = groupsSnapshot.docs.firstWhere(
+        (doc) => TaskGroup.fromFirestore(doc).title == suggestedGroup,
+        orElse: () => groupsSnapshot.docs.first,
+      );
+
+      if (existingGroup.exists) {
+        groupId = existingGroup.id;
+      } else if (groupsSnapshot.docs.isNotEmpty) {
+        // استخدام أول مجموعة متاحة
+        groupId = groupsSnapshot.docs.first.id;
+      }
+    } else {
+      // لا يوجد اقتراح - استخدام أول مجموعة متاحة
+      final groupsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .limit(1)
+          .get();
+
+      if (groupsSnapshot.docs.isNotEmpty) {
+        groupId = groupsSnapshot.docs.first.id;
+      }
+    }
+
+    if (groupId == null) {
+      // إنشاء مجموعة افتراضية إذا لم توجد مجموعات
+      final newGroupRef = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .add({
+        'title': '📝 عام',
+        'icon': '📝',
+        'description': 'مجموعة عامة للمهام',
+        'color': '#58CC02',
+        'userId': userId,
+        'totalTasks': 0,
+        'completedTasks': 0,
+        'taskIds': [],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      groupId = newGroupRef.id;
+    }
+
+    // إنشاء المهمة
+    DateTime? dueDate;
+    if (item['date'] != null) {
+      try {
+        dueDate = DateTime.parse(item['date']);
+      } catch (e) {
+        print('Error parsing date: $e');
+      }
+    }
+
+    final task = TaskModel(
+      id: '',
+      title: item['title'] ?? '',
+      description: item['content'] ?? '',
+      groupId: groupId,
+      priority: item['priority'] ?? 'medium',
+      dueDate: dueDate,
+      tags: [],
+      notes: '',
+      isCompleted: false,
+      createdAt: DateTime.now(),
+      userId: userId,
+    );
+
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('taskGroups')
+        .doc(groupId)
+        .collection('tasks')
+        .add(task.toFirestore());
+
+    // تحديث إحصائيات المجموعة
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('taskGroups')
+        .doc(groupId)
+        .update({
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Widget _buildTaskGroupsSection() {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // عنوان القسم
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF58CC02).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.folder_rounded,
+                color: Color(0xFF58CC02),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'مجموعات المهام',
+              style: GoogleFonts.tajawal(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => _tabController.animateTo(1),
+              child: Text(
+                'عرض الكل',
+                style: GoogleFonts.tajawal(
+                  color: const Color(0xFF58CC02),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // قائمة المجموعات
+        StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('task_groups')
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF58CC02)),
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  'خطأ: ${snapshot.error}',
+                  style: GoogleFonts.tajawal(color: Colors.red),
+                ),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.folder_open_rounded,
+                      size: 48,
+                      color: Colors.grey.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'لا توجد مجموعات مهام',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'انتقل إلى تبويب المهام لإنشاء مجموعة جديدة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 12,
+                        color: Colors.grey.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _tabController.animateTo(1),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(
+                        'إنشاء مجموعة',
+                        style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF58CC02),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // فلترة المجموعات حسب المستخدم وترتيبها
+            final groups = snapshot.data!.docs
+                .map((doc) => TaskGroup.fromFirestore(doc))
+                .where((group) => group.userId == userId)
+                .toList();
+            
+            // ترتيب حسب تاريخ الإنشاء (الأحدث أولاً)
+            groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            if (groups.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.folder_open_rounded,
+                      size: 48,
+                      color: Colors.grey.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'لا توجد مجموعات مهام',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'انتقل إلى تبويب المهام لإنشاء مجموعة جديدة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 12,
+                        color: Colors.grey.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _tabController.animateTo(1),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(
+                        'إنشاء مجموعة',
+                        style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF58CC02),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Column(
+              children: groups.map((group) => _buildExpandedGroupCard(group, userId)).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandedGroupCard(TaskGroup group, String userId) {
+    final color = Color(int.parse(group.color.replaceFirst('#', '0xFF')));
+    final progress = group.totalTasks > 0
+        ? group.completedTasks / group.totalTasks
+        : 0.0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // رأس المجموعة
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      group.icon,
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            group.title,
+                            style: GoogleFonts.tajawal(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${group.completedTasks} من ${group.totalTasks} مهام مكتملة',
+                            style: GoogleFonts.tajawal(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${(progress * 100).toInt()}%',
+                        style: GoogleFonts.tajawal(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // قائمة المهام في المجموعة
+          StreamBuilder<QuerySnapshot>(
+            stream: _firestore
+                .collection('notes')
+                .snapshots(),
+            builder: (context, taskSnapshot) {
+              if (taskSnapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF58CC02),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (!taskSnapshot.hasData) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'لا توجد مهام في هذه المجموعة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              // فلترة المهام حسب groupId في الكود لتجنب الحاجة لـ Firestore index
+              final tasks = taskSnapshot.data!.docs
+                  .where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return data['type'] == 'task' && data['groupId'] == group.id;
+                  })
+                  .take(5)
+                  .toList();
+
+              if (tasks.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'لا توجد مهام في هذه المجموعة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  ...tasks.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final isCompleted = data['isCompleted'] ?? false;
+                    final title = data['title'] ?? 'بدون عنوان';
+                    final dueDate = data['dueDate'] as Timestamp?;
+                    
+                    return _buildGroupTaskItem(
+                      doc.id,
+                      title,
+                      isCompleted,
+                      dueDate,
+                      color,
+                      group.id,
+                      userId,
+                    );
+                  }),
+                  if (tasks.length >= 5)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: TextButton(
+                        onPressed: () => _tabController.animateTo(1),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'عرض جميع المهام',
+                              style: GoogleFonts.tajawal(
+                                fontSize: 14,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.arrow_forward_ios, size: 14, color: color),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupTaskItem(
+    String taskId,
+    String title,
+    bool isCompleted,
+    Timestamp? dueDate,
+    Color groupColor,
+    String groupId,
+    String userId,
+  ) {
+    return InkWell(
+      onTap: () => _toggleGroupTaskCompletion(taskId, isCompleted, groupId, userId),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Colors.grey.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Checkbox
+            GestureDetector(
+              onTap: () => _toggleGroupTaskCompletion(taskId, isCompleted, groupId, userId),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isCompleted ? groupColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isCompleted ? groupColor : Colors.grey.withOpacity(0.4),
+                    width: 2,
+                  ),
+                ),
+                child: isCompleted
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Task title
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.tajawal(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isCompleted ? Colors.grey : null,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (dueDate != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 12,
+                          color: _isOverdue(dueDate) && !isCompleted
+                              ? Colors.red
+                              : Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDueDate(dueDate),
+                          style: GoogleFonts.tajawal(
+                            fontSize: 11,
+                            color: _isOverdue(dueDate) && !isCompleted
+                                ? Colors.red
+                                : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Priority indicator
+            if (!isCompleted)
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: groupColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isOverdue(Timestamp dueDate) {
+    return dueDate.toDate().isBefore(DateTime.now());
+  }
+
+  String _formatDueDate(Timestamp dueDate) {
+    final date = dueDate.toDate();
+    final now = DateTime.now();
+    final difference = date.difference(now).inDays;
+
+    if (difference == 0) {
+      return 'اليوم';
+    } else if (difference == 1) {
+      return 'غداً';
+    } else if (difference == -1) {
+      return 'أمس';
+    } else if (difference < -1) {
+      return 'منذ ${-difference} أيام';
+    } else if (difference < 7) {
+      return 'خلال $difference أيام';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  Future<void> _toggleGroupTaskCompletion(
+    String taskId,
+    bool currentStatus,
+    String groupId,
+    String userId,
+  ) async {
+    try {
+      // تحديث حالة المهمة
+      await _firestore.collection('notes').doc(taskId).update({
+        'isCompleted': !currentStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // تحديث عداد المجموعة
+      final groupRef = _firestore
+          .collection('task_groups')
+          .doc(groupId);
+
+      if (!currentStatus) {
+        // تم إكمال المهمة
+        await groupRef.update({
+          'completedTasks': FieldValue.increment(1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // إلغاء إكمال المهمة
+        await groupRef.update({
+          'completedTasks': FieldValue.increment(-1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في تحديث المهمة: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

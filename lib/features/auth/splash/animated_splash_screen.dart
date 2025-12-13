@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../core/theme/app_theme.dart';
-import '../login/login_screen.dart';
-import '../../dashboard/home_screen.dart';
+import 'package:nota/core/theme/app_theme.dart';
+import 'package:nota/features/auth/login/login_screen.dart';
+import 'package:nota/features/dashboard/home_screen.dart';
 
 /// Animated Splash Screen with Firebase Auth State Management
 /// 
@@ -26,8 +26,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   late Animation<double> _logoRotationAnimation;
   late Animation<double> _progressAnimation;
 
-  String _loadingMessage = 'جاري التحميل...';
-  bool _isInitialized = false;
+  String _loadingMessage = 'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...';
 
   @override
   void initState() {
@@ -83,13 +82,13 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   Future<void> _checkAuthState() async {
     // Simulate loading data with messages
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _loadingMessage = 'جاري التحقق من المستخدم...');
+    if (mounted) setState(() => _loadingMessage = 'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…...');
 
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _loadingMessage = 'تحضير البيانات...');
+    if (mounted) setState(() => _loadingMessage = 'طھط­ط¶ظٹط± ط§ظ„ط¨ظٹط§ظ†ط§طھ...');
 
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _loadingMessage = 'تقريباً جاهز...');
+    if (mounted) setState(() => _loadingMessage = 'طھظ‚ط±ظٹط¨ط§ظ‹ ط¬ط§ظ‡ط²...');
 
     // Wait for animations to complete
     await Future.delayed(const Duration(milliseconds: 500));
@@ -97,13 +96,11 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     if (!mounted) return;
 
     try {
-      setState(() => _isInitialized = true);
-
       // Check auth state from provider
       final user = context.read<User?>();
 
       if (user != null) {
-        debugPrint('✅ User authenticated: ${user.email}');
+        debugPrint('âœ… User authenticated: ${user.email}');
         // User is signed in, navigate to home
         if (mounted) {
           Navigator.of(context).pushReplacement(
@@ -119,7 +116,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
           );
         }
       } else {
-        debugPrint('ℹ️ No user authenticated, navigating to login');
+        debugPrint('â„¹ï¸ڈ No user authenticated, navigating to login');
         // User is not signed in, navigate to login
         if (mounted) {
           Navigator.of(context).pushReplacement(
@@ -136,7 +133,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
         }
       }
     } catch (e) {
-      debugPrint('❌ Error checking auth state: $e');
+      debugPrint('â‌Œ Error checking auth state: $e');
       // On error, navigate to login
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -201,7 +198,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
               // App Name
               const Text(
-                'النوتة',
+                'ط§ظ„ظ†ظˆطھط©',
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
@@ -224,7 +221,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
               // Tagline
               const Text(
-                'مذكراتك الذكية في مكان واحد',
+                'ظ…ط°ظƒط±ط§طھظƒ ط§ظ„ط°ظƒظٹط© ظپظٹ ظ…ظƒط§ظ† ظˆط§ط­ط¯',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white70,

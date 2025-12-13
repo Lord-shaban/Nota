@@ -1,12 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
-import '../../../core/theme/app_theme.dart';
-import '../services/auth_service.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/auth_button.dart';
-import '../register/register_screen.dart';
-import '../../dashboard/home_screen.dart';
-import 'forgot_password_dialog.dart';
+import 'package:nota/core/theme/app_theme.dart';
+import 'package:nota/features/auth/services/auth_service.dart';
+import 'package:nota/features/auth/widgets/auth_text_field.dart';
+import 'package:nota/features/auth/widgets/auth_button.dart';
+import 'package:nota/features/auth/register/register_screen.dart';
+import 'package:nota/features/dashboard/home_screen.dart';
+import 'package:nota/features/auth/login/forgot_password_dialog.dart';
 
 /// Login Screen
 /// Handles user authentication with email and password
@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'سجّل دخولك للمتابعة',
+                  'سجل دخول لحسابك',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -217,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'بتسجيل الدخول، أنت توافق على شروط الاستخدام',
+                  'بتسجيل دخولك أنت توافق على شروط الاستخدام',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),

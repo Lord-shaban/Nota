@@ -172,76 +172,91 @@ class AppTheme {
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
+          
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
+          
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
+          
         ),
         headlineLarge: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         headlineMedium: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         headlineSmall: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         titleLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         titleMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         titleSmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimaryColor,
+          
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
+          
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textLightColor,
+          
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
+          
         ),
         labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textSecondaryColor,
+          
         ),
         labelSmall: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
           color: textLightColor,
+          
         ),
       ),
       
