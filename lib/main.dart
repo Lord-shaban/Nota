@@ -4,8 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
-import ' features/auth/splash/animated_splash_screen.dart';
-import ' features/auth/services/auth_service.dart';
+import 'package:nota/features/auth/splash/animated_splash_screen.dart';
+import 'package:nota/features/auth/services/auth_service.dart';
 import 'core/services/local_notifications_service.dart';
 
 /// Nota - Smart Notes & Diary App with AI (Based on alNota)
