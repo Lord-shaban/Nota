@@ -3242,119 +3242,373 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 140,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: groups.length,
-                itemBuilder: (context, index) {
-                  final group = groups[index];
-                  return _buildGroupCard(group);
-                },
-              ),
-            ),
+            // عرض المجموعات مع المهام التي فيها
+            ...groups.map((group) => _buildExpandedGroupCard(group, userId)),
           ],
         );
       },
     );
   }
 
-  Widget _buildGroupCard(TaskGroup group) {
+  Widget _buildExpandedGroupCard(TaskGroup group, String userId) {
     final color = Color(int.parse(group.color.replaceFirst('#', '0xFF')));
     final progress = group.totalTasks > 0
         ? group.completedTasks / group.totalTasks
         : 0.0;
 
-    return GestureDetector(
-      onTap: () => _tabController.animateTo(1),
-      child: Container(
-        width: 180,
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              color,
-              color.withOpacity(0.8),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  group.icon,
-                  style: const TextStyle(fontSize: 32),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${group.totalTasks}',
-                    style: GoogleFonts.tajawal(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              group.title,
-              style: GoogleFonts.tajawal(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+        ],
+      ),
+      child: Column(
+        children: [
+          // رأس المجموعة
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
             ),
-            const Spacer(),
-            Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                      minHeight: 6,
+                Row(
+                  children: [
+                    Text(
+                      group.icon,
+                      style: const TextStyle(fontSize: 28),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            group.title,
+                            style: GoogleFonts.tajawal(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${group.completedTasks} من ${group.totalTasks} مهام مكتملة',
+                            style: GoogleFonts.tajawal(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${(progress * 100).toInt()}%',
+                        style: GoogleFonts.tajawal(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '${(progress * 100).toInt()}%',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    minHeight: 6,
                   ),
                 ),
               ],
             ),
+          ),
+          // قائمة المهام في المجموعة
+          StreamBuilder<QuerySnapshot>(
+            stream: _firestore
+                .collection('notes')
+                .where('userId', isEqualTo: userId)
+                .where('groupId', isEqualTo: group.id)
+                .orderBy('createdAt', descending: true)
+                .limit(5)
+                .snapshots(),
+            builder: (context, taskSnapshot) {
+              if (taskSnapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF58CC02),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (!taskSnapshot.hasData || taskSnapshot.data!.docs.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'لا توجد مهام في هذه المجموعة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              final tasks = taskSnapshot.data!.docs;
+
+              return Column(
+                children: [
+                  ...tasks.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final isCompleted = data['isCompleted'] ?? false;
+                    final title = data['title'] ?? 'بدون عنوان';
+                    final dueDate = data['dueDate'] as Timestamp?;
+                    
+                    return _buildGroupTaskItem(
+                      doc.id,
+                      title,
+                      isCompleted,
+                      dueDate,
+                      color,
+                      group.id,
+                      userId,
+                    );
+                  }),
+                  if (tasks.length >= 5)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: TextButton(
+                        onPressed: () => _tabController.animateTo(1),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'عرض جميع المهام',
+                              style: GoogleFonts.tajawal(
+                                fontSize: 14,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.arrow_forward_ios, size: 14, color: color),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupTaskItem(
+    String taskId,
+    String title,
+    bool isCompleted,
+    Timestamp? dueDate,
+    Color groupColor,
+    String groupId,
+    String userId,
+  ) {
+    return InkWell(
+      onTap: () => _toggleGroupTaskCompletion(taskId, isCompleted, groupId, userId),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Colors.grey.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Checkbox
+            GestureDetector(
+              onTap: () => _toggleGroupTaskCompletion(taskId, isCompleted, groupId, userId),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isCompleted ? groupColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isCompleted ? groupColor : Colors.grey.withOpacity(0.4),
+                    width: 2,
+                  ),
+                ),
+                child: isCompleted
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Task title
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.tajawal(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isCompleted ? Colors.grey : null,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (dueDate != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 12,
+                          color: _isOverdue(dueDate) && !isCompleted
+                              ? Colors.red
+                              : Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDueDate(dueDate),
+                          style: GoogleFonts.tajawal(
+                            fontSize: 11,
+                            color: _isOverdue(dueDate) && !isCompleted
+                                ? Colors.red
+                                : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Priority indicator
+            if (!isCompleted)
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: groupColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  bool _isOverdue(Timestamp dueDate) {
+    return dueDate.toDate().isBefore(DateTime.now());
+  }
+
+  String _formatDueDate(Timestamp dueDate) {
+    final date = dueDate.toDate();
+    final now = DateTime.now();
+    final difference = date.difference(now).inDays;
+
+    if (difference == 0) {
+      return 'اليوم';
+    } else if (difference == 1) {
+      return 'غداً';
+    } else if (difference == -1) {
+      return 'أمس';
+    } else if (difference < -1) {
+      return 'منذ ${-difference} أيام';
+    } else if (difference < 7) {
+      return 'خلال $difference أيام';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  Future<void> _toggleGroupTaskCompletion(
+    String taskId,
+    bool currentStatus,
+    String groupId,
+    String userId,
+  ) async {
+    try {
+      // تحديث حالة المهمة
+      await _firestore.collection('notes').doc(taskId).update({
+        'isCompleted': !currentStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // تحديث عداد المجموعة
+      final groupRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('taskGroups')
+          .doc(groupId);
+
+      if (!currentStatus) {
+        // تم إكمال المهمة
+        await groupRef.update({
+          'completedTasks': FieldValue.increment(1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // إلغاء إكمال المهمة
+        await groupRef.update({
+          'completedTasks': FieldValue.increment(-1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في تحديث المهمة: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
