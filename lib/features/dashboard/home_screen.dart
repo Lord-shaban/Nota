@@ -3203,10 +3203,7 @@ class _HomeScreenState extends State<HomeScreen>
         // قائمة المجموعات
         StreamBuilder<QuerySnapshot>(
           stream: _firestore
-              .collection('users')
-              .doc(userId)
-              .collection('taskGroups')
-              .orderBy('updatedAt', descending: true)
+              .collection('task_groups')
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -3293,9 +3290,71 @@ class _HomeScreenState extends State<HomeScreen>
               );
             }
 
+            // فلترة المجموعات حسب المستخدم وترتيبها
             final groups = snapshot.data!.docs
                 .map((doc) => TaskGroup.fromFirestore(doc))
+                .where((group) => group.userId == userId)
                 .toList();
+            
+            // ترتيب حسب تاريخ الإنشاء (الأحدث أولاً)
+            groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            if (groups.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.folder_open_rounded,
+                      size: 48,
+                      color: Colors.grey.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'لا توجد مجموعات مهام',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'انتقل إلى تبويب المهام لإنشاء مجموعة جديدة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 12,
+                        color: Colors.grey.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _tabController.animateTo(1),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(
+                        'إنشاء مجموعة',
+                        style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF58CC02),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
             return Column(
               children: groups.map((group) => _buildExpandedGroupCard(group, userId)).toList(),
@@ -3409,10 +3468,6 @@ class _HomeScreenState extends State<HomeScreen>
           StreamBuilder<QuerySnapshot>(
             stream: _firestore
                 .collection('notes')
-                .where('userId', isEqualTo: userId)
-                .where('groupId', isEqualTo: group.id)
-                .orderBy('createdAt', descending: true)
-                .limit(5)
                 .snapshots(),
             builder: (context, taskSnapshot) {
               if (taskSnapshot.connectionState == ConnectionState.waiting) {
@@ -3431,7 +3486,7 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               }
 
-              if (!taskSnapshot.hasData || taskSnapshot.data!.docs.isEmpty) {
+              if (!taskSnapshot.hasData) {
                 return Padding(
                   padding: const EdgeInsets.all(16),
                   child: Center(
@@ -3446,7 +3501,29 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               }
 
-              final tasks = taskSnapshot.data!.docs;
+              // فلترة المهام حسب groupId في الكود لتجنب الحاجة لـ Firestore index
+              final tasks = taskSnapshot.data!.docs
+                  .where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return data['type'] == 'task' && data['groupId'] == group.id;
+                  })
+                  .take(5)
+                  .toList();
+
+              if (tasks.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'لا توجد مهام في هذه المجموعة',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                );
+              }
 
               return Column(
                 children: [
@@ -3638,9 +3715,7 @@ class _HomeScreenState extends State<HomeScreen>
 
       // تحديث عداد المجموعة
       final groupRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('taskGroups')
+          .collection('task_groups')
           .doc(groupId);
 
       if (!currentStatus) {
