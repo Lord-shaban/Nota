@@ -42,7 +42,7 @@ jobs:
           path: build/app/outputs/flutter-apk/
           if-no-files-found: warn
           compression-level: 6
-          overwrite: false
+          overwrite: true
           include-hidden-files: false
 
       - name: Create Release Notes
