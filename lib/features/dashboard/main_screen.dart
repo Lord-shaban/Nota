@@ -9,6 +9,7 @@ import 'categories/expenses_view.dart';
 import 'categories/appointments_view.dart';
 import 'categories/quotes_view.dart';
 import 'search/search_functionality.dart';
+import 'calendar/add_appointment_dialog.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -105,9 +106,19 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     final (icon, tooltip) = actions[_currentIndex];
     
     return FloatingActionButton(
-      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(' coming soon!')),
-      ),
+      onPressed: () {
+        // فتح حوار إضافة الموعد عند الضغط على زر + في تاب المواعيد
+        if (_currentIndex == 3) {
+          showDialog(
+            context: context,
+            builder: (_) => const AddAppointmentDialog(),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$tooltip coming soon!')),
+          );
+        }
+      },
       tooltip: tooltip,
       child: Icon(icon),
     );
