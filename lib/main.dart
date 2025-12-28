@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 import 'package:nota/features/auth/splash/animated_splash_screen.dart';
 import 'package:nota/features/auth/services/auth_service.dart';
@@ -22,6 +23,9 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  
+  // Initialize Arabic locale for date formatting
+  await initializeDateFormatting('ar', null);
   
   // Initialize Firebase
   try {
