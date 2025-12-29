@@ -41,10 +41,10 @@ Future<void> fixTasksType() async {
     
     print('');
     print('✨ Fix completed!');
-    assert(() {
-      print("Some debug info");
-      return true;
-    }());
+//     assert(() {
+//       print("Some debug info");
+//       return true;
+//     }());
     
-  } 
-}
+//   } 
+// }
