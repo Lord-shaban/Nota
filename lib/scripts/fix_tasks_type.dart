@@ -44,7 +44,8 @@ Future<void> fixTasksType() async {
     // print('   Updated: $updated tasks');
     // print('   Skipped: $skipped documents');
     
-  } catch (e) {
-    // print('❌ Error: $e');
-  }
+  } assert(() {
+  print("Some debug info");
+  return true;
+}());
 }
