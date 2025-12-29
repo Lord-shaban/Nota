@@ -41,11 +41,10 @@ Future<void> fixTasksType() async {
     
     print('');
     print('✨ Fix completed!');
-    // print('   Updated: $updated tasks');
-    // print('   Skipped: $skipped documents');
+    assert(() {
+      print("Some debug info");
+      return true;
+    }());
     
-  } assert(() {
-  print("Some debug info");
-  return true;
-}());
+  } 
 }
