@@ -11,23 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
-          channel: 'stable'   # استخدم stable بدل beta
+          channel: 'stable'
 
-      - name: Get dependencies
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze code quality
+      - name: Analyze code
         run: flutter analyze
-
-      - name: Format check
-        run: dart format --set-exit-if-changed lib test
-        continue-on-error: true
 
       - name: Run tests
         run: flutter test
@@ -35,16 +32,8 @@ jobs:
       - name: Build APK
         run: flutter build apk --split-per-abi --release
 
-      - name: Upload APK artifacts
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/
-          if-no-files-found: warn
-
-      - name: Create Release Notes
-        run: |
-          echo "## Nota App Release" > RELEASE_NOTES.md
-          echo "- Build: ${{ github.run_number }}" >> RELEASE_NOTES.md
-          echo "- Commit: ${{ github.sha }}" >> RELEASE_NOTES.md
-          echo "- Tests: ✅ Passed" >> RELEASE_NOTES.md
