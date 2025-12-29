@@ -1,8 +1,10 @@
-name: Flutter Build APK
+name: Flutter Build
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main, develop ]
 
 jobs:
   build:
@@ -15,16 +17,34 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
-          channel: 'stable'
+          channel: 'beta'  # استخدم beta للحصول على Dart >= 3.9.2
 
-      - name: Install dependencies
+      - name: Get dependencies
         run: flutter pub get
 
-      - name: Build release APK
-        run: flutter build apk --release --split-per-abi
+      - name: Analyze code quality
+        run: flutter analyze
 
-      - name: Upload APK artifact
+      - name: Format check
+        run: dart format --set-exit-if-changed lib test
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --split-per-abi --release
+
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nota-release-apk
+          name: app-release.apk
           path: build/app/outputs/flutter-apk/
+          if-no-files-found: warn
+
+      - name: Create Release Notes
+        run: |
+          echo "## Nota App Release" > RELEASE_NOTES.md
+          echo "- Build: ${{ github.run_number }}" >> RELEASE_NOTES.md
+          echo "- Commit: ${{ github.sha }}" >> RELEASE_NOTES.md
+          echo "- Tests: ✅ Passed" >> RELEASE_NOTES.md

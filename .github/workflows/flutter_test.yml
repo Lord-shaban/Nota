@@ -17,19 +17,31 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
-          channel: 'stable'
+          channel: 'beta'  # نفس الشيء هنا
 
-      - name: Install dependencies
+      - name: Get dependencies
         run: flutter pub get
 
       - name: Analyze code
         run: flutter analyze
 
-      - name: Run unit tests
+      - name: Run tests with coverage
         run: flutter test --coverage
+
+      - name: Check test coverage
+        run: |
+          if grep -q "lines" coverage/lcov.info; then
+            echo "✅ Tests completed with coverage"
+          else
+            echo "❌ Coverage data missing"
+            exit 1
+          fi
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: coverage/lcov.info
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
         continue-on-error: true
