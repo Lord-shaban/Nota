@@ -17,7 +17,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
-          channel: 'beta'  # استخدم beta للحصول على Dart >= 3.9.2
+          channel: 'stable'   # استخدم stable بدل beta
 
       - name: Get dependencies
         run: flutter pub get
@@ -38,7 +38,7 @@ jobs:
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-release.apk
+          name: app-release
           path: build/app/outputs/flutter-apk/
           if-no-files-found: warn
 
