@@ -41,10 +41,10 @@ Future<void> fixTasksType() async {
     
     print('');
     print('✨ Fix completed!');
-    print('   Updated: $updated tasks');
-    print('   Skipped: $skipped documents');
+    // print('   Updated: $updated tasks');
+    // print('   Skipped: $skipped documents');
     
   } catch (e) {
-    print('❌ Error: $e');
+    // print('❌ Error: $e');
   }
 }
