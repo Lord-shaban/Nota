@@ -62,7 +62,7 @@ dependencies:
   
   # Media & Input
   camera: ^0.11.3
-  image_picker: ^1.2.1
+  image_picker: ^1.1.1
   speech_to_text: ^7.3.0
   
   # Permissions
