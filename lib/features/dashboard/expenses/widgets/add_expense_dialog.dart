@@ -6,8 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
 
-/// حوار إضافة/تعديل مصروف
-/// يوفر واجهة متقدمة لإدخال تفاصيل المصروف
+/// حوار إضافة/تعديل مصروف محسّن
+/// متوافق مع تصميم باقي التطبيق
 class AddExpenseDialog extends StatefulWidget {
   final ExpenseModel? expense; // للتعديل
   final DateTime? initialDate;
@@ -46,15 +46,12 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
 
   bool _isLoading = false;
 
-  final List<String> _currencies = [
-    'EGP',
-    'USD',
-    'EUR',
-    'GBP',
-    'SAR',
-    'AED',
-    'KWD',
-  ];
+  bool get _isEditing => widget.expense != null;
+
+  // الألوان الرئيسية - متوافقة مع التطبيق
+  static const _primaryColor = Color(0xFF6366F1);
+
+  final List<String> _currencies = ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED', 'KWD'];
 
   @override
   void initState() {
@@ -100,90 +97,55 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isEditing = widget.expense != null;
-    final size = MediaQuery.of(context).size;
-
     return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
-        constraints: BoxConstraints(
-          maxHeight: size.height * 0.9,
-          maxWidth: 500,
-        ),
-        decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark
-              ? Colors.grey.shade900
-              : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 680),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // الهيدر
-            _buildHeader(context, isEditing),
-
-            // التابات
-            _buildTabBar(),
-
-            // المحتوى
+            _buildHeader(),
+            _buildTabs(),
             Flexible(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildBasicInfoTab(context),
-                  _buildAdvancedTab(context),
+                  _buildBasicInfoTab(),
+                  _buildAdvancedTab(),
                 ],
               ),
             ),
-
-            // الأزرار السفلية
-            _buildBottomButtons(context, isEditing),
+            _buildActions(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isEditing) {
+  Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             _selectedCategory.color,
-            _selectedCategory.color.withOpacity(0.7),
+            _selectedCategory.color.withValues(alpha: 0.8),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              isEditing
-                  ? Icons.edit_rounded
-                  : Icons.add_card_rounded,
+              _isEditing ? Icons.edit : Icons.add_card,
               color: Colors.white,
-              size: 24,
+              size: 26,
             ),
           ),
           const SizedBox(width: 14),
@@ -192,17 +154,17 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isEditing ? 'تعديل المصروف' : 'إضافة مصروف جديد',
+                  _isEditing ? 'تعديل المصروف' : 'مصروف جديد',
                   style: GoogleFonts.tajawal(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  DateFormat.yMMMEd('ar').format(_selectedDate),
+                  DateFormat('EEEE، d MMMM', 'ar').format(_selectedDate),
                   style: GoogleFonts.tajawal(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: Colors.white70,
                   ),
                 ),
@@ -211,37 +173,39 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
           ),
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close_rounded, color: Colors.white),
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 20),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabs() {
     return Container(
-      color: _selectedCategory.color.withOpacity(0.1),
+      color: Colors.grey.shade50,
       child: TabBar(
         controller: _tabController,
-        labelColor: _selectedCategory.color,
+        labelColor: _primaryColor,
         unselectedLabelColor: Colors.grey,
-        indicatorColor: _selectedCategory.color,
+        indicatorColor: _primaryColor,
+        indicatorWeight: 3,
         labelStyle: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
         tabs: const [
-          Tab(
-            icon: Icon(Icons.info_outline_rounded),
-            text: 'معلومات أساسية',
-          ),
-          Tab(
-            icon: Icon(Icons.settings_rounded),
-            text: 'خيارات متقدمة',
-          ),
+          Tab(text: 'المعلومات الأساسية', icon: Icon(Icons.info_outline, size: 20)),
+          Tab(text: 'تفاصيل إضافية', icon: Icon(Icons.settings, size: 20)),
         ],
       ),
     );
   }
 
-  Widget _buildBasicInfoTab(BuildContext context) {
+  Widget _buildBasicInfoTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Form(
@@ -250,25 +214,18 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // حقل العنوان
-            _buildSectionTitle('العنوان'),
+            _buildSectionTitle('العنوان', Icons.title),
             const SizedBox(height: 8),
             TextFormField(
               controller: _titleController,
-              decoration: _buildInputDecoration(
-                hintText: 'مثال: غداء في مطعم',
-                prefixIcon: Icons.title_rounded,
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'الرجاء إدخال عنوان المصروف';
-                }
-                return null;
-              },
+              style: GoogleFonts.tajawal(fontSize: 16),
+              decoration: _inputDecoration('أدخل عنوان المصروف', Icons.receipt),
+              validator: (v) => v?.isEmpty ?? true ? 'العنوان مطلوب' : null,
             ),
             const SizedBox(height: 20),
 
             // حقل المبلغ والعملة
-            _buildSectionTitle('المبلغ'),
+            _buildSectionTitle('المبلغ', Icons.attach_money),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -276,46 +233,43 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
                   flex: 2,
                   child: TextFormField(
                     controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.bold),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}'),
-                      ),
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                     ],
-                    decoration: _buildInputDecoration(
-                      hintText: '0.00',
-                      prefixIcon: Icons.attach_money_rounded,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال المبلغ';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'مبلغ غير صحيح';
-                      }
+                    decoration: _inputDecoration('0.00', Icons.payments),
+                    validator: (v) {
+                      if (v?.isEmpty ?? true) return 'المبلغ مطلوب';
+                      if (double.tryParse(v!) == null) return 'مبلغ غير صحيح';
                       return null;
                     },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedCurrency,
-                    decoration: _buildInputDecoration(),
-                    items: _currencies.map((currency) {
-                      return DropdownMenuItem(
-                        value: currency,
-                        child: Text(
-                          currency,
-                          style: GoogleFonts.tajawal(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCurrency,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedCurrency = value!);
-                    },
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      items: _currencies.map((c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(c, style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
+                      )).toList(),
+                      onChanged: (v) => setState(() => _selectedCurrency = v!),
+                    ),
                   ),
                 ),
               ],
@@ -323,51 +277,31 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
             const SizedBox(height: 20),
 
             // الفئة
-            _buildSectionTitle('الفئة'),
+            _buildSectionTitle('الفئة', Icons.category),
             const SizedBox(height: 8),
             _buildCategorySelector(),
             const SizedBox(height: 20),
 
             // طريقة الدفع
-            _buildSectionTitle('طريقة الدفع'),
+            _buildSectionTitle('طريقة الدفع', Icons.payment),
             const SizedBox(height: 8),
             _buildPaymentMethodSelector(),
             const SizedBox(height: 20),
 
             // التاريخ والوقت
-            _buildSectionTitle('التاريخ والوقت'),
+            _buildSectionTitle('التاريخ والوقت', Icons.schedule),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateTimeButton(
-                    icon: Icons.calendar_today_rounded,
-                    label: DateFormat.yMMMd('ar').format(_selectedDate),
-                    onTap: _selectDate,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDateTimeButton(
-                    icon: Icons.access_time_rounded,
-                    label: _selectedTime.format(context),
-                    onTap: _selectTime,
-                  ),
-                ),
-              ],
-            ),
+            _buildDateTimeSection(),
             const SizedBox(height: 20),
 
-            // الوصف (اختياري)
-            _buildSectionTitle('الوصف (اختياري)'),
+            // الوصف
+            _buildSectionTitle('الوصف (اختياري)', Icons.description),
             const SizedBox(height: 8),
             TextFormField(
               controller: _descriptionController,
-              maxLines: 3,
-              decoration: _buildInputDecoration(
-                hintText: 'أضف وصفاً للمصروف...',
-                prefixIcon: Icons.description_outlined,
-              ),
+              maxLines: 2,
+              style: GoogleFonts.tajawal(),
+              decoration: _inputDecoration('أضف وصفاً للمصروف...', Icons.description_outlined),
             ),
           ],
         ),
@@ -375,175 +309,154 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
     );
   }
 
-  Widget _buildAdvancedTab(BuildContext context) {
+  Widget _buildAdvancedTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // الأولوية
-          _buildSectionTitle('الأولوية'),
+          _buildSectionTitle('الأولوية', Icons.flag),
           const SizedBox(height: 8),
           _buildPrioritySelector(),
           const SizedBox(height: 20),
 
           // التكرار
-          _buildSectionTitle('التكرار'),
+          _buildSectionTitle('التكرار', Icons.repeat),
           const SizedBox(height: 8),
           _buildRecurrenceSelector(),
           const SizedBox(height: 20),
 
           // البائع/المتجر
-          _buildSectionTitle('البائع/المتجر (اختياري)'),
+          _buildSectionTitle('البائع/المتجر', Icons.store),
           const SizedBox(height: 8),
           TextFormField(
             controller: _vendorController,
-            decoration: _buildInputDecoration(
-              hintText: 'مثال: كارفور',
-              prefixIcon: Icons.store_rounded,
-            ),
+            style: GoogleFonts.tajawal(),
+            decoration: _inputDecoration('مثال: كارفور (اختياري)', Icons.store_outlined),
           ),
           const SizedBox(height: 20),
 
           // الموقع
-          _buildSectionTitle('الموقع (اختياري)'),
+          _buildSectionTitle('الموقع', Icons.location_on),
           const SizedBox(height: 8),
           TextFormField(
             controller: _locationController,
-            decoration: _buildInputDecoration(
-              hintText: 'مثال: القاهرة',
-              prefixIcon: Icons.location_on_rounded,
-            ),
+            style: GoogleFonts.tajawal(),
+            decoration: _inputDecoration('أضف الموقع (اختياري)', Icons.location_on_outlined),
           ),
           const SizedBox(height: 20),
 
           // التاجات
-          _buildSectionTitle('التاجات'),
+          _buildSectionTitle('التاجات', Icons.tag),
           const SizedBox(height: 8),
           _buildTagsInput(),
           const SizedBox(height: 20),
 
           // ملاحظات
-          _buildSectionTitle('ملاحظات (اختياري)'),
+          _buildSectionTitle('ملاحظات', Icons.note),
           const SizedBox(height: 8),
           TextFormField(
             controller: _notesController,
-            maxLines: 3,
-            decoration: _buildInputDecoration(
-              hintText: 'أضف ملاحظات إضافية...',
-              prefixIcon: Icons.note_rounded,
-            ),
+            style: GoogleFonts.tajawal(),
+            maxLines: 2,
+            decoration: _inputDecoration('أضف ملاحظات (اختياري)', Icons.note_outlined),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.tajawal(
-        fontSize: 14,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey.shade700,
-      ),
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: _primaryColor),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: GoogleFonts.tajawal(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ],
     );
   }
 
-  InputDecoration _buildInputDecoration({
-    String? hintText,
-    IconData? prefixIcon,
-  }) {
+  InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
-      hintText: hintText,
+      hintText: hint,
       hintStyle: GoogleFonts.tajawal(color: Colors.grey.shade400),
-      prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, color: _selectedCategory.color)
-          : null,
+      prefixIcon: Icon(icon, color: _primaryColor),
       filled: true,
-      fillColor: Colors.grey.shade100,
+      fillColor: Colors.grey.shade50,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: _selectedCategory.color,
-          width: 2,
-        ),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: _primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Colors.red),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
   Widget _buildCategorySelector() {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        itemCount: ExpenseCategory.values.length,
-        itemBuilder: (context, index) {
-          final category = ExpenseCategory.values[index];
-          final isSelected = category == _selectedCategory;
-
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCategory = category),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? category.color
-                    : category.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected
-                      ? category.color
-                      : category.color.withOpacity(0.3),
-                  width: isSelected ? 2 : 1,
-                ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: ExpenseCategory.values.map((category) {
+        final isSelected = _selectedCategory == category;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedCategory = category),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected ? category.color : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? category.color : Colors.transparent,
+                width: 2,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    category.icon,
-                    color: isSelected ? Colors.white : category.color,
-                    size: 24,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    category.arabicName,
-                    style: GoogleFonts.tajawal(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : category.color,
-                    ),
-                  ),
-                ],
-              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: category.color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
-          );
-        },
-      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  category.icon,
+                  size: 18,
+                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  category.arabicName,
+                  style: GoogleFonts.tajawal(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -552,22 +465,28 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
       spacing: 8,
       runSpacing: 8,
       children: PaymentMethod.values.map((method) {
-        final isSelected = method == _selectedPaymentMethod;
-        return InkWell(
+        final isSelected = _selectedPaymentMethod == method;
+        return GestureDetector(
           onTap: () => setState(() => _selectedPaymentMethod = method),
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? _selectedCategory.color
-                  : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
+              color: isSelected ? _primaryColor : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected
-                    ? _selectedCategory.color
-                    : Colors.grey.shade300,
+                color: isSelected ? _primaryColor : Colors.transparent,
+                width: 2,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: _primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -581,7 +500,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
                 Text(
                   method.arabicName,
                   style: GoogleFonts.tajawal(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: isSelected ? Colors.white : Colors.grey.shade700,
                   ),
@@ -597,31 +516,48 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
   Widget _buildPrioritySelector() {
     return Row(
       children: ExpensePriority.values.map((priority) {
-        final isSelected = priority == _selectedPriority;
+        final isSelected = _selectedPriority == priority;
         return Expanded(
           child: GestureDetector(
             onTap: () => setState(() => _selectedPriority = priority),
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? priority.color
-                    : priority.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: isSelected ? priority.color : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: priority.color,
                   width: isSelected ? 2 : 1,
                 ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: priority.color.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
-              child: Text(
-                priority.arabicName,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.tajawal(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : priority.color,
-                ),
+              child: Column(
+                children: [
+                  Icon(
+                    _getPriorityIcon(priority),
+                    size: 20,
+                    color: isSelected ? Colors.white : priority.color,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    priority.arabicName,
+                    style: GoogleFonts.tajawal(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : priority.color,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -630,32 +566,40 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
     );
   }
 
+  IconData _getPriorityIcon(ExpensePriority priority) {
+    switch (priority) {
+      case ExpensePriority.essential:
+        return Icons.priority_high;
+      case ExpensePriority.important:
+        return Icons.arrow_upward;
+      case ExpensePriority.optional:
+        return Icons.arrow_downward;
+    }
+  }
+
   Widget _buildRecurrenceSelector() {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: RecurrenceType.values.map((recurrence) {
-        final isSelected = recurrence == _selectedRecurrence;
-        return InkWell(
+        final isSelected = _selectedRecurrence == recurrence;
+        return GestureDetector(
           onTap: () => setState(() => _selectedRecurrence = recurrence),
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? _selectedCategory.color
-                  : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
+              color: isSelected ? _primaryColor : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected
-                    ? _selectedCategory.color
-                    : Colors.grey.shade300,
+                color: isSelected ? _primaryColor : Colors.transparent,
+                width: 2,
               ),
             ),
             child: Text(
               recurrence.arabicName,
               style: GoogleFonts.tajawal(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : Colors.grey.shade700,
               ),
@@ -666,36 +610,107 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
     );
   }
 
-  Widget _buildDateTimeButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: _selectedCategory.color, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.tajawal(
-                  fontSize: 14,
-                  color: Colors.grey.shade800,
-                ),
+  Widget _buildDateTimeSection() {
+    return Row(
+      children: [
+        // التاريخ
+        Expanded(
+          child: InkWell(
+            onTap: _selectDate,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.calendar_today, size: 18, color: _primaryColor),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'التاريخ',
+                          style: GoogleFonts.tajawal(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        Text(
+                          DateFormat('d MMM', 'ar').format(_selectedDate),
+                          style: GoogleFonts.tajawal(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(width: 12),
+        // الوقت
+        Expanded(
+          child: InkWell(
+            onTap: _selectTime,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.access_time, size: 18, color: _primaryColor),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'الوقت',
+                          style: GoogleFonts.tajawal(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        Text(
+                          _selectedTime.format(context),
+                          style: GoogleFonts.tajawal(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -707,43 +722,56 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
             Expanded(
               child: TextFormField(
                 controller: _tagController,
-                decoration: _buildInputDecoration(
-                  hintText: 'أضف تاج...',
-                  prefixIcon: Icons.tag_rounded,
-                ),
+                style: GoogleFonts.tajawal(),
+                decoration: _inputDecoration('أضف تاج...', Icons.tag),
                 onFieldSubmitted: (_) => _addTag(),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              onPressed: _addTag,
-              icon: Icon(
-                Icons.add_circle_rounded,
-                color: _selectedCategory.color,
-                size: 32,
+            Material(
+              color: _primaryColor,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: _addTag,
+                borderRadius: BorderRadius.circular(12),
+                child: const Padding(
+                  padding: EdgeInsets.all(14),
+                  child: Icon(Icons.add, color: Colors.white, size: 22),
+                ),
               ),
             ),
           ],
         ),
         if (_tags.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: _tags.map((tag) {
-              return Chip(
-                label: Text(
-                  '#$tag',
-                  style: GoogleFonts.tajawal(
-                    fontSize: 12,
-                    color: _selectedCategory.color,
-                  ),
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: _primaryColor.withValues(alpha: 0.3)),
                 ),
-                deleteIcon: const Icon(Icons.close, size: 16),
-                onDeleted: () => setState(() => _tags.remove(tag)),
-                backgroundColor: _selectedCategory.color.withOpacity(0.1),
-                side: BorderSide(
-                  color: _selectedCategory.color.withOpacity(0.3),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '#$tag',
+                      style: GoogleFonts.tajawal(
+                        fontSize: 13,
+                        color: _primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () => setState(() => _tags.remove(tag)),
+                      child: Icon(Icons.close, size: 16, color: _primaryColor),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
@@ -753,19 +781,15 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
     );
   }
 
-  Widget _buildBottomButtons(BuildContext context, bool isEditing) {
+  Widget _buildActions() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(
         children: [
-          // زر الإلغاء
           Expanded(
             child: OutlinedButton(
               onPressed: () => Navigator.pop(context),
@@ -779,7 +803,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
               child: Text(
                 'إلغاء',
                 style: GoogleFonts.tajawal(
-                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey.shade700,
                 ),
@@ -787,8 +810,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
             ),
           ),
           const SizedBox(width: 12),
-
-          // زر الحفظ
           Expanded(
             flex: 2,
             child: ElevatedButton(
@@ -800,13 +821,12 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 4,
-                shadowColor: _selectedCategory.color.withOpacity(0.4),
+                elevation: 0,
               ),
               child: _isLoading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 22,
+                      height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation(Colors.white),
@@ -815,18 +835,13 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          isEditing
-                              ? Icons.save_rounded
-                              : Icons.add_rounded,
-                          size: 20,
-                        ),
+                        Icon(_isEditing ? Icons.save : Icons.add, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          isEditing ? 'حفظ التعديلات' : 'إضافة المصروف',
+                          _isEditing ? 'حفظ التعديلات' : 'إضافة المصروف',
                           style: GoogleFonts.tajawal(
-                            fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
                         ),
                       ],
