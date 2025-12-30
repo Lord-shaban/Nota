@@ -213,10 +213,10 @@ void main() {
           home: Scaffold(
             body: Column(
               children: [
-                TextField(decoration: InputDecoration(hintText: 'Email')),
-                TextField(decoration: InputDecoration(hintText: 'Password')),
-                ElevatedButton(onPressed: null, child: Text('Login')),
-                ElevatedButton(onPressed: null, child: Text('Sign Up')),
+                const TextField(decoration: InputDecoration(hintText: 'Email')),
+                const TextField(decoration: InputDecoration(hintText: 'Password')),
+                const ElevatedButton(onPressed: null, child: Text('Login')),
+                const ElevatedButton(onPressed: null, child: Text('Sign Up')),
               ],
             ),
           ),
