@@ -45,7 +45,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
   final List<String> _tags = [];
 
   bool _isLoading = false;
-  bool _showAdvancedOptions = false;
 
   final List<String> _currencies = [
     'EGP',
@@ -255,7 +254,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
             const SizedBox(height: 8),
             TextFormField(
               controller: _titleController,
-              textDirection: TextDirection.rtl,
               decoration: _buildInputDecoration(
                 hintText: 'مثال: غداء في مطعم',
                 prefixIcon: Icons.title_rounded,
@@ -365,7 +363,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
             const SizedBox(height: 8),
             TextFormField(
               controller: _descriptionController,
-              textDirection: TextDirection.rtl,
               maxLines: 3,
               decoration: _buildInputDecoration(
                 hintText: 'أضف وصفاً للمصروف...',
@@ -401,7 +398,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
           const SizedBox(height: 8),
           TextFormField(
             controller: _vendorController,
-            textDirection: TextDirection.rtl,
             decoration: _buildInputDecoration(
               hintText: 'مثال: كارفور',
               prefixIcon: Icons.store_rounded,
@@ -414,7 +410,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
           const SizedBox(height: 8),
           TextFormField(
             controller: _locationController,
-            textDirection: TextDirection.rtl,
             decoration: _buildInputDecoration(
               hintText: 'مثال: القاهرة',
               prefixIcon: Icons.location_on_rounded,
@@ -433,7 +428,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
           const SizedBox(height: 8),
           TextFormField(
             controller: _notesController,
-            textDirection: TextDirection.rtl,
             maxLines: 3,
             decoration: _buildInputDecoration(
               hintText: 'أضف ملاحظات إضافية...',
@@ -713,7 +707,6 @@ class _AddExpenseDialogState extends State<AddExpenseDialog>
             Expanded(
               child: TextFormField(
                 controller: _tagController,
-                textDirection: TextDirection.rtl,
                 decoration: _buildInputDecoration(
                   hintText: 'أضف تاج...',
                   prefixIcon: Icons.tag_rounded,

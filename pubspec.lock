@@ -149,18 +149,18 @@ packages:
     dependency: "direct main"
     description:
       name: camera
-      sha256: eefad89f262a873f38d21e5eec853461737ea074d7c9ede39f3ceb135d201cab
+      sha256: dfa8fc5a1adaeb95e7a54d86a5bd56f4bb0e035515354c8ac6d262e35cec2ec8
       url: "https://pub.dev"
     source: hosted
-    version: "0.11.3"
-  camera_android_camerax:
+    version: "0.10.6"
+  camera_android:
     dependency: transitive
     description:
-      name: camera_android_camerax
-      sha256: "360a9436980590e7268e0ff9eff482ff73ac3e0f66fffdd203cd93d1bfed0fc4"
+      name: camera_android
+      sha256: "50c0d1c4b122163e3d7cdfcd6d4cd8078aac27d0f1cd1e7b3fa69e6b3f06f4b7"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.25+1"
+    version: "0.10.10+14"
   camera_avfoundation:
     dependency: transitive
     description:
@@ -514,10 +514,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_lints
-      sha256: "5398f14efa795ffb7a33e9b6a08798b26a180edac4ad7db3f231e40f82ce11e1"
+      sha256: "9e8c3858111da373efc5aa341de011d9bd23e2c5c5e0c62bccf32438e192d7b1"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.0"
+    version: "3.0.2"
   flutter_local_notifications:
     dependency: "direct main"
     description:
@@ -764,10 +764,10 @@ packages:
     dependency: transitive
     description:
       name: lints
-      sha256: c35bb79562d980e9a453fc715854e1ed39e24e7d0297a880ef54e17f9874a9d7
+      sha256: cbf8d4b858bb0134ef3ef87841abdf8d63bfc255c266b7bf6b39daa1085c4290
       url: "https://pub.dev"
     source: hosted
-    version: "5.1.1"
+    version: "3.0.0"
   logging:
     dependency: transitive
     description:
@@ -1366,5 +1366,5 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.9.2 <4.0.0"
+  dart: ">=3.9.0 <4.0.0"
   flutter: ">=3.35.0"

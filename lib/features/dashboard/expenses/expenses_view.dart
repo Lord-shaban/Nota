@@ -57,7 +57,7 @@ class _ExpensesViewState extends State<ExpensesView>
 
     return Scaffold(
       backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey.shade950
+          ? Colors.grey.shade900
           : Colors.grey.shade50,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {

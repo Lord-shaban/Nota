@@ -291,7 +291,6 @@ class ExpenseStatistics extends StatelessWidget {
   Widget _buildQuickStats(BuildContext context) {
     final maxExpense = _getMaxExpense();
     final minExpense = _getMinExpense();
-    final paymentMethodStats = _getPaymentMethodStats();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
