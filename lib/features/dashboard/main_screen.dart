@@ -6,7 +6,7 @@ import 'navigation/tab_bar.dart';
 import 'home/home_view.dart';
 import 'categories/tasks_view.dart';
 import 'categories/expenses_view.dart';
-import 'categories/appointments_view.dart';
+import 'appointments/appointments_view.dart';
 import 'categories/quotes_view.dart';
 import 'search/search_functionality.dart';
 
@@ -84,7 +84,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           ),
         ],
       ),
-      floatingActionButton: _buildFAB(),
+      floatingActionButton: _currentIndex == 3 ? null : _buildFAB(),
     );
   }
 
@@ -105,9 +105,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     final (icon, tooltip) = actions[_currentIndex];
     
     return FloatingActionButton(
-      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(' coming soon!')),
-      ),
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$tooltip coming soon!')),
+        );
+      },
       tooltip: tooltip,
       child: Icon(icon),
     );

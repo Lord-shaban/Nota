@@ -19,6 +19,7 @@ import 'tasks/create_task_dialog.dart';
 import 'tasks/create_task_group_dialog.dart';
 import '../../core/models/task_model.dart';
 import '../../core/models/task_group.dart';
+import 'appointments/appointments_view.dart';
 
 // Cloudinary Configuration
 final cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
@@ -184,8 +185,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      // Hide main FAB when in tasks tab (index 1)
-      floatingActionButton: _tabController.index != 1 ? _buildFAB() : null,
+      // Hide main FAB when in tasks tab (index 1) or appointments tab (index 2) - they have their own FABs
+      floatingActionButton: _tabController.index != 1 && _tabController.index != 2 ? _buildFAB() : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       drawer: _buildDrawer(),
     );
@@ -583,11 +584,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildTasksTab() => const TasksTabView();
-  Widget _buildAppointmentsTab() => _buildListTab(
-    _appointments,
-    Icons.calendar_month_rounded,
-    'لا توجد مواعيد',
-  );
+  Widget _buildAppointmentsTab() => const AppointmentsView();
   Widget _buildExpensesTab() =>
       _buildListTab(_expenses, Icons.attach_money_rounded, 'لا توجد مصروفات');
   Widget _buildQuotesTab() =>
