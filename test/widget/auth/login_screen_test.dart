@@ -5,13 +5,13 @@ void main() {
   group('LoginScreen Widget Tests', () {
     testWidgets('Text field rendering test', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
                 TextField(decoration: InputDecoration(hintText: 'Email')),
                 TextField(decoration: InputDecoration(hintText: 'Password')),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
@@ -24,7 +24,7 @@ void main() {
 
     testWidgets('Can enter email text', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
@@ -36,20 +36,20 @@ void main() {
                   key: Key('password_field'),
                   decoration: InputDecoration(hintText: 'Password'),
                 ),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
         ),
       );
 
-      await tester.enterText(find.byKey(Key('email_field')), 'test@example.com');
+      await tester.enterText(find.byKey(const Key('email_field')), 'test@example.com');
       expect(find.text('test@example.com'), findsOneWidget);
     });
 
     testWidgets('Can enter password text', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
@@ -62,14 +62,14 @@ void main() {
                   obscureText: true,
                   decoration: InputDecoration(hintText: 'Password'),
                 ),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
         ),
       );
 
-      await tester.enterText(find.byKey(Key('password_field')), 'password123');
+      await tester.enterText(find.byKey(const Key('password_field')), 'password123');
       expect(find.text('password123'), findsOneWidget);
     });
 
@@ -81,11 +81,11 @@ void main() {
           home: Scaffold(
             body: Column(
               children: [
-                TextField(decoration: InputDecoration(hintText: 'Email')),
-                TextField(decoration: InputDecoration(hintText: 'Password')),
+                const TextField(decoration: InputDecoration(hintText: 'Email')),
+                const TextField(decoration: InputDecoration(hintText: 'Password')),
                 ElevatedButton(
                   onPressed: () { buttonPressed = true; },
-                  child: Text('Login'),
+                  child: const Text('Login'),
                 ),
               ],
             ),
@@ -100,13 +100,13 @@ void main() {
 
     testWidgets('Email and password fields are visible', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
                 TextField(decoration: InputDecoration(hintText: 'Email')),
                 TextField(decoration: InputDecoration(hintText: 'Password')),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
@@ -118,13 +118,13 @@ void main() {
 
     testWidgets('Login button is enabled', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
                 TextField(decoration: InputDecoration(hintText: 'Email')),
                 TextField(decoration: InputDecoration(hintText: 'Password')),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
@@ -136,7 +136,7 @@ void main() {
 
     testWidgets('Text fields accept input', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
@@ -148,26 +148,26 @@ void main() {
                   key: Key('password_field'),
                   decoration: InputDecoration(hintText: 'Password'),
                 ),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
         ),
       );
 
-      await tester.enterText(find.byKey(Key('email_field')), 'user@test.com');
+      await tester.enterText(find.byKey(const Key('email_field')), 'user@test.com');
       expect(find.text('user@test.com'), findsOneWidget);
     });
 
     testWidgets('Widget hierarchy is correct', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
                 TextField(decoration: InputDecoration(hintText: 'Email')),
                 TextField(decoration: InputDecoration(hintText: 'Password')),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
@@ -180,7 +180,7 @@ void main() {
 
     testWidgets('Can clear input fields', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
@@ -192,14 +192,14 @@ void main() {
                   key: Key('password_field'),
                   decoration: InputDecoration(hintText: 'Password'),
                 ),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
               ],
             ),
           ),
         ),
       );
 
-      final emailField = find.byKey(Key('email_field'));
+      final emailField = find.byKey(const Key('email_field'));
       await tester.enterText(emailField, 'test@example.com');
       expect(find.text('test@example.com'), findsOneWidget);
 
@@ -209,14 +209,14 @@ void main() {
 
     testWidgets('Multiple buttons render without errors', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
                 TextField(decoration: InputDecoration(hintText: 'Email')),
                 TextField(decoration: InputDecoration(hintText: 'Password')),
-                ElevatedButton(onPressed: () {}, child: Text('Login')),
-                ElevatedButton(onPressed: () {}, child: Text('Sign Up')),
+                ElevatedButton(onPressed: null, child: Text('Login')),
+                ElevatedButton(onPressed: null, child: Text('Sign Up')),
               ],
             ),
           ),
