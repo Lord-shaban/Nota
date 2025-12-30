@@ -11,8 +11,9 @@ void main() {
   testWidgets('App launches successfully', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const NotaApp());
-
+    await tester.pumpAndSettle();
     // Verify that the app starts
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }
+// 

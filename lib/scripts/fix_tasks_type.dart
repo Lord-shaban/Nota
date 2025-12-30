@@ -8,21 +8,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> fixTasksType() async {
   print('🔧 Starting to fix tasks...');
-  
+
   try {
     // Get all documents from notes collection without type field
     final snapshot = await FirebaseFirestore.instance
         .collection('notes')
         .get();
-    
+
     print('📦 Found ${snapshot.docs.length} documents');
-    
+
     int updated = 0;
     int skipped = 0;
-    
+
     for (var doc in snapshot.docs) {
       final data = doc.data();
-      
+
       // Check if it has groupId (which means it's a task)
       if (data.containsKey('groupId') && !data.containsKey('type')) {
         // Update with type field
@@ -38,13 +38,15 @@ Future<void> fixTasksType() async {
         skipped++;
       }
     }
-    
+
     print('');
     print('✨ Fix completed!');
-    print('   Updated: $updated tasks');
-    print('   Skipped: $skipped documents');
-    
+    print('Total updated: $updated, skipped: $skipped');
   } catch (e) {
-    print('❌ Error: $e');
+    print('❌ An error occurred: $e');
   }
+}
+
+void main() async {
+  await fixTasksType();
 }
