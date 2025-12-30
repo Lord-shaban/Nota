@@ -21,6 +21,7 @@ import '../../core/models/task_model.dart';
 import '../../core/models/task_group.dart';
 import 'appointments/appointments_view.dart';
 import 'expenses/expenses_view.dart';
+import 'quotes_diary/quotes_diary_view.dart';
 
 // Cloudinary Configuration
 final cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
@@ -186,8 +187,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      // Hide main FAB when in tasks tab (index 1), appointments tab (index 2), or expenses tab (index 3) - they have their own FABs
-      floatingActionButton: _tabController.index != 1 && _tabController.index != 2 && _tabController.index != 3 ? _buildFAB() : null,
+      // Hide main FAB when in tasks tab (index 1), appointments tab (index 2), expenses tab (index 3), or quotes tab (index 4) - they have their own FABs
+      floatingActionButton: _tabController.index != 1 && _tabController.index != 2 && _tabController.index != 3 && _tabController.index != 4 ? _buildFAB() : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       drawer: _buildDrawer(),
     );
@@ -587,8 +588,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildTasksTab() => const TasksTabView();
   Widget _buildAppointmentsTab() => const AppointmentsView();
   Widget _buildExpensesTab() => const ExpensesView();
-  Widget _buildQuotesTab() =>
-      _buildListTab(_quotes, Icons.format_quote_rounded, 'لا توجد اقتباسات');
+  Widget _buildQuotesTab() => const QuotesDiaryView();
 
   Widget _buildListTab(
     List<Map<String, dynamic>> items,
