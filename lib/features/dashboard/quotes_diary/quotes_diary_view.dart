@@ -264,33 +264,11 @@ class _QuotesDiaryViewState extends State<QuotesDiaryView>
       return _buildLoginRequired();
     }
 
-    Query query = FirebaseFirestore.instance
+    // استعلام بسيط فقط بـ userId و type لتجنب الحاجة لـ composite index
+    final query = FirebaseFirestore.instance
         .collection('notes')
         .where('userId', isEqualTo: user.uid)
         .where('type', isEqualTo: 'quote_diary');
-
-    // فلتر النوع من التاب أو من الفلتر
-    final effectiveType = typeFilter ?? _filterType;
-    if (effectiveType != null) {
-      query = query.where('entryType', isEqualTo: effectiveType.name);
-    }
-
-    // فلتر المفضلة
-    if (_showFavoritesOnly) {
-      query = query.where('isFavorite', isEqualTo: true);
-    }
-
-    // فلتر الفئة (للاقتباسات)
-    if (_filterCategory != null && (effectiveType == null || effectiveType == EntryType.quote)) {
-      query = query.where('quoteCategory', isEqualTo: _filterCategory!.name);
-    }
-
-    // فلتر المزاج (لليوميات)
-    if (_filterMood != null && (effectiveType == null || effectiveType == EntryType.diary)) {
-      query = query.where('mood', isEqualTo: _filterMood!.name);
-    }
-
-    query = query.orderBy('date', descending: true);
 
     return StreamBuilder<QuerySnapshot>(
       stream: query.snapshots(),
@@ -305,28 +283,55 @@ class _QuotesDiaryViewState extends State<QuotesDiaryView>
 
         final docs = snapshot.data?.docs ?? [];
 
-        // تطبيق فلتر البحث
-        final filteredDocs = docs.where((doc) {
-          if (_searchQuery.isEmpty) return true;
-          final entry = EntryModel.fromFirestore(doc);
-          final searchLower = _searchQuery.toLowerCase();
-          return entry.content.toLowerCase().contains(searchLower) ||
-              (entry.title?.toLowerCase().contains(searchLower) ?? false) ||
-              (entry.author?.toLowerCase().contains(searchLower) ?? false) ||
-              entry.tags.any((tag) => tag.toLowerCase().contains(searchLower));
-        }).toList();
+        // تحويل المستندات إلى نماذج
+        var entries = docs.map((doc) => EntryModel.fromFirestore(doc)).toList();
 
-        if (filteredDocs.isEmpty) {
+        // فلتر النوع من التاب أو من الفلتر (محلياً)
+        final effectiveType = typeFilter ?? _filterType;
+        if (effectiveType != null) {
+          entries = entries.where((e) => e.entryType == effectiveType).toList();
+        }
+
+        // فلتر المفضلة (محلياً)
+        if (_showFavoritesOnly) {
+          entries = entries.where((e) => e.isFavorite).toList();
+        }
+
+        // فلتر الفئة للاقتباسات (محلياً)
+        if (_filterCategory != null && (effectiveType == null || effectiveType == EntryType.quote)) {
+          entries = entries.where((e) => e.quoteCategory == _filterCategory).toList();
+        }
+
+        // فلتر المزاج لليوميات (محلياً)
+        if (_filterMood != null && (effectiveType == null || effectiveType == EntryType.diary)) {
+          entries = entries.where((e) => e.mood == _filterMood).toList();
+        }
+
+        // تطبيق فلتر البحث
+        if (_searchQuery.isNotEmpty) {
+          final searchLower = _searchQuery.toLowerCase();
+          entries = entries.where((entry) {
+            return entry.content.toLowerCase().contains(searchLower) ||
+                (entry.title?.toLowerCase().contains(searchLower) ?? false) ||
+                (entry.author?.toLowerCase().contains(searchLower) ?? false) ||
+                entry.tags.any((tag) => tag.toLowerCase().contains(searchLower));
+          }).toList();
+        }
+
+        // ترتيب حسب التاريخ (الأحدث أولاً)
+        entries.sort((a, b) => b.date.compareTo(a.date));
+
+        if (entries.isEmpty) {
           return _buildEmptyState(typeFilter);
         }
 
         return AnimationLimiter(
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: filteredDocs.length,
+            itemCount: entries.length,
             separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
-              final entry = EntryModel.fromFirestore(filteredDocs[index]);
+              final entry = entries[index];
               return AnimationConfiguration.staggeredList(
                 position: index,
                 duration: const Duration(milliseconds: 375),
