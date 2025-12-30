@@ -27,9 +27,6 @@ jobs:
     
     - name: Build APK
       run: flutter build apk --release
-    
-    - name: Build iOS (no sign)
-      run: flutter build ios  --no-codesign
 
     - name: Check Flutter/Dart Version
       run: |
