@@ -187,8 +187,8 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      // Hide main FAB when in tasks tab (index 1), appointments tab (index 2), or expenses tab (index 3) - they have their own FABs
-      floatingActionButton: _tabController.index != 1 && _tabController.index != 2 && _tabController.index != 3 ? _buildFAB() : null,
+      // Hide main FAB when in tasks tab (index 1), appointments tab (index 2), expenses tab (index 3), or quotes tab (index 4) - they have their own FABs
+      floatingActionButton: _tabController.index != 1 && _tabController.index != 2 && _tabController.index != 3 && _tabController.index != 4 ? _buildFAB() : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       drawer: _buildDrawer(),
     );
