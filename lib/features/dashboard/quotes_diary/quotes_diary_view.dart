@@ -289,7 +289,7 @@ class _QuotesDiaryViewState extends State<QuotesDiaryView>
         // فلتر النوع من التاب أو من الفلتر (محلياً)
         final effectiveType = typeFilter ?? _filterType;
         if (effectiveType != null) {
-          entries = entries.where((e) => e.entryType == effectiveType).toList();
+          entries = entries.where((e) => e.type == effectiveType).toList();
         }
 
         // فلتر المفضلة (محلياً)
