@@ -478,6 +478,13 @@ class UnifiedInputHandler {
                           ? [const Color(0xFFFFB800), const Color(0xFFFFD900)]
                           : [Colors.grey[400]!, Colors.grey[600]!],
                     ),
+                    boxShadow: _isListening ? [
+                      BoxShadow(
+                        color: const Color(0xFFFFB800).withOpacity(0.4),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ] : null,
                   ),
                   child: Stack(
                     alignment: Alignment.center,
@@ -498,28 +505,59 @@ class UnifiedInputHandler {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  _isListening ? 'أستمع إليك...' : 'اضغط للتحدث',
+                  _isListening ? '🎙️ أستمع إليك...' : 'اضغط للتحدث',
                   style: GoogleFonts.tajawal(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
+                    color: _isListening ? const Color(0xFFFFB800) : Colors.grey[700],
                   ),
                 ),
+                if (_isListening) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'تحدث بوضوح وسأستخرج المهام والمواعيد والمصروفات',
+                    style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8F8F8),
                     borderRadius: BorderRadius.circular(12),
+                    border: _fullSpeechText.isNotEmpty 
+                        ? Border.all(color: const Color(0xFF58CC02).withOpacity(0.3))
+                        : null,
                   ),
                   constraints: const BoxConstraints(minHeight: 100, maxHeight: 200),
                   child: SingleChildScrollView(
-                    child: Text(
-                      _fullSpeechText.isEmpty ? 'ابدأ بالتحدث...' : _fullSpeechText,
-                      style: GoogleFonts.tajawal(
-                        color: _fullSpeechText.isEmpty ? Colors.grey : Colors.black,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.right,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_fullSpeechText.isEmpty)
+                          Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.mic_none_rounded, size: 32, color: Colors.grey[400]),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'ابدأ بالتحدث...',
+                                  style: GoogleFonts.tajawal(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Text(
+                            _fullSpeechText,
+                            style: GoogleFonts.tajawal(
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                      ],
                     ),
                   ),
                 ),
