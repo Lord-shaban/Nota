@@ -18,12 +18,58 @@ import '../../dashboard/tasks/create_task_group_dialog.dart';
 import '../../dashboard/appointments/widgets/add_appointment_dialog.dart';
 import '../../dashboard/expenses/widgets/add_expense_dialog.dart';
 import '../../dashboard/quotes_diary/widgets/add_entry_dialog.dart';
+import '../../dashboard/quotes_diary/models/entry_model.dart';
 
 // Cloudinary Configuration
 final _cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
 
-// Gemini API Key
+// Gemini API Key - Gemini 2.5 Flash
 const String _geminiApiKey = 'AIzaSyDyTexcA5nzBO54Hq9KJ-gzgfVGMhsjrs0';
+
+/// أنواع العناصر المستخرجة
+enum ExtractedItemType {
+  task,
+  appointment,
+  expense,
+  quote,
+  diary,
+  note,
+}
+
+extension ExtractedItemTypeExtension on ExtractedItemType {
+  String get arabicName {
+    switch (this) {
+      case ExtractedItemType.task: return 'مهمة';
+      case ExtractedItemType.appointment: return 'موعد';
+      case ExtractedItemType.expense: return 'مصروف';
+      case ExtractedItemType.quote: return 'اقتباس';
+      case ExtractedItemType.diary: return 'يومية';
+      case ExtractedItemType.note: return 'ملاحظة';
+    }
+  }
+  
+  IconData get icon {
+    switch (this) {
+      case ExtractedItemType.task: return Icons.task_alt_rounded;
+      case ExtractedItemType.appointment: return Icons.calendar_month_rounded;
+      case ExtractedItemType.expense: return Icons.attach_money_rounded;
+      case ExtractedItemType.quote: return Icons.format_quote_rounded;
+      case ExtractedItemType.diary: return Icons.book_rounded;
+      case ExtractedItemType.note: return Icons.note_rounded;
+    }
+  }
+  
+  Color get color {
+    switch (this) {
+      case ExtractedItemType.task: return const Color(0xFF58CC02);
+      case ExtractedItemType.appointment: return const Color(0xFFFFB800);
+      case ExtractedItemType.expense: return Colors.blue;
+      case ExtractedItemType.quote: return Colors.purple;
+      case ExtractedItemType.diary: return const Color(0xFF3F51B5);
+      case ExtractedItemType.note: return Colors.grey;
+    }
+  }
+}
 
 /// معالج الإدخال الموحد - يدير جميع طرق الإدخال (نص، صوت، صورة، كاميرا)
 /// ويوجه البيانات إلى التابات المناسبة
@@ -114,7 +160,13 @@ class UnifiedInputHandler {
       case 'quote':
         showDialog(
           context: context,
-          builder: (ctx) => const AddEntryDialog(),
+          builder: (ctx) => const AddEntryDialog(initialType: EntryType.quote),
+        );
+        break;
+      case 'diary':
+        showDialog(
+          context: context,
+          builder: (ctx) => const AddEntryDialog(initialType: EntryType.diary),
         );
         break;
     }
@@ -214,48 +266,72 @@ class UnifiedInputHandler {
     );
   }
 
-  /// معالجة النص بالذكاء الاصطناعي
+  /// معالجة النص بالذكاء الاصطناعي - Gemini 2.5 Flash
   Future<void> _processTextWithAI(String text) async {
     _showLoadingDialog('الذكاء الاصطناعي يحلل النص...');
 
     try {
+      final today = DateTime.now();
       final prompt = '''
-قم بتحليل النص التالي واستخراج جميع العناصر منه بدقة:
+أنت مساعد ذكي متخصص في استخراج المعلومات من النصوص العربية والإنجليزية. 
+قم بتحليل النص التالي واستخراج جميع العناصر منه بدقة شديدة.
 
-النص: "$text"
+📅 اليوم هو: ${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}
 
-استخرج العناصر التالية:
-- المهام: أي شيء يحتاج إنجاز (مثل: اشتري، اعمل، راجع، اتصل)
-  * اقترح مجموعة مناسبة للمهمة من: 📚 مذاكرة، 🛒 تسوق، 💼 عمل، 🏠 منزل، 🏋️ رياضة، 🎯 شخصي
-  * حدد الأولوية: urgent (عاجل)، high (عالي)، medium (متوسط)، low (منخفض)
-- المواعيد: أي حدث بتاريخ/وقت (مثل: اجتماع، موعد، غداً، الساعة)
-- المصروفات: أي ذكر للمال (مثل: دفعت، اشتريت، جنيه، ريال، دولار)
-- الاقتباسات: عبارات ملهمة أو حكم
-- الملاحظات: أي شيء آخر
+📝 النص للتحليل:
+"$text"
 
-أرجع JSON فقط بدون أي نص إضافي:
+🎯 استخرج جميع العناصر التالية (يمكن استخراج عناصر متعددة من نفس الفئة):
+
+1️⃣ المهام (task):
+   - أي شيء يحتاج إنجاز: اشتري، اعمل، راجع، اتصل، ارسل، حضر، اكتب، نظف، رتب
+   - المجموعات المتاحة: 📚 مذاكرة، 🛒 تسوق، 💼 عمل، 🏠 منزل، 🏋️ رياضة، 🎯 شخصي، 📝 عام
+   - الأولويات: urgent (عاجل جداً)، high (مهم)، medium (عادي)، low (يمكن تأجيله)
+
+2️⃣ المواعيد (appointment):
+   - أي حدث بتاريخ/وقت محدد: اجتماع، موعد، مقابلة، حجز، رحلة
+   - الكلمات الدالة: غداً، بعد غد، يوم الأحد، الساعة، صباحاً، مساءً
+
+3️⃣ المصروفات (expense):
+   - أي ذكر للمال أو الدفع: دفعت، اشتريت، صرفت، حولت، سددت
+   - العملات: جنيه، ريال، دولار، ر.س، ج.م، $
+
+4️⃣ الاقتباسات (quote):
+   - عبارات ملهمة، حكم، أقوال مأثورة
+   - نصائح حكيمة، كلام محفز
+   - الفئات: motivation (تحفيز)، wisdom (حكمة)، love (حب)، success (نجاح)، life (حياة)، happiness (سعادة)، faith (إيمان)، other (أخرى)
+
+5️⃣ اليوميات (diary):
+   - مشاعر وأحاسيس: سعيد، حزين، متوتر، متحمس
+   - أحداث يومية: حصل اليوم، قابلت، شعرت، أفكر في
+   - الحالة المزاجية: amazing (رائع)، happy (سعيد)، neutral (عادي)، sad (حزين)، terrible (سيء)
+
+⚠️ قواعد مهمة:
+- استخرج كل عنصر على حدة (إذا كان هناك 3 مهام، ارجع 3 items منفصلة)
+- إذا لم يُذكر تاريخ للمهمة/الموعد، استخدم null
+- التاريخ بصيغة YYYY-MM-DD فقط
+- الوقت بصيغة 24 ساعة HH:MM فقط
+- "غداً" = تاريخ الغد، "بعد غد" = بعد يومين
+- إذا النص لا يحتوي على أي من الأنواع السابقة، اعتبره ملاحظة (note)
+
+📤 أرجع JSON صحيح فقط بدون أي نص إضافي:
 {
   "items": [
     {
-      "type": "task",
-      "title": "عنوان قصير (3-5 كلمات)",
-      "content": "المحتوى الكامل",
+      "type": "task/appointment/expense/quote/diary/note",
+      "title": "عنوان قصير وواضح (3-6 كلمات)",
+      "content": "المحتوى الكامل والتفاصيل",
       "date": "YYYY-MM-DD أو null",
       "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "ر.س/جنيه/دولار أو null",
+      "currency": "ر.س/جنيه/$/€ أو null",
       "suggestedGroup": "اسم المجموعة مع الإيموجي (للمهام فقط)",
-      "priority": "urgent/high/medium/low (للمهام فقط، افتراضي medium)"
+      "priority": "urgent/high/medium/low (للمهام فقط)",
+      "category": "فئة الاقتباس (للاقتباسات فقط)",
+      "mood": "amazing/happy/neutral/sad/terrible (لليوميات فقط)"
     }
   ]
 }
-
-مهم جداً: 
-- أرجع JSON صحيح فقط
-- type يجب أن يكون: task أو appointment أو expense أو quote أو note
-- التاريخ بصيغة YYYY-MM-DD
-- الوقت بصيغة 24 ساعة HH:MM
-- suggestedGroup و priority للمهام فقط
 ''';
 
       final content = [Content.text(prompt)];
@@ -495,25 +571,49 @@ class UnifiedInputHandler {
 
           final imageBytes = await File(image.path).readAsBytes();
           
+          final today = DateTime.now();
           final prompt = '''
-قم بتحليل هذه الصورة بدقة واستخرج جميع المعلومات:
-- إذا كانت فاتورة: استخرج المصروفات والمبالغ
-- إذا كانت قائمة مهام: استخرج المهام
-- إذا كانت جدول مواعيد: استخرج المواعيد
-- إذا كانت نص: استخرج المحتوى
+أنت مساعد ذكي متخصص في تحليل الصور واستخراج المعلومات منها.
+قم بتحليل هذه الصورة بدقة واستخراج جميع المعلومات المفيدة.
 
-أرجع JSON فقط:
+📅 اليوم هو: ${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}
+
+🎯 حلل الصورة واستخرج العناصر التالية:
+
+📝 إذا كانت الصورة تحتوي على:
+1. فاتورة/إيصال → استخرج كل المصروفات (expense) مع المبالغ والعملة
+2. قائمة مهام/To-Do List → استخرج كل المهام (task) بشكل منفصل
+3. جدول مواعيد/تقويم → استخرج كل المواعيد (appointment)
+4. نص ملهم/اقتباس → استخرجه كـ (quote) مع الفئة المناسبة
+5. مذكرة/خواطر → استخرجها كـ (diary) مع تحديد المزاج
+6. أي نص آخر → استخرجه كـ (note)
+
+⚠️ مهم جداً:
+- استخرج كل عنصر على حدة (إذا الفاتورة فيها 5 أصناف = 5 expenses منفصلة)
+- اقرأ الأرقام والتواريخ بدقة
+- إذا الصورة فيها نص عربي، اقرأه بشكل صحيح
+
+📤 أرجع JSON صحيح فقط:
 {
   "items": [
     {
-      "type": "task/appointment/expense/quote/note",
-      "title": "عنوان قصير",
-      "content": "المحتوى",
+      "type": "task/appointment/expense/quote/diary/note",
+      "title": "عنوان قصير وواضح",
+      "content": "المحتوى والتفاصيل",
+      "date": "YYYY-MM-DD أو null",
+      "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "العملة أو null"
+      "currency": "العملة أو null",
+      "suggestedGroup": "للمهام فقط",
+      "priority": "للمهام: urgent/high/medium/low",
+      "category": "للاقتباسات: motivation/wisdom/love/success/life/happiness/faith/other",
+      "mood": "لليوميات: amazing/happy/neutral/sad/terrible"
     }
   ]
 }
+
+إذا لم تستطع قراءة أي محتوى مفيد من الصورة، أرجع:
+{"items": [{"type": "note", "title": "صورة", "content": "صورة تم رفعها"}]}
 ''';
 
           final content = [Content.multi([TextPart(prompt), DataPart('image/jpeg', imageBytes)])];
@@ -652,9 +752,24 @@ class UnifiedInputHandler {
         icon = Icons.format_quote_rounded;
         color = Colors.purple;
         break;
+      case 'diary':
+        icon = Icons.book_rounded;
+        color = const Color(0xFF3F51B5);
+        break;
       default:
         icon = Icons.note_rounded;
         color = Colors.grey;
+    }
+
+    // Build subtitle with extra info
+    String subtitle = item['content'] ?? '';
+    if (item['type'] == 'expense' && item['amount'] != null) {
+      subtitle = '${item['amount']} ${item['currency'] ?? 'ر.س'} - $subtitle';
+    } else if (item['type'] == 'appointment' && item['date'] != null) {
+      subtitle = '📅 ${item['date']} ${item['time'] != null ? '⏰ ${item['time']}' : ''} - $subtitle';
+    } else if (item['type'] == 'diary' && item['mood'] != null) {
+      final moodEmoji = _getMoodEmoji(item['mood']);
+      subtitle = '$moodEmoji $subtitle';
     }
 
     return Container(
@@ -673,12 +788,29 @@ class UnifiedInputHandler {
           ),
           child: Icon(icon, color: color),
         ),
-        title: Text(
-          item['title'] ?? 'بدون عنوان',
-          style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item['title'] ?? 'بدون عنوان',
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                _getTypeArabicName(item['type']),
+                style: GoogleFonts.tajawal(fontSize: 10, color: color),
+              ),
+            ),
+          ],
         ),
         subtitle: Text(
-          item['content'] ?? '',
+          subtitle,
           style: GoogleFonts.tajawal(fontSize: 12),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -691,6 +823,28 @@ class UnifiedInputHandler {
     );
   }
 
+  String _getTypeArabicName(String? type) {
+    switch (type) {
+      case 'task': return 'مهمة';
+      case 'appointment': return 'موعد';
+      case 'expense': return 'مصروف';
+      case 'quote': return 'اقتباس';
+      case 'diary': return 'يومية';
+      default: return 'ملاحظة';
+    }
+  }
+
+  String _getMoodEmoji(String? mood) {
+    switch (mood) {
+      case 'amazing': return '🤩';
+      case 'happy': return '😊';
+      case 'neutral': return '😐';
+      case 'sad': return '😢';
+      case 'terrible': return '😭';
+      default: return '😐';
+    }
+  }
+
   /// حفظ عناصر متعددة
   Future<void> _saveMultipleItems() async {
     final userId = _auth.currentUser?.uid;
@@ -699,20 +853,30 @@ class UnifiedInputHandler {
     _showLoadingDialog('جاري الحفظ...');
 
     int savedCount = 0;
+    Map<String, int> savedByType = {};
 
     for (var item in _extractedItems) {
-      switch (item['type']) {
+      final type = item['type'] ?? 'note';
+      switch (type) {
         case 'task':
           await _saveTaskWithGroup(item);
+          savedByType['مهام'] = (savedByType['مهام'] ?? 0) + 1;
           break;
         case 'appointment':
           await _saveAppointment(item);
+          savedByType['مواعيد'] = (savedByType['مواعيد'] ?? 0) + 1;
           break;
         case 'expense':
           await _saveExpense(item);
+          savedByType['مصروفات'] = (savedByType['مصروفات'] ?? 0) + 1;
           break;
         case 'quote':
           await _saveQuote(item);
+          savedByType['اقتباسات'] = (savedByType['اقتباسات'] ?? 0) + 1;
+          break;
+        case 'diary':
+          await _saveDiary(item);
+          savedByType['يوميات'] = (savedByType['يوميات'] ?? 0) + 1;
           break;
         default:
           await _firestore.collection('users').doc(userId).collection('notes').add({
@@ -720,6 +884,7 @@ class UnifiedInputHandler {
             'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
+          savedByType['ملاحظات'] = (savedByType['ملاحظات'] ?? 0) + 1;
       }
       savedCount++;
     }
@@ -728,10 +893,24 @@ class UnifiedInputHandler {
       Navigator.pop(context);
       _extractedItems.clear();
 
+      // Build detailed message
+      String detailMessage = savedByType.entries
+          .map((e) => '${e.value} ${e.key}')
+          .join(' • ');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم حفظ $savedCount عنصر', style: GoogleFonts.tajawal()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('✅ تم حفظ $savedCount عنصر بنجاح!', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+              if (detailMessage.isNotEmpty)
+                Text(detailMessage, style: GoogleFonts.tajawal(fontSize: 12)),
+            ],
+          ),
           backgroundColor: const Color(0xFF58CC02),
+          duration: const Duration(seconds: 3),
         ),
       );
 
@@ -867,10 +1046,60 @@ class UnifiedInputHandler {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    await _firestore.collection('users').doc(userId).collection('notes').add({
+    // تحويل فئة الاقتباس
+    String category = 'other';
+    if (item['category'] != null) {
+      final catMap = {
+        'motivation': 'motivation',
+        'wisdom': 'wisdom',
+        'love': 'love',
+        'success': 'success',
+        'life': 'life',
+        'happiness': 'happiness',
+        'faith': 'faith',
+        'friendship': 'friendship',
+        'knowledge': 'knowledge',
+      };
+      category = catMap[item['category']] ?? 'other';
+    }
+
+    await _firestore.collection('users').doc(userId).collection('entries').add({
       'type': 'quote',
-      'title': item['title'] ?? '',
-      'content': item['content'] ?? '',
+      'content': item['content'] ?? item['title'] ?? '',
+      'author': item['author'] ?? '',
+      'category': category,
+      'isFavorite': false,
+      'fontFamily': 'Tajawal',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// حفظ يومية
+  Future<void> _saveDiary(Map<String, dynamic> item) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    // تحويل المزاج
+    String mood = 'neutral';
+    if (item['mood'] != null) {
+      final moodMap = {
+        'amazing': 'amazing',
+        'happy': 'happy',
+        'neutral': 'neutral',
+        'sad': 'sad',
+        'terrible': 'terrible',
+      };
+      mood = moodMap[item['mood']] ?? 'neutral';
+    }
+
+    await _firestore.collection('users').doc(userId).collection('entries').add({
+      'type': 'diary',
+      'content': item['content'] ?? item['title'] ?? '',
+      'mood': mood,
+      'tags': <String>[],
+      'isFavorite': false,
+      'fontFamily': 'Tajawal',
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -1228,12 +1457,16 @@ class _QuickAddSheet extends StatelessWidget {
           const SizedBox(height: 12),
           GridView.count(
             shrinkWrap: true,
-            crossAxisCount: 4,
+            crossAxisCount: 5,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 4,
+            childAspectRatio: 0.9,
             children: [
               _buildQuickAddOption(Icons.add_task_rounded, 'مهمة', const Color(0xFF58CC02), () => onManualAdd('task')),
               _buildQuickAddOption(Icons.event_rounded, 'موعد', const Color(0xFFFFB800), () => onManualAdd('appointment')),
               _buildQuickAddOption(Icons.receipt_long_rounded, 'مصروف', Colors.blue, () => onManualAdd('expense')),
               _buildQuickAddOption(Icons.format_quote_rounded, 'اقتباس', Colors.purple, () => onManualAdd('quote')),
+              _buildQuickAddOption(Icons.book_rounded, 'يومية', const Color(0xFF3F51B5), () => onManualAdd('diary')),
             ],
           ),
           const SizedBox(height: 20),
@@ -1271,15 +1504,15 @@ class _QuickAddSheet extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 8),
-          Text(label, style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          Text(label, style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w500)),
         ],
       ),
     );
