@@ -191,8 +191,7 @@ All data synced with **Firebase** in real-time. Access from any device, anytime.
 <td><img src="docs/screenshots/ai_input.png" width="180"/></td>
 <td><img src="docs/screenshots/tasks.png" width="180"/></td>
 <td><img src="docs/screenshots/appointments.png" width="180"/></td>
-
-[//]: # (<td><img src="docs/screenshots/qoutes.png" width="180"/></td>)
+<td><img src="docs/screenshots/qoutes.png" width="180"/></td>
 
 [//]: # (<td><img src="docs/screenshots/track-money.png" width="180"/></td>)
 </tr>
