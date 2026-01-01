@@ -810,91 +810,180 @@ class UnifiedInputHandler {
         builder: (context, setDialogState) {
           final stats = _getExtractedItemsStats();
           return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            contentPadding: EdgeInsets.zero,
+            title: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF58CC02).withOpacity(0.1),
+                    const Color(0xFF58CC02).withOpacity(0.05),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF58CC02).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF58CC02)),
+                  // Header Row
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF58CC02),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF58CC02).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'تم استخراج ${_extractedItems.length} عنصر',
+                              style: GoogleFonts.tajawal(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: const Color(0xFF1A1A1A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'راجع العناصر قبل الحفظ',
+                              style: GoogleFonts.tajawal(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'تم استخراج ${_extractedItems.length} عنصر',
-                      style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                  const SizedBox(height: 16),
+                  // Stats Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: stats.entries.map((e) {
+                        final color = _getTypeColor(e.key);
+                        return Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_getTypeIcon(e.key), size: 16, color: color),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${e.value}',
+                                style: GoogleFonts.tajawal(
+                                  fontSize: 14,
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _getTypeArabicName(e.key),
+                                style: GoogleFonts.tajawal(
+                                  fontSize: 12,
+                                  color: color.withOpacity(0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              // إحصائيات سريعة
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: stats.entries.map((e) {
-                  final color = _getTypeColor(e.key);
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: color.withOpacity(0.3)),
+            ),
+            content: Container(
+              width: double.maxFinite,
+              constraints: const BoxConstraints(maxHeight: 380),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: _extractedItems.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) => _buildExtractedItemCard(
+                  _extractedItems[index], 
+                  index, 
+                  onRemove: () => setDialogState(() => _extractedItems.removeAt(index)),
+                  onEdit: () => _showEditItemDialog(index, setDialogState),
+                ),
+              ),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _extractedItems.clear();
+                        Navigator.pop(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                        side: BorderSide(color: Colors.grey[300]!),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('إلغاء', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(_getTypeIcon(e.key), size: 14, color: color),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${e.value} ${_getTypeArabicName(e.key)}',
-                          style: GoogleFonts.tajawal(fontSize: 11, color: color, fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await _saveMultipleItems();
+                      },
+                      icon: const Icon(Icons.check_rounded, size: 20),
+                      label: Text('حفظ الكل', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF58CC02),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                ],
               ),
             ],
-          ),
-          content: Container(
-            width: double.maxFinite,
-            constraints: const BoxConstraints(maxHeight: 400),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _extractedItems.length,
-              itemBuilder: (context, index) => _buildExtractedItemCard(
-                _extractedItems[index], 
-                index, 
-                onRemove: () => setDialogState(() => _extractedItems.removeAt(index)),
-                onEdit: () => _showEditItemDialog(index, setDialogState),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _extractedItems.clear();
-                Navigator.pop(context);
-              },
-              child: Text('إلغاء', style: GoogleFonts.tajawal(color: Colors.grey[600])),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await _saveMultipleItems();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
-              child: Text('حفظ الكل', style: GoogleFonts.tajawal(color: Colors.white)),
-            ),
-          ],
-        );
+          );
         },
       ),
     );
@@ -1091,75 +1180,217 @@ class UnifiedInputHandler {
         color = Colors.grey;
     }
 
-    // Build subtitle with extra info
-    String subtitle = item['content'] ?? '';
+    // Build info chips
+    List<Widget> infoChips = [];
+    
     if (item['type'] == 'expense' && item['amount'] != null) {
-      subtitle = '${item['amount']} ${item['currency'] ?? 'ر.س'} - $subtitle';
-    } else if (item['type'] == 'appointment' && item['date'] != null) {
-      subtitle = '📅 ${item['date']} ${item['time'] != null ? '⏰ ${item['time']}' : ''} - $subtitle';
-    } else if (item['type'] == 'diary' && item['mood'] != null) {
-      final moodEmoji = _getMoodEmoji(item['mood']);
-      subtitle = '$moodEmoji $subtitle';
+      infoChips.add(_buildInfoChip(
+        Icons.payments_outlined,
+        '${item['amount']} ${item['currency'] ?? 'ر.س'}',
+        Colors.blue,
+      ));
+    }
+    
+    if (item['type'] == 'appointment' && item['date'] != null) {
+      infoChips.add(_buildInfoChip(
+        Icons.calendar_today_outlined,
+        item['date'],
+        const Color(0xFFFFB800),
+      ));
+      if (item['time'] != null) {
+        infoChips.add(_buildInfoChip(
+          Icons.access_time_outlined,
+          item['time'],
+          const Color(0xFFFFB800),
+        ));
+      }
+    }
+    
+    if (item['type'] == 'diary' && item['mood'] != null) {
+      infoChips.add(_buildInfoChip(
+        null,
+        _getMoodEmoji(item['mood']),
+        const Color(0xFF3F51B5),
+        isEmoji: true,
+      ));
+    }
+    
+    if (item['type'] == 'task' && item['priority'] != null) {
+      final priorityEmoji = {
+        'urgent': '🔴',
+        'high': '🟠',
+        'medium': '🟡',
+        'low': '🟢',
+      }[item['priority']] ?? '⚪';
+      infoChips.add(_buildInfoChip(
+        null,
+        priorityEmoji,
+        const Color(0xFF58CC02),
+        isEmoji: true,
+      ));
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.25), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Icon(icon, color: color),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                item['title'] ?? 'بدون عنوان',
-                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
-              ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with icon, title and type badge
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 12),
+                // Title and content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item['title'] ?? 'بدون عنوان',
+                              style: GoogleFonts.tajawal(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: const Color(0xFF1A1A1A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              _getTypeArabicName(item['type']),
+                              style: GoogleFonts.tajawal(
+                                fontSize: 11,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (item['content'] != null && item['content'].toString().isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item['content'],
+                          style: GoogleFonts.tajawal(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                _getTypeArabicName(item['type']),
-                style: GoogleFonts.tajawal(fontSize: 10, color: color),
-              ),
+          ),
+          // Info chips and actions row
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 0, 8, 10),
+            child: Row(
+              children: [
+                // Info chips
+                Expanded(
+                  child: infoChips.isNotEmpty 
+                    ? Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: infoChips,
+                      )
+                    : const SizedBox(),
+                ),
+                // Action buttons
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onEdit,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(Icons.edit_outlined, size: 20, color: color),
+                        ),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onRemove,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(Icons.delete_outline, size: 20, color: Colors.red[400]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// بناء شريحة معلومات
+  Widget _buildInfoChip(IconData? icon, String text, Color color, {bool isEmoji = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
           ],
-        ),
-        subtitle: Text(
-          subtitle,
-          style: GoogleFonts.tajawal(fontSize: 12),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.edit_outlined, size: 20, color: color),
-              onPressed: onEdit,
-              tooltip: 'تعديل',
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20, color: Colors.red),
-              onPressed: onRemove,
-              tooltip: 'حذف',
-            ),
-          ],
-        ),
+          Text(
+            text,
+            style: isEmoji 
+              ? const TextStyle(fontSize: 14)
+              : GoogleFonts.tajawal(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
@@ -1393,22 +1624,30 @@ class UnifiedInputHandler {
     });
   }
 
-  /// حفظ مصروف
+  /// حفظ مصروف - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveExpense(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    await _firestore.collection('expenses').add({
+    final now = DateTime.now();
+
+    // حفظ المصروف في collection notes (نظام التابات الجديد)
+    await _firestore.collection('notes').add({
       'title': item['title'] ?? '',
       'description': item['content'] ?? '',
       'amount': (item['amount'] ?? 0).toDouble(),
-      'currency': item['currency'] ?? 'ر.س',
+      'currency': item['currency'] ?? 'EGP',
       'category': 'other',
       'paymentMethod': 'cash',
-      'date': Timestamp.now(),
+      'priority': 'optional',
+      'recurrence': 'none',
+      'date': Timestamp.fromDate(now),
       'userId': userId,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      'type': 'expense',
+      'tags': <String>[],
+      'isRefunded': false,
+      'createdAt': Timestamp.fromDate(now),
+      'updatedAt': Timestamp.fromDate(now),
     });
   }
 
