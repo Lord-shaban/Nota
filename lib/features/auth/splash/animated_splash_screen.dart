@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nota/core/theme/app_theme.dart';
-import 'package:nota/features/auth/login/login_screen.dart';
+import 'package:nota/features/auth/login/enhanced_login_screen.dart';
 import 'package:nota/features/dashboard/home_screen.dart';
 
 /// Animated Splash Screen with Firebase Auth State Management
@@ -116,13 +116,13 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
           );
         }
       } else {
-        debugPrint('â„¹ï¸ڈ No user authenticated, navigating to login');
+        debugPrint('ℹ️ No user authenticated, navigating to login');
         // User is not signed in, navigate to login
         if (mounted) {
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
               pageBuilder: (context, animation, secondaryAnimation) =>
-                  const LoginScreen(),
+                  const EnhancedLoginScreen(),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
                 return FadeTransition(opacity: animation, child: child);
@@ -133,11 +133,11 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
         }
       }
     } catch (e) {
-      debugPrint('â‌Œ Error checking auth state: $e');
+      debugPrint('❌ Error checking auth state: $e');
       // On error, navigate to login
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const EnhancedLoginScreen()),
         );
       }
     }

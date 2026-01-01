@@ -6,7 +6,7 @@ import 'package:nota/core/theme/app_theme.dart';
 import 'package:nota/features/auth/services/auth_service.dart';
 import 'package:nota/features/auth/register/enhanced_register_screen.dart';
 import 'package:nota/features/dashboard/home_screen.dart';
-import 'package:nota/features/auth/login/forgot_password_dialog.dart';
+import 'package:nota/features/auth/login/enhanced_forgot_password_dialog.dart';
 
 /// Enhanced Login Screen with Modern UI/UX
 /// Features:
@@ -424,7 +424,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
               TextButton(
                 onPressed: () => showDialog(
                   context: context,
-                  builder: (context) => const ForgotPasswordDialog(),
+                  builder: (context) => const EnhancedForgotPasswordDialog(),
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
