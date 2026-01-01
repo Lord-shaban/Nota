@@ -27,6 +27,7 @@ class EnhancedHomeTab extends StatefulWidget {
 }
 
 class _EnhancedHomeTabState extends State<EnhancedHomeTab> {
+  final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
   String? get _userId => _auth.currentUser?.uid;
