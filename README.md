@@ -189,7 +189,7 @@ All data synced with **Firebase** in real-time. Access from any device, anytime.
 <td align="center"><strong>Track Money</strong></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/dashboard.png" width="180"/></td>
+<td><img src="docs/screenshots/Dashboard.png" width="180"/></td>
 <td><img src="docs/screenshots/ai_input.png" width="180"/></td>
 <td><img src="docs/screenshots/tasks.png" width="180"/></td>
 <td><img src="docs/screenshots/appointments.png" width="180"/></td>
@@ -684,6 +684,7 @@ It helps us grow and motivates the team to keep improving.
 [![Gemini](https://img.shields.io/badge/AI_by-Gemini-8E75B2?style=flat&logo=google)](https://ai.google.dev)
 
 </div>
+
 
 
 
