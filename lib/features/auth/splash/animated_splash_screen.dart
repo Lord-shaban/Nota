@@ -26,7 +26,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   late Animation<double> _logoRotationAnimation;
   late Animation<double> _progressAnimation;
 
-  String _loadingMessage = 'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...';
+  String _loadingMessage = 'جاري التحميل...';
 
   @override
   void initState() {
@@ -82,13 +82,13 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   Future<void> _checkAuthState() async {
     // Simulate loading data with messages
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _loadingMessage = 'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط§ظ„ظ…ط³طھط®ط¯ظ…...');
+    if (mounted) setState(() => _loadingMessage = 'جاري التحقق من المستخدم...');
 
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _loadingMessage = 'طھط­ط¶ظٹط± ط§ظ„ط¨ظٹط§ظ†ط§طھ...');
+    if (mounted) setState(() => _loadingMessage = 'تحضير البيانات...');
 
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _loadingMessage = 'طھظ‚ط±ظٹط¨ط§ظ‹ ط¬ط§ظ‡ط²...');
+    if (mounted) setState(() => _loadingMessage = 'تقريباً جاهز...');
 
     // Wait for animations to complete
     await Future.delayed(const Duration(milliseconds: 500));
@@ -198,7 +198,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
               // App Name
               const Text(
-                'ط§ظ„ظ†ظˆطھط©',
+                'النوتة',
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
@@ -221,7 +221,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
               // Tagline
               const Text(
-                'ظ…ط°ظƒط±ط§طھظƒ ط§ظ„ط°ظƒظٹط© ظپظٹ ظ…ظƒط§ظ† ظˆط§ط­ط¯',
+                'مذكراتك الذكية في مكان واحد',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white70,
