@@ -672,28 +672,75 @@ class UnifiedInputHandler {
     }
   }
 
+  /// حساب إحصائيات العناصر المستخرجة
+  Map<String, int> _getExtractedItemsStats() {
+    final stats = <String, int>{};
+    for (var item in _extractedItems) {
+      final type = item['type'] ?? 'note';
+      stats[type] = (stats[type] ?? 0) + 1;
+    }
+    return stats;
+  }
+
   /// عرض العناصر المستخرجة للمراجعة
   void _showExtractedItemsDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) {
+          final stats = _getExtractedItemsStats();
+          return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF58CC02).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF58CC02)),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF58CC02).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF58CC02)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'تم استخراج ${_extractedItems.length} عنصر',
+                      style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Text(
-                'تم استخراج ${_extractedItems.length} عنصر',
-                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
+              const SizedBox(height: 12),
+              // إحصائيات سريعة
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: stats.entries.map((e) {
+                  final color = _getTypeColor(e.key);
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: color.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_getTypeIcon(e.key), size: 14, color: color),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${e.value} ${_getTypeArabicName(e.key)}',
+                          style: GoogleFonts.tajawal(fontSize: 11, color: color, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
             ],
           ),
@@ -728,7 +775,8 @@ class UnifiedInputHandler {
               child: Text('حفظ الكل', style: GoogleFonts.tajawal(color: Colors.white)),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -1005,6 +1053,28 @@ class UnifiedInputHandler {
       case 'quote': return 'اقتباس';
       case 'diary': return 'يومية';
       default: return 'ملاحظة';
+    }
+  }
+
+  Color _getTypeColor(String? type) {
+    switch (type) {
+      case 'task': return const Color(0xFF58CC02);
+      case 'appointment': return const Color(0xFFFFB800);
+      case 'expense': return Colors.blue;
+      case 'quote': return Colors.purple;
+      case 'diary': return const Color(0xFF3F51B5);
+      default: return Colors.grey;
+    }
+  }
+
+  IconData _getTypeIcon(String? type) {
+    switch (type) {
+      case 'task': return Icons.task_alt_rounded;
+      case 'appointment': return Icons.calendar_month_rounded;
+      case 'expense': return Icons.attach_money_rounded;
+      case 'quote': return Icons.format_quote_rounded;
+      case 'diary': return Icons.book_rounded;
+      default: return Icons.note_rounded;
     }
   }
 
