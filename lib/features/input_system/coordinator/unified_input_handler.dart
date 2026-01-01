@@ -23,7 +23,7 @@ import '../../dashboard/quotes_diary/models/entry_model.dart';
 // Cloudinary Configuration
 final _cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
 
-// Gemini API Key - Gemini 2.5 Flash
+// Gemini API Key - Gemini 1.5 Flash (Free)
 const String _geminiApiKey = 'AIzaSyDyTexcA5nzBO54Hq9KJ-gzgfVGMhsjrs0';
 
 /// أنواع العناصر المستخرجة
@@ -101,7 +101,7 @@ class UnifiedInputHandler {
   }
 
   void _initializeGemini() {
-    _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: _geminiApiKey);
+    _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _geminiApiKey);
   }
 
   void dispose() {
@@ -205,7 +205,7 @@ class UnifiedInputHandler {
                     style: GoogleFonts.tajawal(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   Text(
-                    'Gemini 2.5 Flash',
+                    'Gemini 1.5 Flash',
                     style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey),
                   ),
                 ],
@@ -316,7 +316,7 @@ class UnifiedInputHandler {
     );
   }
 
-  /// معالجة النص بالذكاء الاصطناعي - Gemini 2.5 Flash
+  /// معالجة النص بالذكاء الاصطناعي - Gemini 1.5 Flash
   Future<void> _processTextWithAI(String text) async {
     _showLoadingDialog('الذكاء الاصطناعي يحلل النص...');
 
