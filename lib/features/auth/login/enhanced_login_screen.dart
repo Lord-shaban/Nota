@@ -4,6 +4,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nota/core/theme/app_theme.dart';
 import 'package:nota/features/auth/services/auth_service.dart';
+import 'package:nota/features/auth/services/social_auth_service.dart';
 import 'package:nota/features/auth/register/enhanced_register_screen.dart';
 import 'package:nota/features/dashboard/home_screen.dart';
 import 'package:nota/features/auth/login/enhanced_forgot_password_dialog.dart';
@@ -36,8 +37,13 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
   final _passwordFocusNode = FocusNode();
   
   bool _isLoading = false;
+  bool _isSocialLoading = false;
+  String? _loadingProvider;
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  bool _biometricAvailable = false;
+  
+  final SocialAuthService _socialAuthService = SocialAuthService();
   
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -55,6 +61,14 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
   void initState() {
     super.initState();
     _initAnimations();
+    _checkBiometricAvailability();
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final available = await _socialAuthService.isBiometricAvailable();
+    if (mounted) {
+      setState(() => _biometricAvailable = available);
+    }
   }
 
   void _initAnimations() {
@@ -176,6 +190,221 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         margin: const EdgeInsets.all(16),
       ),
     );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: _primaryColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _navigateToHome() {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.2, 0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
+  }
+
+  // ============================================
+  // SOCIAL LOGIN HANDLERS
+  // ============================================
+
+  Future<void> _handleGoogleSignIn() async {
+    if (_isSocialLoading) return;
+    
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSocialLoading = true;
+      _loadingProvider = 'google';
+    });
+
+    try {
+      final userCredential = await _socialAuthService.signInWithGoogle();
+      
+      if (userCredential != null && mounted) {
+        HapticFeedback.heavyImpact();
+        _showSuccessSnackBar('تم تسجيل الدخول بنجاح! 🎉');
+        await Future.delayed(const Duration(milliseconds: 500));
+        _navigateToHome();
+      }
+    } catch (e) {
+      if (mounted) {
+        HapticFeedback.vibrate();
+        _showErrorSnackBar(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSocialLoading = false;
+          _loadingProvider = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    if (_isSocialLoading) return;
+    
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSocialLoading = true;
+      _loadingProvider = 'facebook';
+    });
+
+    try {
+      final userCredential = await _socialAuthService.signInWithFacebook();
+      
+      if (userCredential != null && mounted) {
+        HapticFeedback.heavyImpact();
+        _showSuccessSnackBar('تم تسجيل الدخول بنجاح! 🎉');
+        await Future.delayed(const Duration(milliseconds: 500));
+        _navigateToHome();
+      }
+    } catch (e) {
+      if (mounted) {
+        HapticFeedback.vibrate();
+        _showErrorSnackBar(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSocialLoading = false;
+          _loadingProvider = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleGitHubSignIn() async {
+    if (_isSocialLoading) return;
+    
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSocialLoading = true;
+      _loadingProvider = 'github';
+    });
+
+    try {
+      final userCredential = await _socialAuthService.signInWithGitHub();
+      
+      if (userCredential != null && mounted) {
+        HapticFeedback.heavyImpact();
+        _showSuccessSnackBar('تم تسجيل الدخول بنجاح! 🎉');
+        await Future.delayed(const Duration(milliseconds: 500));
+        _navigateToHome();
+      }
+    } catch (e) {
+      if (mounted) {
+        HapticFeedback.vibrate();
+        _showErrorSnackBar(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSocialLoading = false;
+          _loadingProvider = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    if (_isSocialLoading) return;
+    
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSocialLoading = true;
+      _loadingProvider = 'apple';
+    });
+
+    try {
+      final userCredential = await _socialAuthService.signInWithApple();
+      
+      if (userCredential != null && mounted) {
+        HapticFeedback.heavyImpact();
+        _showSuccessSnackBar('تم تسجيل الدخول بنجاح! 🎉');
+        await Future.delayed(const Duration(milliseconds: 500));
+        _navigateToHome();
+      }
+    } catch (e) {
+      if (mounted) {
+        HapticFeedback.vibrate();
+        _showErrorSnackBar(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSocialLoading = false;
+          _loadingProvider = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleBiometricSignIn() async {
+    if (_isSocialLoading) return;
+    
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSocialLoading = true;
+      _loadingProvider = 'biometric';
+    });
+
+    try {
+      final success = await _socialAuthService.biometricSignIn();
+      
+      if (success && mounted) {
+        HapticFeedback.heavyImpact();
+        _showSuccessSnackBar('تم تسجيل الدخول بنجاح! 🎉');
+        await Future.delayed(const Duration(milliseconds: 500));
+        _navigateToHome();
+      } else if (mounted) {
+        _showErrorSnackBar('فشل تسجيل الدخول بالبصمة. قم بتسجيل الدخول بطريقة أخرى.');
+      }
+    } catch (e) {
+      if (mounted) {
+        HapticFeedback.vibrate();
+        _showErrorSnackBar(e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSocialLoading = false;
+          _loadingProvider = null;
+        });
+      }
+    }
   }
 
   void _navigateToRegister() {
@@ -581,54 +810,59 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         
         const SizedBox(height: 20),
         
-        // Social buttons
+        // Social buttons - First row (Google, Apple, Facebook)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildSocialButton(
               icon: Icons.g_mobiledata_rounded,
+              label: 'Google',
               color: Colors.red[600]!,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('قريباً...', style: GoogleFonts.tajawal()),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-              },
+              isLoading: _loadingProvider == 'google',
+              onTap: _handleGoogleSignIn,
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 16),
             _buildSocialButton(
               icon: Icons.apple_rounded,
+              label: 'Apple',
               color: Colors.black,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('قريباً...', style: GoogleFonts.tajawal()),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-              },
+              isLoading: _loadingProvider == 'apple',
+              onTap: _handleAppleSignIn,
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 16),
             _buildSocialButton(
-              icon: Icons.fingerprint_rounded,
-              color: _primaryColor,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('قريباً...', style: GoogleFonts.tajawal()),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-              },
+              icon: Icons.facebook_rounded,
+              label: 'Facebook',
+              color: const Color(0xFF1877F2),
+              isLoading: _loadingProvider == 'facebook',
+              onTap: _handleFacebookSignIn,
             ),
+          ],
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Social buttons - Second row (GitHub, Biometric)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSocialButton(
+              icon: Icons.code_rounded,
+              label: 'GitHub',
+              color: const Color(0xFF333333),
+              isLoading: _loadingProvider == 'github',
+              onTap: _handleGitHubSignIn,
+            ),
+            if (_biometricAvailable) ...[
+              const SizedBox(width: 16),
+              _buildSocialButton(
+                icon: Icons.fingerprint_rounded,
+                label: 'بصمة',
+                color: _primaryColor,
+                isLoading: _loadingProvider == 'biometric',
+                onTap: _handleBiometricSignIn,
+              ),
+            ],
           ],
         ),
       ],
@@ -637,28 +871,59 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
 
   Widget _buildSocialButton({
     required IconData icon,
+    required String label,
     required Color color,
     required VoidCallback onTap,
+    bool isLoading = false,
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: _isSocialLoading ? null : onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 60,
-        height: 60,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 70,
+        height: 70,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isLoading ? color.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(
+            color: isLoading ? color : Colors.grey[200]!,
+            width: isLoading ? 2 : 1,
+          ),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+            if (!isLoading)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              )
+            else
+              Icon(icon, color: color, size: 26),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.tajawal(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
-        child: Icon(icon, color: color, size: 30),
       ),
     );
   }
