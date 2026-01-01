@@ -1282,35 +1282,33 @@ class UnifiedInputHandler {
   }
 
   /// حفظ مهمة مع المجموعة
+  /// حفظ مهمة - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveTaskWithGroup(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    // البحث عن مجموعة أو إنشاء واحدة افتراضية
+    // البحث عن مجموعة أو إنشاء واحدة افتراضية في task_groups
     String? groupId;
     final groupsSnapshot = await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('taskGroups')
+        .collection('task_groups')
+        .where('userId', isEqualTo: userId)
         .limit(1)
         .get();
 
     if (groupsSnapshot.docs.isNotEmpty) {
       groupId = groupsSnapshot.docs.first.id;
     } else {
+      // إنشاء مجموعة افتراضية جديدة
       final newGroupRef = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('taskGroups')
+          .collection('task_groups')
           .add({
         'title': '📝 عام',
         'icon': '📝',
         'description': 'مجموعة عامة للمهام',
         'color': '#58CC02',
         'userId': userId,
-        'totalTasks': 0,
+        'totalTasks': 1,
         'completedTasks': 0,
-        'taskIds': [],
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -1326,27 +1324,37 @@ class UnifiedInputHandler {
       }
     }
 
-    final task = TaskModel(
-      id: '',
-      title: item['title'] ?? '',
-      description: item['content'] ?? '',
-      groupId: groupId,
-      priority: item['priority'] ?? 'medium',
-      dueDate: dueDate,
-      tags: [],
-      notes: '',
-      isCompleted: false,
-      createdAt: DateTime.now(),
-      userId: userId,
-    );
+    final now = DateTime.now();
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('taskGroups')
-        .doc(groupId)
-        .collection('tasks')
-        .add(task.toFirestore());
+    // حفظ المهمة في collection notes (نظام التابات الجديد)
+    final taskData = {
+      'title': item['title'] ?? '',
+      'description': item['content'] ?? '',
+      'priority': item['priority'] ?? 'medium',
+      'dueDate': dueDate != null ? Timestamp.fromDate(dueDate) : null,
+      'notes': '',
+      'tags': <String>[],
+      'userId': userId,
+      'groupId': groupId,
+      'type': 'task',
+      'isCompleted': false,
+      'createdAt': Timestamp.fromDate(now),
+      'updatedAt': Timestamp.fromDate(now),
+      'sortOrder': 0,
+    };
+
+    await _firestore.collection('notes').add(taskData);
+
+    // تحديث إحصائيات المجموعة
+    final groupRef = _firestore.collection('task_groups').doc(groupId);
+    await _firestore.runTransaction((transaction) async {
+      final groupDoc = await transaction.get(groupRef);
+      final currentTotal = groupDoc.data()?['totalTasks'] ?? 0;
+      transaction.update(groupRef, {
+        'totalTasks': currentTotal + 1,
+        'updatedAt': Timestamp.fromDate(now),
+      });
+    });
   }
 
   /// حفظ موعد
@@ -1404,68 +1412,80 @@ class UnifiedInputHandler {
     });
   }
 
-  /// حفظ اقتباس
+  /// حفظ اقتباس - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveQuote(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
     // تحويل فئة الاقتباس
-    String category = 'other';
+    QuoteCategory category = QuoteCategory.other;
     if (item['category'] != null) {
-      final catMap = {
-        'motivation': 'motivation',
-        'wisdom': 'wisdom',
-        'love': 'love',
-        'success': 'success',
-        'life': 'life',
-        'happiness': 'happiness',
-        'faith': 'faith',
-        'friendship': 'friendship',
-        'knowledge': 'knowledge',
-      };
-      category = catMap[item['category']] ?? 'other';
+      try {
+        category = QuoteCategory.values.firstWhere(
+          (e) => e.name == item['category'],
+          orElse: () => QuoteCategory.other,
+        );
+      } catch (e) {
+        category = QuoteCategory.other;
+      }
     }
 
-    await _firestore.collection('users').doc(userId).collection('entries').add({
-      'type': 'quote',
-      'content': item['content'] ?? item['title'] ?? '',
-      'author': item['author'] ?? '',
-      'category': category,
-      'isFavorite': false,
-      'fontFamily': 'Tajawal',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final now = DateTime.now();
+    
+    // إنشاء نموذج الاقتباس باستخدام EntryModel (نظام التابات الجديد)
+    final entry = EntryModel(
+      userId: userId,
+      type: EntryType.quote,
+      content: item['content'] ?? item['title'] ?? '',
+      author: item['author'],
+      quoteCategory: category,
+      date: now,
+      createdAt: now,
+      isFavorite: false,
+      isPrivate: true,
+      tags: <String>[],
+    );
+
+    // حفظ في collection notes (نظام التابات الجديد)
+    await _firestore.collection('notes').add(entry.toFirestore());
   }
 
-  /// حفظ يومية
+  /// حفظ يومية - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveDiary(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
     // تحويل المزاج
-    String mood = 'neutral';
+    DiaryMood mood = DiaryMood.neutral;
     if (item['mood'] != null) {
-      final moodMap = {
-        'amazing': 'amazing',
-        'happy': 'happy',
-        'neutral': 'neutral',
-        'sad': 'sad',
-        'terrible': 'terrible',
-      };
-      mood = moodMap[item['mood']] ?? 'neutral';
+      try {
+        mood = DiaryMood.values.firstWhere(
+          (e) => e.name == item['mood'],
+          orElse: () => DiaryMood.neutral,
+        );
+      } catch (e) {
+        mood = DiaryMood.neutral;
+      }
     }
 
-    await _firestore.collection('users').doc(userId).collection('entries').add({
-      'type': 'diary',
-      'content': item['content'] ?? item['title'] ?? '',
-      'mood': mood,
-      'tags': <String>[],
-      'isFavorite': false,
-      'fontFamily': 'Tajawal',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final now = DateTime.now();
+    
+    // إنشاء نموذج اليومية باستخدام EntryModel (نظام التابات الجديد)
+    final entry = EntryModel(
+      userId: userId,
+      type: EntryType.diary,
+      content: item['content'] ?? '',
+      title: item['title'],
+      mood: mood,
+      date: now,
+      createdAt: now,
+      isFavorite: false,
+      isPrivate: true,
+      tags: <String>[],
+    );
+
+    // حفظ في collection notes (نظام التابات الجديد)
+    await _firestore.collection('notes').add(entry.toFirestore());
   }
 
   /// حفظ كملاحظة عادية
