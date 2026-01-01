@@ -344,7 +344,7 @@ class UnifiedInputHandler {
 
 3️⃣ المصروفات (expense):
    - أي ذكر للمال أو الدفع: دفعت، اشتريت، صرفت، حولت، سددت
-   - العملات: جنيه، ريال، دولار، ر.س، ج.م، $
+   - العملات: جنيه، ريال، دولار، ر.س، ج.م، \$
 
 4️⃣ الاقتباسات (quote):
    - عبارات ملهمة، حكم، أقوال مأثورة
@@ -374,7 +374,7 @@ class UnifiedInputHandler {
       "date": "YYYY-MM-DD أو null",
       "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "ر.س/جنيه/$/€ أو null",
+      "currency": "ر.س/جنيه/\$/€ أو null",
       "suggestedGroup": "اسم المجموعة مع الإيموجي (للمهام فقط)",
       "priority": "urgent/high/medium/low (للمهام فقط)",
       "category": "فئة الاقتباس (للاقتباسات فقط)",
