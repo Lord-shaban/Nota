@@ -101,7 +101,15 @@ class UnifiedInputHandler {
   }
 
   void _initializeGemini() {
-    _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _geminiApiKey);
+    // استخدام gemini-1.5-flash-latest للحصول على أحدث إصدار مستقر
+    _model = GenerativeModel(
+      model: 'gemini-1.5-flash-latest',
+      apiKey: _geminiApiKey,
+      generationConfig: GenerationConfig(
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      ),
+    );
   }
 
   void dispose() {
@@ -420,15 +428,38 @@ class UnifiedInputHandler {
           SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('AI Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
       if (context.mounted) {
         Navigator.pop(context);
+        
+        // عرض رسالة خطأ مفصلة
+        String errorMessage = 'خطأ في الاتصال';
+        if (e.toString().contains('API key')) {
+          errorMessage = 'خطأ في مفتاح API';
+        } else if (e.toString().contains('network') || e.toString().contains('SocketException')) {
+          errorMessage = 'لا يوجد اتصال بالإنترنت';
+        } else if (e.toString().contains('quota') || e.toString().contains('limit')) {
+          errorMessage = 'تم تجاوز الحد المسموح';
+        } else if (e.toString().contains('model')) {
+          errorMessage = 'الموديل غير متاح';
+        }
+        
         await _saveAsNote(text);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في الاتصال - تم الحفظ كملاحظة', style: GoogleFonts.tajawal()),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$errorMessage - تم الحفظ كملاحظة', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                Text(e.toString().length > 100 ? '${e.toString().substring(0, 100)}...' : e.toString(), 
+                     style: GoogleFonts.tajawal(fontSize: 10)),
+              ],
+            ),
             backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
