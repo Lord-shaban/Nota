@@ -23,8 +23,8 @@ import '../../dashboard/quotes_diary/models/entry_model.dart';
 // Cloudinary Configuration
 final _cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
 
-// Gemini API Key - Gemini 1.5 Flash (Free)
-const String _geminiApiKey = 'AIzaSyDyTexcA5nzBO54Hq9KJ-gzgfVGMhsjrs0';
+// Gemini API Key - Gemini 2.5 Flash
+const String _geminiApiKey = 'AIzaSyD6U4j1UeJwFWXgNtila4uC07IOcf77mcw';
 
 /// أنواع العناصر المستخرجة
 enum ExtractedItemType {
@@ -101,9 +101,9 @@ class UnifiedInputHandler {
   }
 
   void _initializeGemini() {
-    // استخدام gemini-1.5-flash-latest للحصول على أحدث إصدار مستقر
+    // استخدام Gemini 2.5 Flash - أحدث وأقوى موديل
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-2.5-flash',
       apiKey: _geminiApiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7,
@@ -213,7 +213,7 @@ class UnifiedInputHandler {
                     style: GoogleFonts.tajawal(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   Text(
-                    'Gemini 1.5 Flash',
+                    'Gemini 2.5 Flash',
                     style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey),
                   ),
                 ],
@@ -324,7 +324,7 @@ class UnifiedInputHandler {
     );
   }
 
-  /// معالجة النص بالذكاء الاصطناعي - Gemini 1.5 Flash
+  /// معالجة النص بالذكاء الاصطناعي - Gemini 2.5 Flash
   Future<void> _processTextWithAI(String text) async {
     _showLoadingDialog('الذكاء الاصطناعي يحلل النص...');
 
