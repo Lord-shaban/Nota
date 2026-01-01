@@ -18,12 +18,58 @@ import '../../dashboard/tasks/create_task_group_dialog.dart';
 import '../../dashboard/appointments/widgets/add_appointment_dialog.dart';
 import '../../dashboard/expenses/widgets/add_expense_dialog.dart';
 import '../../dashboard/quotes_diary/widgets/add_entry_dialog.dart';
+import '../../dashboard/quotes_diary/models/entry_model.dart';
 
 // Cloudinary Configuration
 final _cloudinary = CloudinaryPublic('dlbwwddv5', 'chat123', cache: false);
 
-// Gemini API Key
-const String _geminiApiKey = 'AIzaSyDyTexcA5nzBO54Hq9KJ-gzgfVGMhsjrs0';
+// Gemini API Key - Gemini 2.5 Flash
+const String _geminiApiKey = 'AIzaSyD6U4j1UeJwFWXgNtila4uC07IOcf77mcw';
+
+/// أنواع العناصر المستخرجة
+enum ExtractedItemType {
+  task,
+  appointment,
+  expense,
+  quote,
+  diary,
+  note,
+}
+
+extension ExtractedItemTypeExtension on ExtractedItemType {
+  String get arabicName {
+    switch (this) {
+      case ExtractedItemType.task: return 'مهمة';
+      case ExtractedItemType.appointment: return 'موعد';
+      case ExtractedItemType.expense: return 'مصروف';
+      case ExtractedItemType.quote: return 'اقتباس';
+      case ExtractedItemType.diary: return 'يومية';
+      case ExtractedItemType.note: return 'ملاحظة';
+    }
+  }
+  
+  IconData get icon {
+    switch (this) {
+      case ExtractedItemType.task: return Icons.task_alt_rounded;
+      case ExtractedItemType.appointment: return Icons.calendar_month_rounded;
+      case ExtractedItemType.expense: return Icons.attach_money_rounded;
+      case ExtractedItemType.quote: return Icons.format_quote_rounded;
+      case ExtractedItemType.diary: return Icons.book_rounded;
+      case ExtractedItemType.note: return Icons.note_rounded;
+    }
+  }
+  
+  Color get color {
+    switch (this) {
+      case ExtractedItemType.task: return const Color(0xFF58CC02);
+      case ExtractedItemType.appointment: return const Color(0xFFFFB800);
+      case ExtractedItemType.expense: return Colors.blue;
+      case ExtractedItemType.quote: return Colors.purple;
+      case ExtractedItemType.diary: return const Color(0xFF3F51B5);
+      case ExtractedItemType.note: return Colors.grey;
+    }
+  }
+}
 
 /// معالج الإدخال الموحد - يدير جميع طرق الإدخال (نص، صوت، صورة، كاميرا)
 /// ويوجه البيانات إلى التابات المناسبة
@@ -55,7 +101,15 @@ class UnifiedInputHandler {
   }
 
   void _initializeGemini() {
-    _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: _geminiApiKey);
+    // استخدام Gemini 2.5 Flash - أحدث وأقوى موديل
+    _model = GenerativeModel(
+      model: 'gemini-2.5-flash',
+      apiKey: _geminiApiKey,
+      generationConfig: GenerationConfig(
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      ),
+    );
   }
 
   void dispose() {
@@ -114,7 +168,13 @@ class UnifiedInputHandler {
       case 'quote':
         showDialog(
           context: context,
-          builder: (ctx) => const AddEntryDialog(),
+          builder: (ctx) => const AddEntryDialog(initialType: EntryType.quote),
+        );
+        break;
+      case 'diary':
+        showDialog(
+          context: context,
+          builder: (ctx) => const AddEntryDialog(initialType: EntryType.diary),
         );
         break;
     }
@@ -133,7 +193,9 @@ class UnifiedInputHandler {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF58CC02).withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF58CC02).withOpacity(0.1), const Color(0xFF4CAF50).withOpacity(0.1)],
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
@@ -142,53 +204,70 @@ class UnifiedInputHandler {
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              'إدخال ذكي',
-              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: noteController,
-              decoration: InputDecoration(
-                hintText: 'اكتب أي شيء وسأستخرجه تلقائياً...',
-                hintStyle: GoogleFonts.tajawal(color: Colors.grey),
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 5,
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F8F8),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.tips_and_updates,
-                    size: 16,
-                    color: Color(0xFF58CC02),
+                  Text(
+                    'إدخال ذكي بالـ AI',
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'مثال: اشتري حليب غداً، اجتماع الساعة 3، دفعت 50 جنيه',
-                      style: GoogleFonts.tajawal(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                  Text(
+                    'Gemini 2.5 Flash',
+                    style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ),
             ),
           ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: noteController,
+                decoration: InputDecoration(
+                  hintText: 'اكتب أي شيء وسأستخرجه تلقائياً...',
+                  hintStyle: GoogleFonts.tajawal(color: Colors.grey),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF58CC02), width: 2),
+                  ),
+                ),
+                maxLines: 5,
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              // أمثلة للأنواع المختلفة
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F8F8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.tips_and_updates, size: 16, color: Color(0xFF58CC02)),
+                        const SizedBox(width: 8),
+                        Text('أمثلة للإدخال الذكي:', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildExampleRow('✅', 'اشتري حليب وخبز غداً', 'مهام'),
+                    _buildExampleRow('📅', 'اجتماع العمل الساعة 3 مساءً', 'مواعيد'),
+                    _buildExampleRow('💰', 'دفعت 150 جنيه للفاتورة', 'مصروفات'),
+                    _buildExampleRow('💬', 'النجاح هو الانتقال من فشل إلى فشل', 'اقتباسات'),
+                    _buildExampleRow('📔', 'اليوم كان يوم رائع، شعرت بالسعادة', 'يوميات'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -198,15 +277,20 @@ class UnifiedInputHandler {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF58CC02),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () async {
               if (noteController.text.trim().isEmpty) return;
               Navigator.pop(ctx);
               await _processTextWithAI(noteController.text);
             },
-            child: Text(
-              'تحليل',
-              style: GoogleFonts.tajawal(color: Colors.white),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('تحليل بالـ AI', style: GoogleFonts.tajawal(color: Colors.white)),
+              ],
             ),
           ),
         ],
@@ -214,48 +298,98 @@ class UnifiedInputHandler {
     );
   }
 
-  /// معالجة النص بالذكاء الاصطناعي
+  Widget _buildExampleRow(String emoji, String example, String type) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              example,
+              style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey[700]),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(type, style: GoogleFonts.tajawal(fontSize: 9, color: Colors.grey[600])),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// معالجة النص بالذكاء الاصطناعي - Gemini 2.5 Flash
   Future<void> _processTextWithAI(String text) async {
     _showLoadingDialog('الذكاء الاصطناعي يحلل النص...');
 
     try {
+      final today = DateTime.now();
       final prompt = '''
-قم بتحليل النص التالي واستخراج جميع العناصر منه بدقة:
+أنت مساعد ذكي متخصص في استخراج المعلومات من النصوص العربية والإنجليزية. 
+قم بتحليل النص التالي واستخراج جميع العناصر منه بدقة شديدة.
 
-النص: "$text"
+📅 اليوم هو: ${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}
 
-استخرج العناصر التالية:
-- المهام: أي شيء يحتاج إنجاز (مثل: اشتري، اعمل، راجع، اتصل)
-  * اقترح مجموعة مناسبة للمهمة من: 📚 مذاكرة، 🛒 تسوق، 💼 عمل، 🏠 منزل، 🏋️ رياضة، 🎯 شخصي
-  * حدد الأولوية: urgent (عاجل)، high (عالي)، medium (متوسط)، low (منخفض)
-- المواعيد: أي حدث بتاريخ/وقت (مثل: اجتماع، موعد، غداً، الساعة)
-- المصروفات: أي ذكر للمال (مثل: دفعت، اشتريت، جنيه، ريال، دولار)
-- الاقتباسات: عبارات ملهمة أو حكم
-- الملاحظات: أي شيء آخر
+📝 النص للتحليل:
+"$text"
 
-أرجع JSON فقط بدون أي نص إضافي:
+🎯 استخرج جميع العناصر التالية (يمكن استخراج عناصر متعددة من نفس الفئة):
+
+1️⃣ المهام (task):
+   - أي شيء يحتاج إنجاز: اشتري، اعمل، راجع، اتصل، ارسل، حضر، اكتب، نظف، رتب
+   - المجموعات المتاحة: 📚 مذاكرة، 🛒 تسوق، 💼 عمل، 🏠 منزل، 🏋️ رياضة، 🎯 شخصي، 📝 عام
+   - الأولويات: urgent (عاجل جداً)، high (مهم)، medium (عادي)، low (يمكن تأجيله)
+
+2️⃣ المواعيد (appointment):
+   - أي حدث بتاريخ/وقت محدد: اجتماع، موعد، مقابلة، حجز، رحلة
+   - الكلمات الدالة: غداً، بعد غد، يوم الأحد، الساعة، صباحاً، مساءً
+
+3️⃣ المصروفات (expense):
+   - أي ذكر للمال أو الدفع: دفعت، اشتريت، صرفت، حولت، سددت
+   - العملات: جنيه، ريال، دولار، ر.س، ج.م، \$
+
+4️⃣ الاقتباسات (quote):
+   - عبارات ملهمة، حكم، أقوال مأثورة
+   - نصائح حكيمة، كلام محفز
+   - الفئات: motivation (تحفيز)، wisdom (حكمة)، love (حب)، success (نجاح)، life (حياة)، happiness (سعادة)، faith (إيمان)، other (أخرى)
+
+5️⃣ اليوميات (diary):
+   - مشاعر وأحاسيس: سعيد، حزين، متوتر، متحمس
+   - أحداث يومية: حصل اليوم، قابلت، شعرت، أفكر في
+   - الحالة المزاجية: amazing (رائع)، happy (سعيد)، neutral (عادي)، sad (حزين)، terrible (سيء)
+
+⚠️ قواعد مهمة:
+- استخرج كل عنصر على حدة (إذا كان هناك 3 مهام، ارجع 3 items منفصلة)
+- إذا لم يُذكر تاريخ للمهمة/الموعد، استخدم null
+- التاريخ بصيغة YYYY-MM-DD فقط
+- الوقت بصيغة 24 ساعة HH:MM فقط
+- "غداً" = تاريخ الغد، "بعد غد" = بعد يومين
+- إذا النص لا يحتوي على أي من الأنواع السابقة، اعتبره ملاحظة (note)
+
+📤 أرجع JSON صحيح فقط بدون أي نص إضافي:
 {
   "items": [
     {
-      "type": "task",
-      "title": "عنوان قصير (3-5 كلمات)",
-      "content": "المحتوى الكامل",
+      "type": "task/appointment/expense/quote/diary/note",
+      "title": "عنوان قصير وواضح (3-6 كلمات)",
+      "content": "المحتوى الكامل والتفاصيل",
       "date": "YYYY-MM-DD أو null",
       "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "ر.س/جنيه/دولار أو null",
+      "currency": "ر.س/جنيه/\$/€ أو null",
       "suggestedGroup": "اسم المجموعة مع الإيموجي (للمهام فقط)",
-      "priority": "urgent/high/medium/low (للمهام فقط، افتراضي medium)"
+      "priority": "urgent/high/medium/low (للمهام فقط)",
+      "category": "فئة الاقتباس (للاقتباسات فقط)",
+      "mood": "amazing/happy/neutral/sad/terrible (لليوميات فقط)"
     }
   ]
 }
-
-مهم جداً: 
-- أرجع JSON صحيح فقط
-- type يجب أن يكون: task أو appointment أو expense أو quote أو note
-- التاريخ بصيغة YYYY-MM-DD
-- الوقت بصيغة 24 ساعة HH:MM
-- suggestedGroup و priority للمهام فقط
 ''';
 
       final content = [Content.text(prompt)];
@@ -294,15 +428,38 @@ class UnifiedInputHandler {
           SnackBar(content: Text('تم الحفظ كملاحظة عادية', style: GoogleFonts.tajawal())),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('AI Error: $e');
+      debugPrint('Stack Trace: $stackTrace');
       if (context.mounted) {
         Navigator.pop(context);
+        
+        // عرض رسالة خطأ مفصلة
+        String errorMessage = 'خطأ في الاتصال';
+        if (e.toString().contains('API key')) {
+          errorMessage = 'خطأ في مفتاح API';
+        } else if (e.toString().contains('network') || e.toString().contains('SocketException')) {
+          errorMessage = 'لا يوجد اتصال بالإنترنت';
+        } else if (e.toString().contains('quota') || e.toString().contains('limit')) {
+          errorMessage = 'تم تجاوز الحد المسموح';
+        } else if (e.toString().contains('model')) {
+          errorMessage = 'الموديل غير متاح';
+        }
+        
         await _saveAsNote(text);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في الاتصال - تم الحفظ كملاحظة', style: GoogleFonts.tajawal()),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$errorMessage - تم الحفظ كملاحظة', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                Text(e.toString().length > 100 ? '${e.toString().substring(0, 100)}...' : e.toString(), 
+                     style: GoogleFonts.tajawal(fontSize: 10)),
+              ],
+            ),
             backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -352,6 +509,13 @@ class UnifiedInputHandler {
                           ? [const Color(0xFFFFB800), const Color(0xFFFFD900)]
                           : [Colors.grey[400]!, Colors.grey[600]!],
                     ),
+                    boxShadow: _isListening ? [
+                      BoxShadow(
+                        color: const Color(0xFFFFB800).withOpacity(0.4),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ] : null,
                   ),
                   child: Stack(
                     alignment: Alignment.center,
@@ -372,28 +536,59 @@ class UnifiedInputHandler {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  _isListening ? 'أستمع إليك...' : 'اضغط للتحدث',
+                  _isListening ? '🎙️ أستمع إليك...' : 'اضغط للتحدث',
                   style: GoogleFonts.tajawal(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
+                    color: _isListening ? const Color(0xFFFFB800) : Colors.grey[700],
                   ),
                 ),
+                if (_isListening) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'تحدث بوضوح وسأستخرج المهام والمواعيد والمصروفات',
+                    style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8F8F8),
                     borderRadius: BorderRadius.circular(12),
+                    border: _fullSpeechText.isNotEmpty 
+                        ? Border.all(color: const Color(0xFF58CC02).withOpacity(0.3))
+                        : null,
                   ),
                   constraints: const BoxConstraints(minHeight: 100, maxHeight: 200),
                   child: SingleChildScrollView(
-                    child: Text(
-                      _fullSpeechText.isEmpty ? 'ابدأ بالتحدث...' : _fullSpeechText,
-                      style: GoogleFonts.tajawal(
-                        color: _fullSpeechText.isEmpty ? Colors.grey : Colors.black,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.right,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_fullSpeechText.isEmpty)
+                          Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.mic_none_rounded, size: 32, color: Colors.grey[400]),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'ابدأ بالتحدث...',
+                                  style: GoogleFonts.tajawal(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Text(
+                            _fullSpeechText,
+                            style: GoogleFonts.tajawal(
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -495,25 +690,49 @@ class UnifiedInputHandler {
 
           final imageBytes = await File(image.path).readAsBytes();
           
+          final today = DateTime.now();
           final prompt = '''
-قم بتحليل هذه الصورة بدقة واستخرج جميع المعلومات:
-- إذا كانت فاتورة: استخرج المصروفات والمبالغ
-- إذا كانت قائمة مهام: استخرج المهام
-- إذا كانت جدول مواعيد: استخرج المواعيد
-- إذا كانت نص: استخرج المحتوى
+أنت مساعد ذكي متخصص في تحليل الصور واستخراج المعلومات منها.
+قم بتحليل هذه الصورة بدقة واستخراج جميع المعلومات المفيدة.
 
-أرجع JSON فقط:
+📅 اليوم هو: ${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}
+
+🎯 حلل الصورة واستخرج العناصر التالية:
+
+📝 إذا كانت الصورة تحتوي على:
+1. فاتورة/إيصال → استخرج كل المصروفات (expense) مع المبالغ والعملة
+2. قائمة مهام/To-Do List → استخرج كل المهام (task) بشكل منفصل
+3. جدول مواعيد/تقويم → استخرج كل المواعيد (appointment)
+4. نص ملهم/اقتباس → استخرجه كـ (quote) مع الفئة المناسبة
+5. مذكرة/خواطر → استخرجها كـ (diary) مع تحديد المزاج
+6. أي نص آخر → استخرجه كـ (note)
+
+⚠️ مهم جداً:
+- استخرج كل عنصر على حدة (إذا الفاتورة فيها 5 أصناف = 5 expenses منفصلة)
+- اقرأ الأرقام والتواريخ بدقة
+- إذا الصورة فيها نص عربي، اقرأه بشكل صحيح
+
+📤 أرجع JSON صحيح فقط:
 {
   "items": [
     {
-      "type": "task/appointment/expense/quote/note",
-      "title": "عنوان قصير",
-      "content": "المحتوى",
+      "type": "task/appointment/expense/quote/diary/note",
+      "title": "عنوان قصير وواضح",
+      "content": "المحتوى والتفاصيل",
+      "date": "YYYY-MM-DD أو null",
+      "time": "HH:MM أو null",
       "amount": رقم أو null,
-      "currency": "العملة أو null"
+      "currency": "العملة أو null",
+      "suggestedGroup": "للمهام فقط",
+      "priority": "للمهام: urgent/high/medium/low",
+      "category": "للاقتباسات: motivation/wisdom/love/success/life/happiness/faith/other",
+      "mood": "لليوميات: amazing/happy/neutral/sad/terrible"
     }
   ]
 }
+
+إذا لم تستطع قراءة أي محتوى مفيد من الصورة، أرجع:
+{"items": [{"type": "note", "title": "صورة", "content": "صورة تم رفعها"}]}
 ''';
 
           final content = [Content.multi([TextPart(prompt), DataPart('image/jpeg', imageBytes)])];
@@ -572,11 +791,216 @@ class UnifiedInputHandler {
     }
   }
 
+  /// حساب إحصائيات العناصر المستخرجة
+  Map<String, int> _getExtractedItemsStats() {
+    final stats = <String, int>{};
+    for (var item in _extractedItems) {
+      final type = item['type'] ?? 'note';
+      stats[type] = (stats[type] ?? 0) + 1;
+    }
+    return stats;
+  }
+
   /// عرض العناصر المستخرجة للمراجعة
   void _showExtractedItemsDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final stats = _getExtractedItemsStats();
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            contentPadding: EdgeInsets.zero,
+            title: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF58CC02).withOpacity(0.1),
+                    const Color(0xFF58CC02).withOpacity(0.05),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header Row
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF58CC02),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF58CC02).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'تم استخراج ${_extractedItems.length} عنصر',
+                              style: GoogleFonts.tajawal(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: const Color(0xFF1A1A1A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'راجع العناصر قبل الحفظ',
+                              style: GoogleFonts.tajawal(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Stats Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: stats.entries.map((e) {
+                        final color = _getTypeColor(e.key);
+                        return Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_getTypeIcon(e.key), size: 16, color: color),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${e.value}',
+                                style: GoogleFonts.tajawal(
+                                  fontSize: 14,
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _getTypeArabicName(e.key),
+                                style: GoogleFonts.tajawal(
+                                  fontSize: 12,
+                                  color: color.withOpacity(0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            content: Container(
+              width: double.maxFinite,
+              constraints: const BoxConstraints(maxHeight: 380),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: _extractedItems.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) => _buildExtractedItemCard(
+                  _extractedItems[index], 
+                  index, 
+                  onRemove: () => setDialogState(() => _extractedItems.removeAt(index)),
+                  onEdit: () => _showEditItemDialog(index, setDialogState),
+                ),
+              ),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _extractedItems.clear();
+                        Navigator.pop(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                        side: BorderSide(color: Colors.grey[300]!),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('إلغاء', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await _saveMultipleItems();
+                      },
+                      icon: const Icon(Icons.check_rounded, size: 20),
+                      label: Text('حفظ الكل', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF58CC02),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// عرض نافذة تعديل عنصر مستخرج
+  void _showEditItemDialog(int index, StateSetter parentSetState) {
+    final item = _extractedItems[index];
+    final titleController = TextEditingController(text: item['title'] ?? '');
+    final contentController = TextEditingController(text: item['content'] ?? '');
+    final amountController = TextEditingController(text: item['amount']?.toString() ?? '');
+    String selectedType = item['type'] ?? 'note';
+    String? selectedMood = item['mood'];
+    String? selectedPriority = item['priority'];
+
+    showDialog(
+      context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -588,43 +1012,138 @@ class UnifiedInputHandler {
                   color: const Color(0xFF58CC02).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF58CC02)),
+                child: const Icon(Icons.edit, color: Color(0xFF58CC02)),
               ),
               const SizedBox(width: 12),
-              Text(
-                'تم استخراج ${_extractedItems.length} عنصر',
-                style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
-              ),
+              Text('تعديل العنصر', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
             ],
           ),
-          content: Container(
-            width: double.maxFinite,
-            constraints: const BoxConstraints(maxHeight: 400),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _extractedItems.length,
-              itemBuilder: (context, index) => _buildExtractedItemCard(
-                _extractedItems[index], 
-                index, 
-                () => setDialogState(() => _extractedItems.removeAt(index)),
-              ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // نوع العنصر
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'النوع',
+                    labelStyle: GoogleFonts.tajawal(),
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    DropdownMenuItem(value: 'task', child: Row(children: [const Icon(Icons.task_alt, size: 18, color: Color(0xFF58CC02)), const SizedBox(width: 8), Text('مهمة', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'appointment', child: Row(children: [const Icon(Icons.calendar_month, size: 18, color: Color(0xFFFFB800)), const SizedBox(width: 8), Text('موعد', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'expense', child: Row(children: [const Icon(Icons.attach_money, size: 18, color: Colors.blue), const SizedBox(width: 8), Text('مصروف', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'quote', child: Row(children: [const Icon(Icons.format_quote, size: 18, color: Colors.purple), const SizedBox(width: 8), Text('اقتباس', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'diary', child: Row(children: [const Icon(Icons.book, size: 18, color: Color(0xFF3F51B5)), const SizedBox(width: 8), Text('يومية', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'note', child: Row(children: [const Icon(Icons.note, size: 18, color: Colors.grey), const SizedBox(width: 8), Text('ملاحظة', style: GoogleFonts.tajawal())])),
+                  ],
+                  onChanged: (value) => setDialogState(() => selectedType = value ?? 'note'),
+                ),
+                const SizedBox(height: 16),
+                
+                // العنوان
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: 'العنوان',
+                    labelStyle: GoogleFonts.tajawal(),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // المحتوى
+                TextField(
+                  controller: contentController,
+                  decoration: InputDecoration(
+                    labelText: 'المحتوى',
+                    labelStyle: GoogleFonts.tajawal(),
+                    border: const OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                
+                // المبلغ (للمصروفات)
+                if (selectedType == 'expense') ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountController,
+                    decoration: InputDecoration(
+                      labelText: 'المبلغ',
+                      labelStyle: GoogleFonts.tajawal(),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.attach_money),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+                
+                // الأولوية (للمهام)
+                if (selectedType == 'task') ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedPriority ?? 'medium',
+                    decoration: InputDecoration(
+                      labelText: 'الأولوية',
+                      labelStyle: GoogleFonts.tajawal(),
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'urgent', child: Text('🔴 عاجل', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'high', child: Text('🟠 عالي', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'medium', child: Text('🟡 متوسط', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'low', child: Text('🟢 منخفض', style: GoogleFonts.tajawal())),
+                    ],
+                    onChanged: (value) => setDialogState(() => selectedPriority = value),
+                  ),
+                ],
+                
+                // المزاج (لليوميات)
+                if (selectedType == 'diary') ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedMood ?? 'neutral',
+                    decoration: InputDecoration(
+                      labelText: 'المزاج',
+                      labelStyle: GoogleFonts.tajawal(),
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'amazing', child: Text('🤩 رائع', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'happy', child: Text('😊 سعيد', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'neutral', child: Text('😐 عادي', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'sad', child: Text('😢 حزين', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'terrible', child: Text('😭 سيء', style: GoogleFonts.tajawal())),
+                    ],
+                    onChanged: (value) => setDialogState(() => selectedMood = value),
+                  ),
+                ],
+              ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                _extractedItems.clear();
-                Navigator.pop(context);
-              },
-              child: Text('إلغاء', style: GoogleFonts.tajawal(color: Colors.grey[600])),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('إلغاء', style: GoogleFonts.tajawal()),
             ),
             ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await _saveMultipleItems();
-              },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
-              child: Text('حفظ الكل', style: GoogleFonts.tajawal(color: Colors.white)),
+              onPressed: () {
+                // تحديث العنصر
+                _extractedItems[index] = {
+                  ...item,
+                  'type': selectedType,
+                  'title': titleController.text.trim(),
+                  'content': contentController.text.trim(),
+                  if (selectedType == 'expense') 'amount': double.tryParse(amountController.text) ?? 0,
+                  if (selectedType == 'task') 'priority': selectedPriority ?? 'medium',
+                  if (selectedType == 'diary') 'mood': selectedMood ?? 'neutral',
+                };
+                Navigator.pop(ctx);
+                parentSetState(() {});
+              },
+              child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
             ),
           ],
         ),
@@ -632,7 +1151,7 @@ class UnifiedInputHandler {
     );
   }
 
-  Widget _buildExtractedItemCard(Map<String, dynamic> item, int index, VoidCallback onRemove) {
+  Widget _buildExtractedItemCard(Map<String, dynamic> item, int index, {required VoidCallback onRemove, required VoidCallback onEdit}) {
     IconData icon;
     Color color;
     switch (item['type']) {
@@ -652,43 +1171,272 @@ class UnifiedInputHandler {
         icon = Icons.format_quote_rounded;
         color = Colors.purple;
         break;
+      case 'diary':
+        icon = Icons.book_rounded;
+        color = const Color(0xFF3F51B5);
+        break;
       default:
         icon = Icons.note_rounded;
         color = Colors.grey;
     }
 
+    // Build info chips
+    List<Widget> infoChips = [];
+    
+    if (item['type'] == 'expense' && item['amount'] != null) {
+      infoChips.add(_buildInfoChip(
+        Icons.payments_outlined,
+        '${item['amount']} ${item['currency'] ?? 'ر.س'}',
+        Colors.blue,
+      ));
+    }
+    
+    if (item['type'] == 'appointment' && item['date'] != null) {
+      infoChips.add(_buildInfoChip(
+        Icons.calendar_today_outlined,
+        item['date'],
+        const Color(0xFFFFB800),
+      ));
+      if (item['time'] != null) {
+        infoChips.add(_buildInfoChip(
+          Icons.access_time_outlined,
+          item['time'],
+          const Color(0xFFFFB800),
+        ));
+      }
+    }
+    
+    if (item['type'] == 'diary' && item['mood'] != null) {
+      infoChips.add(_buildInfoChip(
+        null,
+        _getMoodEmoji(item['mood']),
+        const Color(0xFF3F51B5),
+        isEmoji: true,
+      ));
+    }
+    
+    if (item['type'] == 'task' && item['priority'] != null) {
+      final priorityEmoji = {
+        'urgent': '🔴',
+        'high': '🟠',
+        'medium': '🟡',
+        'low': '🟢',
+      }[item['priority']] ?? '⚪';
+      infoChips.add(_buildInfoChip(
+        null,
+        priorityEmoji,
+        const Color(0xFF58CC02),
+        isEmoji: true,
+      ));
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.25), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(
-          item['title'] ?? 'بدون عنوان',
-          style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          item['content'] ?? '',
-          style: GoogleFonts.tajawal(fontSize: 12),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.close, size: 20),
-          onPressed: onRemove,
-        ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with icon, title and type badge
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 12),
+                // Title and content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item['title'] ?? 'بدون عنوان',
+                              style: GoogleFonts.tajawal(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: const Color(0xFF1A1A1A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              _getTypeArabicName(item['type']),
+                              style: GoogleFonts.tajawal(
+                                fontSize: 11,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (item['content'] != null && item['content'].toString().isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item['content'],
+                          style: GoogleFonts.tajawal(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Info chips and actions row
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 0, 8, 10),
+            child: Row(
+              children: [
+                // Info chips
+                Expanded(
+                  child: infoChips.isNotEmpty 
+                    ? Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: infoChips,
+                      )
+                    : const SizedBox(),
+                ),
+                // Action buttons
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onEdit,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(Icons.edit_outlined, size: 20, color: color),
+                        ),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onRemove,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(Icons.delete_outline, size: 20, color: Colors.red[400]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+  
+  /// بناء شريحة معلومات
+  Widget _buildInfoChip(IconData? icon, String text, Color color, {bool isEmoji = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            text,
+            style: isEmoji 
+              ? const TextStyle(fontSize: 14)
+              : GoogleFonts.tajawal(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getTypeArabicName(String? type) {
+    switch (type) {
+      case 'task': return 'مهمة';
+      case 'appointment': return 'موعد';
+      case 'expense': return 'مصروف';
+      case 'quote': return 'اقتباس';
+      case 'diary': return 'يومية';
+      default: return 'ملاحظة';
+    }
+  }
+
+  Color _getTypeColor(String? type) {
+    switch (type) {
+      case 'task': return const Color(0xFF58CC02);
+      case 'appointment': return const Color(0xFFFFB800);
+      case 'expense': return Colors.blue;
+      case 'quote': return Colors.purple;
+      case 'diary': return const Color(0xFF3F51B5);
+      default: return Colors.grey;
+    }
+  }
+
+  IconData _getTypeIcon(String? type) {
+    switch (type) {
+      case 'task': return Icons.task_alt_rounded;
+      case 'appointment': return Icons.calendar_month_rounded;
+      case 'expense': return Icons.attach_money_rounded;
+      case 'quote': return Icons.format_quote_rounded;
+      case 'diary': return Icons.book_rounded;
+      default: return Icons.note_rounded;
+    }
+  }
+
+  String _getMoodEmoji(String? mood) {
+    switch (mood) {
+      case 'amazing': return '🤩';
+      case 'happy': return '😊';
+      case 'neutral': return '😐';
+      case 'sad': return '😢';
+      case 'terrible': return '😭';
+      default: return '😐';
+    }
   }
 
   /// حفظ عناصر متعددة
@@ -699,20 +1447,30 @@ class UnifiedInputHandler {
     _showLoadingDialog('جاري الحفظ...');
 
     int savedCount = 0;
+    Map<String, int> savedByType = {};
 
     for (var item in _extractedItems) {
-      switch (item['type']) {
+      final type = item['type'] ?? 'note';
+      switch (type) {
         case 'task':
           await _saveTaskWithGroup(item);
+          savedByType['مهام'] = (savedByType['مهام'] ?? 0) + 1;
           break;
         case 'appointment':
           await _saveAppointment(item);
+          savedByType['مواعيد'] = (savedByType['مواعيد'] ?? 0) + 1;
           break;
         case 'expense':
           await _saveExpense(item);
+          savedByType['مصروفات'] = (savedByType['مصروفات'] ?? 0) + 1;
           break;
         case 'quote':
           await _saveQuote(item);
+          savedByType['اقتباسات'] = (savedByType['اقتباسات'] ?? 0) + 1;
+          break;
+        case 'diary':
+          await _saveDiary(item);
+          savedByType['يوميات'] = (savedByType['يوميات'] ?? 0) + 1;
           break;
         default:
           await _firestore.collection('users').doc(userId).collection('notes').add({
@@ -720,6 +1478,7 @@ class UnifiedInputHandler {
             'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
           });
+          savedByType['ملاحظات'] = (savedByType['ملاحظات'] ?? 0) + 1;
       }
       savedCount++;
     }
@@ -728,10 +1487,24 @@ class UnifiedInputHandler {
       Navigator.pop(context);
       _extractedItems.clear();
 
+      // Build detailed message
+      String detailMessage = savedByType.entries
+          .map((e) => '${e.value} ${e.key}')
+          .join(' • ');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم حفظ $savedCount عنصر', style: GoogleFonts.tajawal()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('✅ تم حفظ $savedCount عنصر بنجاح!', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold)),
+              if (detailMessage.isNotEmpty)
+                Text(detailMessage, style: GoogleFonts.tajawal(fontSize: 12)),
+            ],
+          ),
           backgroundColor: const Color(0xFF58CC02),
+          duration: const Duration(seconds: 3),
         ),
       );
 
@@ -740,35 +1513,33 @@ class UnifiedInputHandler {
   }
 
   /// حفظ مهمة مع المجموعة
+  /// حفظ مهمة - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveTaskWithGroup(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    // البحث عن مجموعة أو إنشاء واحدة افتراضية
+    // البحث عن مجموعة أو إنشاء واحدة افتراضية في task_groups
     String? groupId;
     final groupsSnapshot = await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('taskGroups')
+        .collection('task_groups')
+        .where('userId', isEqualTo: userId)
         .limit(1)
         .get();
 
     if (groupsSnapshot.docs.isNotEmpty) {
       groupId = groupsSnapshot.docs.first.id;
     } else {
+      // إنشاء مجموعة افتراضية جديدة
       final newGroupRef = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('taskGroups')
+          .collection('task_groups')
           .add({
         'title': '📝 عام',
         'icon': '📝',
         'description': 'مجموعة عامة للمهام',
         'color': '#58CC02',
         'userId': userId,
-        'totalTasks': 0,
+        'totalTasks': 1,
         'completedTasks': 0,
-        'taskIds': [],
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -784,27 +1555,37 @@ class UnifiedInputHandler {
       }
     }
 
-    final task = TaskModel(
-      id: '',
-      title: item['title'] ?? '',
-      description: item['content'] ?? '',
-      groupId: groupId,
-      priority: item['priority'] ?? 'medium',
-      dueDate: dueDate,
-      tags: [],
-      notes: '',
-      isCompleted: false,
-      createdAt: DateTime.now(),
-      userId: userId,
-    );
+    final now = DateTime.now();
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('taskGroups')
-        .doc(groupId)
-        .collection('tasks')
-        .add(task.toFirestore());
+    // حفظ المهمة في collection notes (نظام التابات الجديد)
+    final taskData = {
+      'title': item['title'] ?? '',
+      'description': item['content'] ?? '',
+      'priority': item['priority'] ?? 'medium',
+      'dueDate': dueDate != null ? Timestamp.fromDate(dueDate) : null,
+      'notes': '',
+      'tags': <String>[],
+      'userId': userId,
+      'groupId': groupId,
+      'type': 'task',
+      'isCompleted': false,
+      'createdAt': Timestamp.fromDate(now),
+      'updatedAt': Timestamp.fromDate(now),
+      'sortOrder': 0,
+    };
+
+    await _firestore.collection('notes').add(taskData);
+
+    // تحديث إحصائيات المجموعة
+    final groupRef = _firestore.collection('task_groups').doc(groupId);
+    await _firestore.runTransaction((transaction) async {
+      final groupDoc = await transaction.get(groupRef);
+      final currentTotal = groupDoc.data()?['totalTasks'] ?? 0;
+      transaction.update(groupRef, {
+        'totalTasks': currentTotal + 1,
+        'updatedAt': Timestamp.fromDate(now),
+      });
+    });
   }
 
   /// حفظ موعد
@@ -843,37 +1624,107 @@ class UnifiedInputHandler {
     });
   }
 
-  /// حفظ مصروف
+  /// حفظ مصروف - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveExpense(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    await _firestore.collection('expenses').add({
+    final now = DateTime.now();
+
+    // حفظ المصروف في collection notes (نظام التابات الجديد)
+    await _firestore.collection('notes').add({
       'title': item['title'] ?? '',
       'description': item['content'] ?? '',
       'amount': (item['amount'] ?? 0).toDouble(),
-      'currency': item['currency'] ?? 'ر.س',
+      'currency': item['currency'] ?? 'EGP',
       'category': 'other',
       'paymentMethod': 'cash',
-      'date': Timestamp.now(),
+      'priority': 'optional',
+      'recurrence': 'none',
+      'date': Timestamp.fromDate(now),
       'userId': userId,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      'type': 'expense',
+      'tags': <String>[],
+      'isRefunded': false,
+      'createdAt': Timestamp.fromDate(now),
+      'updatedAt': Timestamp.fromDate(now),
     });
   }
 
-  /// حفظ اقتباس
+  /// حفظ اقتباس - يستخدم نظام التابات الجديد (notes collection)
   Future<void> _saveQuote(Map<String, dynamic> item) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
 
-    await _firestore.collection('users').doc(userId).collection('notes').add({
-      'type': 'quote',
-      'title': item['title'] ?? '',
-      'content': item['content'] ?? '',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    // تحويل فئة الاقتباس
+    QuoteCategory category = QuoteCategory.other;
+    if (item['category'] != null) {
+      try {
+        category = QuoteCategory.values.firstWhere(
+          (e) => e.name == item['category'],
+          orElse: () => QuoteCategory.other,
+        );
+      } catch (e) {
+        category = QuoteCategory.other;
+      }
+    }
+
+    final now = DateTime.now();
+    
+    // إنشاء نموذج الاقتباس باستخدام EntryModel (نظام التابات الجديد)
+    final entry = EntryModel(
+      userId: userId,
+      type: EntryType.quote,
+      content: item['content'] ?? item['title'] ?? '',
+      author: item['author'],
+      quoteCategory: category,
+      date: now,
+      createdAt: now,
+      isFavorite: false,
+      isPrivate: true,
+      tags: <String>[],
+    );
+
+    // حفظ في collection notes (نظام التابات الجديد)
+    await _firestore.collection('notes').add(entry.toFirestore());
+  }
+
+  /// حفظ يومية - يستخدم نظام التابات الجديد (notes collection)
+  Future<void> _saveDiary(Map<String, dynamic> item) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    // تحويل المزاج
+    DiaryMood mood = DiaryMood.neutral;
+    if (item['mood'] != null) {
+      try {
+        mood = DiaryMood.values.firstWhere(
+          (e) => e.name == item['mood'],
+          orElse: () => DiaryMood.neutral,
+        );
+      } catch (e) {
+        mood = DiaryMood.neutral;
+      }
+    }
+
+    final now = DateTime.now();
+    
+    // إنشاء نموذج اليومية باستخدام EntryModel (نظام التابات الجديد)
+    final entry = EntryModel(
+      userId: userId,
+      type: EntryType.diary,
+      content: item['content'] ?? '',
+      title: item['title'],
+      mood: mood,
+      date: now,
+      createdAt: now,
+      isFavorite: false,
+      isPrivate: true,
+      tags: <String>[],
+    );
+
+    // حفظ في collection notes (نظام التابات الجديد)
+    await _firestore.collection('notes').add(entry.toFirestore());
   }
 
   /// حفظ كملاحظة عادية
@@ -1228,12 +2079,16 @@ class _QuickAddSheet extends StatelessWidget {
           const SizedBox(height: 12),
           GridView.count(
             shrinkWrap: true,
-            crossAxisCount: 4,
+            crossAxisCount: 5,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 4,
+            childAspectRatio: 0.9,
             children: [
               _buildQuickAddOption(Icons.add_task_rounded, 'مهمة', const Color(0xFF58CC02), () => onManualAdd('task')),
               _buildQuickAddOption(Icons.event_rounded, 'موعد', const Color(0xFFFFB800), () => onManualAdd('appointment')),
               _buildQuickAddOption(Icons.receipt_long_rounded, 'مصروف', Colors.blue, () => onManualAdd('expense')),
               _buildQuickAddOption(Icons.format_quote_rounded, 'اقتباس', Colors.purple, () => onManualAdd('quote')),
+              _buildQuickAddOption(Icons.book_rounded, 'يومية', const Color(0xFF3F51B5), () => onManualAdd('diary')),
             ],
           ),
           const SizedBox(height: 20),
@@ -1271,15 +2126,15 @@ class _QuickAddSheet extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 8),
-          Text(label, style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          Text(label, style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w500)),
         ],
       ),
     );
