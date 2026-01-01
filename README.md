@@ -185,7 +185,7 @@ All data synced with **Firebase** in real-time. Access from any device, anytime.
 <td align="center"><strong>AI Input</strong></td>
 <td align="center"><strong>Tasks</strong></td>
 <td align="center"><strong>Appointments</strong></td>
-<td align="center"><strong>Qoutes</strong></td>
+<td align="center"><strong>Quotes</strong></td>
 </tr>
 <tr>
 <td><img src="docs/screenshots/dashboard.png" width="180"/></td>
@@ -683,6 +683,7 @@ It helps us grow and motivates the team to keep improving.
 [![Gemini](https://img.shields.io/badge/AI_by-Gemini-8E75B2?style=flat&logo=google)](https://ai.google.dev)
 
 </div>
+
 
 
 
