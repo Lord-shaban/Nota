@@ -185,7 +185,9 @@ class UnifiedInputHandler {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF58CC02).withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF58CC02).withOpacity(0.1), const Color(0xFF4CAF50).withOpacity(0.1)],
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
@@ -194,53 +196,70 @@ class UnifiedInputHandler {
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              'إدخال ذكي',
-              style: GoogleFonts.tajawal(fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: noteController,
-              decoration: InputDecoration(
-                hintText: 'اكتب أي شيء وسأستخرجه تلقائياً...',
-                hintStyle: GoogleFonts.tajawal(color: Colors.grey),
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 5,
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F8F8),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.tips_and_updates,
-                    size: 16,
-                    color: Color(0xFF58CC02),
+                  Text(
+                    'إدخال ذكي بالـ AI',
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'مثال: اشتري حليب غداً، اجتماع الساعة 3، دفعت 50 جنيه',
-                      style: GoogleFonts.tajawal(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                  Text(
+                    'Gemini 2.5 Flash',
+                    style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ),
             ),
           ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: noteController,
+                decoration: InputDecoration(
+                  hintText: 'اكتب أي شيء وسأستخرجه تلقائياً...',
+                  hintStyle: GoogleFonts.tajawal(color: Colors.grey),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF58CC02), width: 2),
+                  ),
+                ),
+                maxLines: 5,
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              // أمثلة للأنواع المختلفة
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F8F8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.tips_and_updates, size: 16, color: Color(0xFF58CC02)),
+                        const SizedBox(width: 8),
+                        Text('أمثلة للإدخال الذكي:', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildExampleRow('✅', 'اشتري حليب وخبز غداً', 'مهام'),
+                    _buildExampleRow('📅', 'اجتماع العمل الساعة 3 مساءً', 'مواعيد'),
+                    _buildExampleRow('💰', 'دفعت 150 جنيه للفاتورة', 'مصروفات'),
+                    _buildExampleRow('💬', 'النجاح هو الانتقال من فشل إلى فشل', 'اقتباسات'),
+                    _buildExampleRow('📔', 'اليوم كان يوم رائع، شعرت بالسعادة', 'يوميات'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -250,16 +269,47 @@ class UnifiedInputHandler {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF58CC02),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () async {
               if (noteController.text.trim().isEmpty) return;
               Navigator.pop(ctx);
               await _processTextWithAI(noteController.text);
             },
-            child: Text(
-              'تحليل',
-              style: GoogleFonts.tajawal(color: Colors.white),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('تحليل بالـ AI', style: GoogleFonts.tajawal(color: Colors.white)),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExampleRow(String emoji, String example, String type) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              example,
+              style: GoogleFonts.tajawal(fontSize: 11, color: Colors.grey[700]),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(type, style: GoogleFonts.tajawal(fontSize: 9, color: Colors.grey[600])),
           ),
         ],
       ),
