@@ -43,7 +43,11 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
   bool _rememberMe = false;
   bool _biometricAvailable = false;
   
-  final SocialAuthService _socialAuthService = SocialAuthService();
+  SocialAuthService? _socialAuthServiceInstance;
+  SocialAuthService get _socialAuthService {
+    _socialAuthServiceInstance ??= SocialAuthService();
+    return _socialAuthServiceInstance!;
+  }
   
   late AnimationController _fadeController;
   late AnimationController _slideController;

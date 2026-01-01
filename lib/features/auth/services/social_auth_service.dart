@@ -14,17 +14,31 @@ import '../../../core/models/user_model.dart';
 /// Co-authored-by: abdelrahman hesham
 /// Co-authored-by: ALi Sameh
 class SocialAuthService {
-  // Singleton pattern
-  static final SocialAuthService _instance = SocialAuthService._internal();
-  factory SocialAuthService() => _instance;
+  // Singleton pattern with lazy initialization
+  static SocialAuthService? _instance;
+  
+  factory SocialAuthService() {
+    _instance ??= SocialAuthService._internal();
+    return _instance!;
+  }
+  
   SocialAuthService._internal();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-  );
-  final LocalAuthentication _localAuth = LocalAuthentication();
+  // Lazy initialization to avoid Firebase access during tests
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  
+  GoogleSignIn? _googleSignIn;
+  GoogleSignIn get googleSignIn {
+    _googleSignIn ??= GoogleSignIn(scopes: ['email', 'profile']);
+    return _googleSignIn!;
+  }
+  
+  LocalAuthentication? _localAuth;
+  LocalAuthentication get localAuth {
+    _localAuth ??= LocalAuthentication();
+    return _localAuth!;
+  }
 
   // ============================================
   // GOOGLE SIGN IN
@@ -34,7 +48,7 @@ class SocialAuthService {
   Future<UserCredential?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
         // User cancelled the sign-in
@@ -75,14 +89,14 @@ class SocialAuthService {
   /// Sign out from Google
   Future<void> signOutFromGoogle() async {
     try {
-      await _googleSignIn.signOut();
+      await googleSignIn.signOut();
     } catch (e) {
       debugPrint('Error signing out from Google: $e');
     }
   }
 
   /// Check if signed in with Google
-  bool get isSignedInWithGoogle => _googleSignIn.currentUser != null;
+  bool get isSignedInWithGoogle => googleSignIn.currentUser != null;
 
   // ============================================
   // FACEBOOK SIGN IN
@@ -190,9 +204,9 @@ class SocialAuthService {
   Future<bool> isBiometricAvailable() async {
     try {
       final bool canAuthenticateWithBiometrics = 
-          await _localAuth.canCheckBiometrics;
+          await localAuth.canCheckBiometrics;
       final bool canAuthenticate = 
-          canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
+          canAuthenticateWithBiometrics || await localAuth.isDeviceSupported();
       return canAuthenticate;
     } on PlatformException catch (_) {
       return false;
@@ -202,7 +216,7 @@ class SocialAuthService {
   /// Get available biometric types
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
-      return await _localAuth.getAvailableBiometrics();
+      return await localAuth.getAvailableBiometrics();
     } on PlatformException catch (_) {
       return [];
     }
@@ -216,7 +230,7 @@ class SocialAuthService {
     bool sensitiveTransaction = true,
   }) async {
     try {
-      final bool didAuthenticate = await _localAuth.authenticate(
+      final bool didAuthenticate = await localAuth.authenticate(
         localizedReason: localizedReason,
         options: AuthenticationOptions(
           useErrorDialogs: useErrorDialogs,
@@ -379,7 +393,7 @@ class SocialAuthService {
       final user = _auth.currentUser;
       if (user == null) throw 'لا يوجد مستخدم مسجل الدخول';
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth = 
