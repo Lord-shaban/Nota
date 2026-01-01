@@ -706,7 +706,8 @@ class UnifiedInputHandler {
               itemBuilder: (context, index) => _buildExtractedItemCard(
                 _extractedItems[index], 
                 index, 
-                () => setDialogState(() => _extractedItems.removeAt(index)),
+                onRemove: () => setDialogState(() => _extractedItems.removeAt(index)),
+                onEdit: () => _showEditItemDialog(index, setDialogState),
               ),
             ),
           ),
@@ -732,7 +733,169 @@ class UnifiedInputHandler {
     );
   }
 
-  Widget _buildExtractedItemCard(Map<String, dynamic> item, int index, VoidCallback onRemove) {
+  /// عرض نافذة تعديل عنصر مستخرج
+  void _showEditItemDialog(int index, StateSetter parentSetState) {
+    final item = _extractedItems[index];
+    final titleController = TextEditingController(text: item['title'] ?? '');
+    final contentController = TextEditingController(text: item['content'] ?? '');
+    final amountController = TextEditingController(text: item['amount']?.toString() ?? '');
+    String selectedType = item['type'] ?? 'note';
+    String? selectedMood = item['mood'];
+    String? selectedPriority = item['priority'];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF58CC02).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.edit, color: Color(0xFF58CC02)),
+              ),
+              const SizedBox(width: 12),
+              Text('تعديل العنصر', style: GoogleFonts.tajawal(fontWeight: FontWeight.w600)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // نوع العنصر
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'النوع',
+                    labelStyle: GoogleFonts.tajawal(),
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    DropdownMenuItem(value: 'task', child: Row(children: [const Icon(Icons.task_alt, size: 18, color: Color(0xFF58CC02)), const SizedBox(width: 8), Text('مهمة', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'appointment', child: Row(children: [const Icon(Icons.calendar_month, size: 18, color: Color(0xFFFFB800)), const SizedBox(width: 8), Text('موعد', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'expense', child: Row(children: [const Icon(Icons.attach_money, size: 18, color: Colors.blue), const SizedBox(width: 8), Text('مصروف', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'quote', child: Row(children: [const Icon(Icons.format_quote, size: 18, color: Colors.purple), const SizedBox(width: 8), Text('اقتباس', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'diary', child: Row(children: [const Icon(Icons.book, size: 18, color: Color(0xFF3F51B5)), const SizedBox(width: 8), Text('يومية', style: GoogleFonts.tajawal())])),
+                    DropdownMenuItem(value: 'note', child: Row(children: [const Icon(Icons.note, size: 18, color: Colors.grey), const SizedBox(width: 8), Text('ملاحظة', style: GoogleFonts.tajawal())])),
+                  ],
+                  onChanged: (value) => setDialogState(() => selectedType = value ?? 'note'),
+                ),
+                const SizedBox(height: 16),
+                
+                // العنوان
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: 'العنوان',
+                    labelStyle: GoogleFonts.tajawal(),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // المحتوى
+                TextField(
+                  controller: contentController,
+                  decoration: InputDecoration(
+                    labelText: 'المحتوى',
+                    labelStyle: GoogleFonts.tajawal(),
+                    border: const OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                
+                // المبلغ (للمصروفات)
+                if (selectedType == 'expense') ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountController,
+                    decoration: InputDecoration(
+                      labelText: 'المبلغ',
+                      labelStyle: GoogleFonts.tajawal(),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.attach_money),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+                
+                // الأولوية (للمهام)
+                if (selectedType == 'task') ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedPriority ?? 'medium',
+                    decoration: InputDecoration(
+                      labelText: 'الأولوية',
+                      labelStyle: GoogleFonts.tajawal(),
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'urgent', child: Text('🔴 عاجل', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'high', child: Text('🟠 عالي', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'medium', child: Text('🟡 متوسط', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'low', child: Text('🟢 منخفض', style: GoogleFonts.tajawal())),
+                    ],
+                    onChanged: (value) => setDialogState(() => selectedPriority = value),
+                  ),
+                ],
+                
+                // المزاج (لليوميات)
+                if (selectedType == 'diary') ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedMood ?? 'neutral',
+                    decoration: InputDecoration(
+                      labelText: 'المزاج',
+                      labelStyle: GoogleFonts.tajawal(),
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'amazing', child: Text('🤩 رائع', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'happy', child: Text('😊 سعيد', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'neutral', child: Text('😐 عادي', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'sad', child: Text('😢 حزين', style: GoogleFonts.tajawal())),
+                      DropdownMenuItem(value: 'terrible', child: Text('😭 سيء', style: GoogleFonts.tajawal())),
+                    ],
+                    onChanged: (value) => setDialogState(() => selectedMood = value),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('إلغاء', style: GoogleFonts.tajawal()),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF58CC02)),
+              onPressed: () {
+                // تحديث العنصر
+                _extractedItems[index] = {
+                  ...item,
+                  'type': selectedType,
+                  'title': titleController.text.trim(),
+                  'content': contentController.text.trim(),
+                  if (selectedType == 'expense') 'amount': double.tryParse(amountController.text) ?? 0,
+                  if (selectedType == 'task') 'priority': selectedPriority ?? 'medium',
+                  if (selectedType == 'diary') 'mood': selectedMood ?? 'neutral',
+                };
+                Navigator.pop(ctx);
+                parentSetState(() {});
+              },
+              child: Text('حفظ', style: GoogleFonts.tajawal(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExtractedItemCard(Map<String, dynamic> item, int index, {required VoidCallback onRemove, required VoidCallback onEdit}) {
     IconData icon;
     Color color;
     switch (item['type']) {
@@ -815,9 +978,20 @@ class UnifiedInputHandler {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.close, size: 20),
-          onPressed: onRemove,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.edit_outlined, size: 20, color: color),
+              onPressed: onEdit,
+              tooltip: 'تعديل',
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 20, color: Colors.red),
+              onPressed: onRemove,
+              tooltip: 'حذف',
+            ),
+          ],
         ),
       ),
     );
