@@ -520,21 +520,21 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 <tr>
 
 <td align="center">
-<img src="https://github.com/GoldenBoy13420.png" width="80" style="border-radius: 50%"/>
-<br/><strong>GoldenBoy13420</strong>
+<img src="https://github.com/Lord-shaban.png" width="80" style="border-radius: 50%"/>
+<br/><strong>Lord-shaban</strong>
 <br/><sub>🎯 Project Lead</sub>
 <br/>
-<a href="https://github.com/GoldenBoy13420">
+<a href="https://github.com/Lord-shaban">
 <img src="https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white"/>
 </a>
 </td>
 
 <td align="center">
-<img src="https://github.com/Lord-shaban.png" width="80" style="border-radius: 50%"/>
-<br/><strong>Lord-shaban</strong>
+<img src="https://github.com/GoldenBoy13420.png" width="80" style="border-radius: 50%"/>
+<br/><strong>GoldenBoy13420</strong>
 <br/><sub>💻 Developer</sub>
 <br/>
-<a href="https://github.com/Lord-shaban">
+<a href="https://github.com/GoldenBoy13420">
 <img src="https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white"/>
 </a>
 </td>
@@ -684,6 +684,7 @@ It helps us grow and motivates the team to keep improving.
 [![Gemini](https://img.shields.io/badge/AI_by-Gemini-8E75B2?style=flat&logo=google)](https://ai.google.dev)
 
 </div>
+
 
 
 
